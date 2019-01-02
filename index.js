@@ -23,10 +23,11 @@ app.use(methodOverride('_method'))
 // 请求处理
 
 // 路由
+app.use(require('./app/controller'))
 
 // 错误处理
 
 const port = process.env.PORT || 5001
 app.listen(port, () => {
-	console.log('Example app listening on port 3000!')
+	console.log(`apiSvr listening on port ${port}`)
 })
