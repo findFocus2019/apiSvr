@@ -3,7 +3,8 @@ const app = express()
 
 const bodyParser = require('body-parser') // 处理请求中body的内容
 const methodOverride = require('method-override')
-const uuid = require('uuid')
+// const uuid = require('uuid')
+const config = require('./config')
 
 // parse request bodies (req.body)
 app.use(bodyParser.urlencoded({
@@ -27,7 +28,7 @@ app.use(require('./app/controller'))
 
 // 错误处理
 
-const port = process.env.PORT || 5001
+const port = config.port || process.env.PORT || 5001
 app.listen(port, () => {
 	console.log(`apiSvr listening on port ${port}`)
 })

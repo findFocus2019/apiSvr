@@ -15,6 +15,11 @@ class UserController extends Controller {
 
   async info(ctx) {
     console.log(ctx)
+
+    let userModel = (new this.models.user_model()).model()
+    let user = await userModel.findByPk(ctx.query.id)
+
+    ctx.ret.data = user
   }
 }
 
