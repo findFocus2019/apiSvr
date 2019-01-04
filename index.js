@@ -3,18 +3,17 @@ const app = express()
 
 const bodyParser = require('body-parser') // 处理请求中body的内容
 const methodOverride = require('method-override')
-const uuid = require('uuid')
 
 // parse request bodies (req.body)
 app.use(bodyParser.urlencoded({
-	extended: true
+  extended: true
 }))
 app.use(bodyParser.json())
 app.use(bodyParser.raw({
-	type: 'application/xml'
+  type: 'application/xml'
 }))
 app.use(bodyParser.text({
-	type: 'text/xml'
+  type: 'text/xml'
 }))
 
 // allow overriding methods in query (?_method=put)
@@ -26,8 +25,30 @@ app.use(methodOverride('_method'))
 app.use(require('./app/controller'))
 
 // 错误处理
+let logErrors = (err, req, res, next) => {
+  console.error(err.stack)
+  next(err)
+}
+let clientErrorHandler = (err, req, res, next) => {
+  if (req.xhr) {
+    res.status(500).send({
+      error: 'Something failed!'
+    })
+  } else {
+    next(err)
+  }
+}
+let errorHandler = (err, req, res, next) => {
+  res.status(500)
+  res.render('error', {
+    error: err
+  })
+}
+app.use(logErrors)
+app.use(clientErrorHandler)
+app.use(errorHandler)
 
 const port = process.env.PORT || 5001
 app.listen(port, () => {
-	console.log(`apiSvr listening on port ${port}`)
+  console.log(`apiSvr listening on port ${port}`)
 })
