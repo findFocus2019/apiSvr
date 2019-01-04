@@ -13,11 +13,15 @@ const commonFields = {
     type: Sequelize.BIGINT(11),
     defaultValue: parseInt(Date.now() / 1000)
   },
-  status: {
+}
+
+let getStatusFields = (val = 0) => {
+  return {
     type: Sequelize.INTEGER(2),
-    defaultValue: 1
+    defaultValue: val
   }
 }
+
 const commonOpts = {
   timestamps: true,
   createdAt: 'create_time',
@@ -28,6 +32,7 @@ const commonOpts = {
 module.exports = {
   user: [{
     ...commonFields,
+    status: getStatusFields(0),
     mobile: {
       type: Sequelize.STRING(16),
       defaultValue: ''
@@ -35,5 +40,16 @@ module.exports = {
   }, {
     ...commonOpts,
     tableName: 't_user'
-  }]
+  }],
+  admin: [{
+    ...commonFields,
+    status: getStatusFields(0),
+    mobile: {
+      type: Sequelize.STRING(16),
+      defaultValue: ''
+    }
+  }, {
+    ...commonOpts,
+    tableName: 't_admin'
+  }],
 }
