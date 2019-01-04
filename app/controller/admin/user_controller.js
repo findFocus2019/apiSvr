@@ -5,16 +5,22 @@ class UserController extends Controller {
   constructor(ctx) {
     // super.constructor()
     super()
-    console.log('UserController', ctx.uuid)
+    this.logger.info(ctx.uuid, 'UserController Constructor')
 
     ;
     (async () => {
-      console.log('UserController.constructor async ')
+      this.logger.info(ctx.uuid, 'UserController.constructor async ')
     })()
   }
 
   async info(ctx) {
-    console.log(ctx)
+    this.logger.info(ctx.uuid, 'body', ctx.body, 'query', ctx.query)
+
+    let userModel = (new this.models.user_model()).model()
+    let user = await userModel.findByPk(ctx.query.id)
+
+    ctx.ret.data = user
+    this.logger.info(ctx.uuid, 'ret', ctx.ret)
   }
 }
 

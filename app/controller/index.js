@@ -2,8 +2,8 @@ const express = require('express')
 const router = express.Router()
 const path = require('path')
 const fs = require('fs')
-const uuid = require('uuid')
-const crytoUtils = require('../utils/cryto_utils')
+// const Uuid = require('uuid')
+const cryptoUtils = require('../utils/crypto_utils')
 const {
   signKey
 } = require('./../../config/index')
@@ -53,7 +53,9 @@ router.post('/:group/:module/:action', async (req, res) => {
 
   // 验证签名
   console.log('sign key', signKey)
-  let signContent = crytoUtils.hmacMd5Obj(content, signKey)
+  console.log(req.body)
+  let signContent = cryptoUtils.hmacMd5Obj(content, signKey)
+  console.log(sign, signContent)
   if (sign != signContent) {
     return res.status(400).json({
       code: -1,
@@ -63,11 +65,11 @@ router.post('/:group/:module/:action', async (req, res) => {
 
   // 主装上下文
   let ctx = {
-    uuid: uuid || req.uuid || uuid.v4(),
+    uuid: uuid || req.uuid || 'uuid',
     ip: req.headers['x-real-ip'] ? req.headers['x-real-ip'] : req.ip.replace(/::ffff:/, ''),
-    query: content.query ? JSON.parse(content.query) : {},
-    body: content.body ? JSON.parse(content.body) : {},
-    session: content.session ? JSON.parse(content.session) : {},
+    query: content.query || {},
+    body: content.body || {},
+    session: content.session || {},
     ret: {
       code: 0,
       message: ''

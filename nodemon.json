@@ -3,7 +3,6 @@
   "verbose": false,
   "env": {
     "NODE_ENV": "dev"
-
   },
   "execMap": {
     "": "node",
@@ -12,10 +11,7 @@
   "watch": [
     "app/",
     "config/",
-    "client/",
     "lib/",
-    "protos/",
-    "web/",
     "index.js"
   ],
   "ignore": [
