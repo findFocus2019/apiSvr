@@ -1,5 +1,5 @@
 module.exports = {
-  port: 5002,
+  port: 5001,
   signKey: '123456',
   db: {
     host: '59939c0a9a983.gz.cdb.myqcloud.com',

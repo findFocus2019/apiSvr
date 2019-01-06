@@ -9,15 +9,17 @@ class CryptUtils {
 
     return signStr.toUpperCase()
   }
+
   /**
    * md5加盐加密
    * @param {*} obj 
    * @param {*} key 
    */
   hmacMd5Obj(obj = {}, key) {
+    console.log('hmacObj', obj)
     let sortStr = this.objSortToBase64(obj)
-
-    let hash = crypto.createHmac('md5', key)
+    console.log('base64SortStr:', sortStr)
+    let hash = crypto.createHmac('sha256', key)
     hash.update(sortStr)
     let signStr = hash.digest('hex')
 

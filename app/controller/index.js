@@ -97,7 +97,14 @@ router.post('/:group/:module/:action', async (req, res) => {
     let moduleController = new controller(ctx)
     if (typeof moduleController[actionName] == 'function') {
 
-      await moduleController[actionName](ctx)
+      if (moduleController._init_) {
+        await moduleController._init_(ctx)
+      }
+
+      if (ctx.ret.code == 0) {
+        await moduleController[actionName](ctx)
+      }
+
       return res.json(ctx.ret)
     } else {
       return res.status(404).json({

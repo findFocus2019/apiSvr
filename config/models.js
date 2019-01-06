@@ -22,6 +22,49 @@ let getStatusFields = (val = 0) => {
   }
 }
 
+const FIELDS = {
+  bigInt() {
+    return {
+      type: Sequelize.BIGINT,
+      defaultValue: 0,
+    }
+  },
+  tinyInt() {
+    return {
+      type: Sequelize.TINYINT(2),
+      defaultValue: 0,
+    }
+  },
+  defaultInt() {
+    return {
+      type: Sequelize.BIGINT(11),
+      defaultValue: 0,
+    }
+
+  },
+  stringLen: (len) => {
+    return {
+      type: Sequelize.STRING(len),
+      defaultValue: ''
+    }
+
+  },
+  money: (filed) => {
+    return {
+      type: Sequelize.BIGINT,
+      defaultValue: 0,
+      get() {
+        const val = this.getDataValue(filed)
+        return val / 100
+      },
+      set(val) {
+        this.setDataValue(filed, val * 100)
+      }
+    }
+
+  }
+}
+
 const commonOpts = {
   timestamps: true,
   createdAt: 'create_time',
@@ -33,21 +76,41 @@ module.exports = {
   user: [{
     ...commonFields,
     status: getStatusFields(0),
-    mobile: {
-      type: Sequelize.STRING(16),
-      defaultValue: ''
-    }
+    mobile: FIELDS.stringLen(16),
+    password: FIELDS.stringLen(32),
+    pid: FIELDS.bigInt(),
+    vip: FIELDS.tinyInt(),
+    vip_deadline: FIELDS.defaultInt(),
+    login_type: FIELDS.tinyInt(),
+    last_signin_time: FIELDS.defaultInt(),
+    last_signin_ip: FIELDS.stringLen(24),
+    share_level: FIELDS.tinyInt(),
+    auth_token: FIELDS.stringLen(64)
   }, {
     ...commonOpts,
     tableName: 't_user'
   }],
-  admin: [{
+  userInfo: [{
     ...commonFields,
     status: getStatusFields(0),
-    mobile: {
-      type: Sequelize.STRING(16),
-      defaultValue: ''
-    }
+    user_id: FIELDS.bigInt(),
+    mobile: FIELDS.stringLen(16),
+    nickname: FIELDS.stringLen(64),
+    realname: FIELDS.stringLen(64),
+    sex: FIELDS.tinyInt(),
+    avatar: FIELDS.stringLen(255),
+    birth: FIELDS.defaultInt(),
+    // balance: FIELDS.bigInt(),
+    // score: FIELDS.bigInt()
+    balance: FIELDS.money('balance'),
+    score: FIELDS.money('score'),
+  }, {
+    ...commonOpts,
+    tableName: 't_user_info'
+  }],
+  admin: [{
+    ...commonFields,
+    status: getStatusFields(0)
   }, {
     ...commonOpts,
     tableName: 't_admin'
