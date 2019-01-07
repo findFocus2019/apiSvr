@@ -63,6 +63,7 @@ class AuthController extends Controller {
     if (verify_code != '0512') {
       ctx.ret.code = 1
       ctx.ret.message = '验证码错误'
+      return ctx.ret
     }
 
     let userModel = new this.models.user_model()
