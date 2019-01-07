@@ -56,8 +56,10 @@ class AuthController extends Controller {
     let {
       mobile,
       password,
-      verify_code
+      verify_code,
+      type
     } = ctx.body
+    // type 0:注册 1:忘记密码 2:老用户绑定 3:3方登录绑定
 
     // TODO 短信验证
     if (verify_code != '0512') {
@@ -74,30 +76,51 @@ class AuthController extends Controller {
     })
     this.logger.info(ctx.uuid, 'register()', 'user.find', user)
 
-    if (user) {
-      ctx.ret.code = 1
-      ctx.ret.message = '请不要重复注册'
-      return ctx.ret
-    }
+    if (type == 0) {
+      if (user) {
+        ctx.ret.code = 1
+        ctx.ret.message = '请不要重复注册'
+        return ctx.ret
+      }
 
-    password = cryptoUtils.hmacMd5(password, '')
-    password
-    user = await userModel.model().create({
-      mobile: mobile,
-      password: password
-    })
-    this.logger.info(ctx.uuid, 'register()', 'user.create', user)
+      password = cryptoUtils.hmacMd5(password, '')
+      user = await userModel.model().create({
+        mobile: mobile,
+        password: password
+      })
+      this.logger.info(ctx.uuid, 'register()', 'user.create', user)
 
-    if (!user) {
-      ctx.ret.code = 1
-      ctx.ret.message = '注册失败'
-      return ctx.ret
+      if (!user) {
+        ctx.ret.code = 1
+        ctx.ret.message = '注册失败'
+        return ctx.ret
+      }
+
+      ctx.ret.message = '注册成功'
+
+    } else if (type == 1 || type == 2) {
+      if (!user) {
+        ctx.ret.code = 1
+        ctx.ret.message = '无效账号,请先注册'
+        return ctx.ret
+      }
+      if (type == 2) {
+        if (user.password) {
+          ctx.ret.code = 1
+          ctx.ret.message = '密码已重置过，请返回登录'
+          return ctx.ret
+        }
+      }
+
+      user.password = cryptoUtils.hmacMd5(password, '')
+      await user.save()
+
+      ctx.ret.message = '重置密码成功'
     }
 
     let userInfo = await userModel.getInfoByUserId(user.id, mobile)
     this.logger.info(ctx.uuid, 'register()', 'user.userInfo', userInfo)
 
-    ctx.ret.message = '注册成功'
     return ctx.ret
   }
 
