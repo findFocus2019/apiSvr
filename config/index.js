@@ -8,5 +8,18 @@ module.exports = {
     username: 'root',
     password: 'Lc19890512',
     maxLimit: 1000,
+  },
+
+  tasks: {
+    REGISTER: 'register', // 用户注册
+    POSTS_VIEW: 'posts_view', //文章阅读
+  },
+  taskType: {
+    day: '每日任务',
+    one: '一次性任务'
+  },
+  taskTypeVals: {
+    DAY: 'day',
+    ONE: 'one'
   }
 }

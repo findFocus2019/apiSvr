@@ -1,6 +1,4 @@
 const Controller = require('./../../../lib/controller')
-const cryptoUtils = require('./../../utils/crypto_utils')
-const uuid = require('uuid')
 
 class UserController extends Controller {
 
@@ -73,14 +71,6 @@ class UserController extends Controller {
     }
 
     return ctx.ret
-  }
-
-
-  /**
-   * 绑定新密码
-   */
-  async signSetPwd(ctx) {
-
   }
 
 

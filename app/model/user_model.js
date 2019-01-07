@@ -30,6 +30,36 @@ class UserModel extends Model {
     return info
   }
 
+  /**
+   * 增加用户积分或者现金
+   * @param {*} ctx 
+   * @param {*} userId 
+   * @param {*} balance 
+   * @param {*} score 
+   * @param {*} t 
+   */
+  async addUserAssets(ctx, userId, balance = 0, score = 0, t = null) {
+    let ret = {
+      code: 0,
+      message: ''
+    }
+
+    let info = await this.getInfoByUserId(userId)
+    info.balance = info.balance + balance
+    info.score = info.score + score
+
+    let opts = {
+      transaction: t
+    }
+    let saveRet = await info.save(opts)
+    if (!saveRet) {
+      ret.code = 1
+      ret.message = '更新用户资产失败'
+    }
+
+    return ret
+  }
+
 }
 
 module.exports = UserModel

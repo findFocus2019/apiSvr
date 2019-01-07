@@ -1,6 +1,7 @@
 const Controller = require('./../../../lib/controller')
 const cryptoUtils = require('./../../utils/crypto_utils')
 const uuid = require('uuid')
+const config = require('./../../../config')
 
 class AuthController extends Controller {
 
@@ -121,38 +122,25 @@ class AuthController extends Controller {
     let userInfo = await userModel.getInfoByUserId(user.id, mobile)
     this.logger.info(ctx.uuid, 'register()', 'user.userInfo', userInfo)
 
+    if (type == 0) {
+      // 发送现金
+      let t = await userModel.getTrans()
+      let taskModel = new this.models.task_model
+      let taskData = {
+        user_id: user.id,
+        model_id: 0,
+        ip: ctx.ip
+      }
+      taskModel.logByName(ctx, config.tasks.REGISTER, taskData, t).then(ret => {
+        if (ret.code === 0) {
+          t.commit()
+        } else {
+          t.rollback()
+        }
+      })
+
+    }
     return ctx.ret
-  }
-
-  /**
-   * 老用户登录
-   * @param {*} ctx 
-   */
-  async signIn(ctx) {
-
-  }
-
-  /**
-   * 绑定新密码
-   */
-  async signSetPwd() {
-
-  }
-
-  /**
-   * 第三方登录
-   * @param {*} ctx 
-   */
-  async signThird(ctx) {
-
-  }
-
-  /**
-   * 三方登录绑定
-   * @param {*} ctx 
-   */
-  async signThirdBind(ctx) {
-
   }
 
 

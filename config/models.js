@@ -115,4 +115,37 @@ module.exports = {
     ...commonOpts,
     tableName: 't_admin'
   }],
+  task: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    name: FIELDS.stringLen(24),
+    title: FIELDS.stringLen(32),
+    description: FIELDS.stringLen(255),
+    type: FIELDS.stringLen(12),
+    balance: FIELDS.money('balance'),
+    score: FIELDS.money('score'),
+    limit_count: FIELDS.defaultInt(),
+    limit_id: FIELDS.defaultInt(),
+    limit_ip: FIELDS.defaultInt(),
+    model: FIELDS.stringLen(24),
+    display: FIELDS.tinyInt()
+  }, {
+    ...commonOpts,
+    tableName: 't_task'
+  }],
+  taskLogs: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    type: FIELDS.stringLen(12),
+    balance: FIELDS.money('balance'),
+    score: FIELDS.money('score'),
+    user_id: FIELDS.bigInt(),
+    model_id: FIELDS.bigInt(),
+    ip: FIELDS.stringLen(32),
+    log_date: FIELDS.stringLen(8)
+  }, {
+    ...commonOpts,
+    tableName: 't_task_logs'
+  }],
+
 }
