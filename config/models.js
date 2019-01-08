@@ -119,6 +119,18 @@ module.exports = {
     ...commonOpts,
     tableName: 't_user_auth'
   }],
+  oAuth: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    user_id: FIELDS.bigInt(),
+    platform: FIELDS.stringLen(16),
+    openid: FIELDS.stringLen(64),
+    avatar: FIELDS.stringLen(255),
+    nickname: FIELDS.stringLen(64)
+  }, {
+    ...commonOpts,
+    tableName: 't_oauth'
+  }],
   admin: [{
     ...commonFields,
     status: getStatusFields(0)

@@ -11,31 +11,32 @@ class UserController extends Controller {
 
   async _init_(ctx) {
     this.logger.info(ctx.uuid, 'UserController._init_ async ')
-
-    let token = ctx.query.token || ctx.body.token || ''
-    if (!token) {
-      ctx.ret.code = -101
-      ctx.ret.message = 'token err'
-      return ctx.ret
-    }
-
     let userModel = new this.models.user_model
-    let userAuth = await userModel.authModel().findOne({
-      where: {
-        token: token
-      }
-    })
-    this.logger.info(ctx.uuid, 'UserController._init_ user ', userAuth)
-    if (!userAuth) {
-      ctx.ret.code = -100
-      ctx.ret.message = 'token check fail'
-      return ctx.ret
-    }
+    await userModel.checkAuth(ctx)
+    // let token = ctx.query.token || ctx.body.token || ''
+    // if (!token) {
+    //   ctx.ret.code = -101
+    //   ctx.ret.message = 'token err'
+    //   return ctx.ret
+    // }
+
+    // let userModel = new this.models.user_model
+    // let userAuth = await userModel.authModel().findOne({
+    //   where: {
+    //     token: token
+    //   }
+    // })
+    // this.logger.info(ctx.uuid, 'UserController._init_ user ', userAuth)
+    // if (!userAuth) {
+    //   ctx.ret.code = -100
+    //   ctx.ret.message = 'token check fail'
+    //   return ctx.ret
+    // }
 
 
-    ctx.body.user_id = userAuth.user_id
+    // ctx.body.user_id = userAuth.user_id
 
-    return ctx.ret
+    // return ctx.ret
   }
 
   /**
