@@ -101,6 +101,13 @@ router.post('/:group/:module/:action', async (req, res) => {
         await moduleController._init_(ctx)
       }
 
+      if (actionName[0] == '_') {
+        return res.status(404).json({
+          code: -1,
+          message: `404 not found (action:${actionName})`
+        })
+      }
+
       if (ctx.ret.code == 0) {
         await moduleController[actionName](ctx)
       }

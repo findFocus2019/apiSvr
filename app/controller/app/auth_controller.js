@@ -27,8 +27,10 @@ class AuthController extends Controller {
       mobile,
       password
     } = ctx.body
-    let userModel = (new this.models.user_model()).model()
-    let user = await userModel.findOne({
+    let authInfo = ctx.body.auth_info
+
+    let userModel = (new this.models.user_model())
+    let user = await userModel.model().findOne({
       where: {
         mobile: mobile
       }
@@ -42,11 +44,19 @@ class AuthController extends Controller {
     }
 
     let token = uuid.v4()
-    user.auth_token = token
-    await user.save()
-    ctx.ret.data = {
-      token: token
+    authInfo.user_id = user.id
+    authInfo.token = token
+    let userAuth = await userModel.authLogin(authInfo)
+    if (!userAuth.token) {
+      ctx.ret.code = 1
+      ctx.ret.message = '请稍后重试'
+      return ctx.ret
+    } else {
+      ctx.ret.data = {
+        token: token
+      }
     }
+
     this.logger.info(ctx.uuid, 'login()', 'ret', ctx.ret)
     return ctx.ret
   }

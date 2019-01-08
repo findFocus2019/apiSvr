@@ -22,6 +22,14 @@ app.use(bodyParser.text({
 app.use(methodOverride('_method'))
 
 // 请求处理
+app.all('*', (req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With,Content-Type");
+  res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+  res.header("X-Powered-By", ' 3.2.1')
+  res.header("Content-Type", "application/json;charset=utf-8");
+  next()
+})
 
 // 路由
 app.use(require('./app/controller'))

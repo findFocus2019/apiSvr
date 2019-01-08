@@ -20,21 +20,20 @@ class UserController extends Controller {
     }
 
     let userModel = new this.models.user_model
-    let user = await userModel.model().findOne({
+    let userAuth = await userModel.authModel().findOne({
       where: {
-        auth_token: token
+        token: token
       }
     })
-    this.logger.info(ctx.uuid, 'UserController._init_ user ', user)
-    if (!user) {
+    this.logger.info(ctx.uuid, 'UserController._init_ user ', userAuth)
+    if (!userAuth) {
       ctx.ret.code = -100
       ctx.ret.message = 'token check fail'
       return ctx.ret
     }
 
 
-    ctx.body.user_id = user.id
-    ctx.user = user
+    ctx.body.user_id = userAuth.user_id
 
     return ctx.ret
   }
@@ -47,10 +46,15 @@ class UserController extends Controller {
 
     this.logger.info(ctx.uuid, 'logout()', 'body', ctx.body, 'query', ctx.query)
 
-    // let userId = ctx.body.user_id
-    let user = ctx.user
-    user.auth_token = ''
-    await user.save()
+    let userId = ctx.body.user_id
+    let userModel = new this.models.user_model
+    let userAuth = await userModel.authModel().findOne({
+      where: {
+        user_id: userId
+      }
+    })
+    userAuth.token = ''
+    await userAuth.save()
 
     return ctx.ret
 

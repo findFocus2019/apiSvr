@@ -1,7 +1,8 @@
 const Model = require('./../../lib/model')
 const {
   user,
-  userInfo
+  userInfo,
+  userAuth
 } = require('./../../config/models')
 
 class UserModel extends Model {
@@ -12,6 +13,32 @@ class UserModel extends Model {
 
   infoModel() {
     return this.db().define('user_info', userInfo[0], userInfo[1])
+  }
+
+  authModel() {
+    return this.db().define('user_auth', userAuth[0], userAuth[1])
+  }
+
+  async authLogin(auth) {
+    console.log(JSON.stringify(auth))
+    let userAuth = await this.authModel().findOne({
+      where: {
+        user_id: auth.user_id,
+        platform: auth.platform
+      }
+    })
+
+    if (userAuth) {
+      let saveRet = await userAuth.update(auth)
+      console.log(JSON.stringify(saveRet))
+      return saveRet
+    } else {
+      userAuth = await this.authModel().create(auth)
+      console.log(JSON.stringify(userAuth))
+      return userAuth
+    }
+
+
   }
 
   async getInfoByUserId(userId, mobile = '') {
