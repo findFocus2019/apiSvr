@@ -21,5 +21,10 @@ module.exports = {
   taskTypeVals: {
     DAY: 'day',
     ONE: 'one'
+  },
+
+  newsApi: {
+    appId: '85387',
+    secret: '5e62271be7b8464ab05d44e078ce8064'
   }
 }

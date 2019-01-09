@@ -49,6 +49,18 @@ const FIELDS = {
     }
 
   },
+  text: () => {
+    return {
+      type: Sequelize.TEXT,
+      defaultValue: ''
+    }
+  },
+  uuid: () => {
+    return {
+      type: Sequelize.UUID,
+      defaultValue: Sequelize.UUIDV4
+    }
+  },
   money: (filed) => {
     return {
       type: Sequelize.BIGINT,
@@ -62,6 +74,34 @@ const FIELDS = {
       }
     }
 
+  },
+  jsonObj: (filed) => {
+    return {
+      type: Sequelize.TEXT,
+      defaultValue: '',
+      get() {
+        const val = this.getDataValue(filed)
+        return val ? JSON.parse(val) : {}
+      },
+      set(val) {
+        let str = val ? JSON.stringify(val) : ''
+        this.setDataValue(filed, str)
+      }
+    }
+  },
+  jsonArr: (filed) => {
+    return {
+      type: Sequelize.TEXT,
+      defaultValue: '',
+      get() {
+        const val = this.getDataValue(filed)
+        return val ? JSON.parse(val) : []
+      },
+      set(val) {
+        let str = val ? JSON.stringify(val) : ''
+        this.setDataValue(filed, str)
+      }
+    }
   }
 }
 
@@ -169,6 +209,43 @@ module.exports = {
   }, {
     ...commonOpts,
     tableName: 't_task_logs'
+  }],
+  posts: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    title: FIELDS.stringLen(255),
+    type: FIELDS.tinyInt(),
+    category: FIELDS.tinyInt(),
+    recommend: FIELDS.tinyInt(),
+    description: FIELDS.stringLen(1000),
+    info: FIELDS.text(),
+    content: FIELDS.text(),
+    pub_date: FIELDS.defaultInt(),
+    views: FIELDS.defaultInt(),
+    cover: FIELDS.stringLen(255),
+    video: FIELDS.stringLen(255),
+    audio: FIELDS.stringLen(255),
+    imgs: FIELDS.jsonArr('imgs'),
+    channel: FIELDS.stringLen(32),
+    source: FIELDS.stringLen(32),
+    link: FIELDS.stringLen(255),
+    user_id: FIELDS.bigInt(),
+    admin_id: FIELDS.bigInt(),
+    goods_id: FIELDS.bigInt(),
+    uuid: FIELDS.uuid()
+  }, {
+    ...commonOpts,
+    tableName: 't_posts'
+  }],
+  schedule: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    name: FIELDS.stringLen(32),
+    title: FIELDS.stringLen(64),
+    rule: FIELDS.stringLen(32)
+  }, {
+    ...commonOpts,
+    tableName: 't_schedule'
   }],
 
 }
