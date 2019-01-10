@@ -138,7 +138,10 @@ class UserController extends Controller {
     let rows = await userModel.addressModel().findAll({
       where: {
         user_id: userId
-      }
+      },
+      order: [
+        ['update_time', 'desc']
+      ]
     })
     this.logger.info(ctx.uuid, 'address()', 'rows', rows)
 
