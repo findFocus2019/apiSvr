@@ -147,6 +147,27 @@ class UserController extends Controller {
   }
 
   /**
+   * 删除地址
+   * @param {*} ctx 
+   */
+  async addressDelete(ctx) {
+    this.logger.info(ctx.uuid, 'addressDelete()', 'body', ctx.body, 'query', ctx.query)
+
+    let userId = ctx.body.user_id
+    let addressId = ctx.body.address_id
+    let userModel = new this.models.user_model
+
+    let address = await userModel.addressModel().findByPk(addressId)
+    this.logger.info(ctx.uuid, 'addressDelete()', 'address', address)
+    if (!address && address.user_id != userId) {
+      return this._fail('无效数据')
+    }
+
+    await address.destory()
+
+    return ctx.ret
+  }
+  /**
    * 用户地址管理
    * @param {*} ctx 
    */
