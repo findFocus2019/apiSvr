@@ -144,6 +144,7 @@ module.exports = {
     // score: FIELDS.bigInt()
     balance: FIELDS.money('balance'),
     score: FIELDS.money('score'),
+    post_pub: FIELDS.tinyInt()
   }, {
     ...commonOpts,
     tableName: 't_user_info'
@@ -158,6 +159,29 @@ module.exports = {
   }, {
     ...commonOpts,
     tableName: 't_user_auth'
+  }],
+  userApply: [{
+    ...commonFields,
+    status: getStatusFields(0),
+    user_id: FIELDS.bigInt(),
+    type: FIELDS.stringLen(12),
+    info: FIELDS.stringLen(1000),
+    remark: FIELDS.stringLen(255)
+  }, {
+    ...commonOpts,
+    tableName: 't_user_apply'
+  }],
+  userAddress: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    user_id: FIELDS.bigInt(),
+    type: FIELDS.stringLen(12),
+    info: FIELDS.stringLen(255),
+    name: FIELDS.stringLen(64),
+    mobile: FIELDS.stringLen(16)
+  }, {
+    ...commonOpts,
+    tableName: 't_user_address'
   }],
   oAuth: [{
     ...commonFields,

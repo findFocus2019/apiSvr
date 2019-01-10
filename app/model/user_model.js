@@ -3,7 +3,9 @@ const {
   user,
   userInfo,
   userAuth,
-  oAuth
+  oAuth,
+  userApply,
+  userAddress
 } = require('./../../config/models')
 const uuid = require('uuid')
 
@@ -23,6 +25,14 @@ class UserModel extends Model {
 
   authModel() {
     return this.db().define('user_auth', userAuth[0], userAuth[1])
+  }
+
+  applyModel() {
+    return this.db().define('user_apply', userApply[0], userApply[1])
+  }
+
+  addressModel() {
+    return this.db().define('user_address', userAddress[0], userAddress[1])
   }
 
   async checkAuth(ctx) {

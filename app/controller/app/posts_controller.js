@@ -355,6 +355,52 @@ class PostsController extends Controller {
     return ctx.ret
 
   }
+
+  /**
+   * 发布评测
+   */
+  async postAction(ctx) {
+
+    this.logger.info(ctx.uuid, 'postAction()', 'body', ctx.body, 'query', ctx.query)
+    let userId = ctx.body.user_id
+    let goodsId = ctx.body.goods_id
+    let body = ctx.body
+    // TODO 校验goodsID
+
+    // 是否有评测资格
+    let userModel = new this.models.user_model
+    let userInfo = await userModel.getInfoByUserId(userId)
+    if (userInfo.post_pub == 0) {
+      return this._fail('无评测资格')
+    }
+
+    let postData = {
+      type: 3,
+      title: body.title,
+      content: body.content,
+      cover: body.cover || '',
+      imgs: body.imgs || [],
+      video: body.video || '',
+      audio: body.audio || '',
+      goods_id: goodsId,
+      user_id: userId
+    }
+    this.logger.info(ctx.uuid, 'postAction()', 'postData', postData)
+
+    let postsModel = new this.models.posts_model
+    let post = await postsModel.model().create(postData)
+
+    if (!post) {
+      return this._fail('发表失败')
+    }
+
+    ctx.ret.data = {
+      uuid: post.uuid
+    }
+    this.logger.info(ctx.uuid, 'postAction()', 'ret', ctx.ret)
+    return ctx.ret
+
+  }
 }
 
 module.exports = PostsController

@@ -35,5 +35,11 @@ module.exports = {
   shareCategory: {
     POSTS: 'posts',
     GOODS: 'goods'
-  }
+  },
+
+  userApplyTypes: {
+    PUB_POST: 'pub_post'
+  },
+
+  userAddressCountLimit: 5
 }
