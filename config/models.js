@@ -237,6 +237,50 @@ module.exports = {
     ...commonOpts,
     tableName: 't_posts'
   }],
+  postComment: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    user_id: FIELDS.bigInt(),
+    post_id: FIELDS.bigInt(),
+    ip: FIELDS.stringLen(32),
+    pid: FIELDS.bigInt(),
+    info: FIELDS.stringLen(1000)
+  }, {
+    ...commonOpts,
+    tableName: 't_post_comment'
+  }],
+  postLike: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    user_id: FIELDS.bigInt(),
+    post_id: FIELDS.bigInt(),
+    ip: FIELDS.stringLen(32)
+  }, {
+    ...commonOpts,
+    tableName: 't_post_like'
+  }],
+  postView: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    user_id: FIELDS.bigInt(),
+    post_id: FIELDS.bigInt(),
+    ip: FIELDS.stringLen(32),
+    view_date: FIELDS.stringLen(8)
+  }, {
+    ...commonOpts,
+    tableName: 't_post_view'
+  }],
+  share: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    user_id: FIELDS.bigInt(),
+    category: FIELDS.stringLen(12),
+    item_id: FIELDS.bigInt(),
+    uuid: FIELDS.uuid()
+  }, {
+    ...commonOpts,
+    tableName: 't_share'
+  }],
   schedule: [{
     ...commonFields,
     status: getStatusFields(1),

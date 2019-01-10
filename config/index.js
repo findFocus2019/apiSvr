@@ -26,5 +26,14 @@ module.exports = {
   newsApi: {
     appId: '85387',
     secret: '5e62271be7b8464ab05d44e078ce8064'
+  },
+
+  postListAttributes: {
+    exclude: ['info', 'content']
+  },
+
+  shareCategory: {
+    POSTS: 'posts',
+    GOODS: 'goods'
   }
 }

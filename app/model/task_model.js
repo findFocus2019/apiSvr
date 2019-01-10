@@ -20,6 +20,17 @@ class TaskModel extends Model {
     return this.db().define('user_info', userInfo[0], userInfo[1])
   }
 
+  /**
+   * 
+   * @param {*} ctx 
+   * @param {*} name 
+   * @param {
+   *  user_id
+   *  model_id
+   *  ip
+   * } data 
+   * @param {*} t 
+   */
   async logByName(ctx, name, data, t) {
     let ret = {
       code: 0,
@@ -78,7 +89,7 @@ class TaskModel extends Model {
     console.log(ctx.uuid, 'logByName() count', count)
     if (count >= limitCount) {
       ret.code = 1
-      ret.message = '超过数量限制'
+      ret.message = '超过收益数量限制'
       return ret
     }
 

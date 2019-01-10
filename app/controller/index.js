@@ -70,6 +70,7 @@ router.post('/:group/:module/:action', async (req, res) => {
     query: content.query || {},
     body: content.body || {},
     session: content.session || {},
+    token: req.query.token || req.body.token || '',
     ret: {
       code: 0,
       message: ''
@@ -81,6 +82,12 @@ router.post('/:group/:module/:action', async (req, res) => {
   let groupName = req.params.group // 组别
   let moduleName = req.params.module // 模块
   let actionName = req.params.action // 方法
+
+  ctx.route = {
+    group: groupName,
+    module: moduleName,
+    action: actionName
+  }
 
   if (groups.indexOf(groupName) > -1) {
 
