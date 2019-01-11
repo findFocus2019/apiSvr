@@ -280,7 +280,6 @@ class AuthController extends Controller {
     return ctx.ret
   }
 
-
 }
 
 module.exports = AuthController

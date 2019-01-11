@@ -162,6 +162,26 @@ class TaskModel extends Model {
     console.log('log task log :', taskLog.id)
     return taskLog
   }
+
+  /**
+   * 获取用户当日完成数
+   * @param {*} ctx 
+   * @param {*} userId 
+   * @param {*} type 
+   */
+  async getTodayCount(ctx, userId, type) {
+    let logDate = dateUtils.dateFormat(null, 'YYYYMMDD')
+
+    let count = await this.logsModel().count({
+      where: {
+        user_id: userId,
+        type: type,
+        log_date: logDate
+      }
+    })
+
+    return count
+  }
 }
 
 module.exports = TaskModel

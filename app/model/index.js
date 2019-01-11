@@ -3,5 +3,6 @@ module.exports = {
   task_model: require('./task_model'),
   posts_model: require('./posts_model'),
   schedule_model: require('./schedule_model'),
-  share_model: require('./share_model')
+  share_model: require('./share_model'),
+  notice_model: require('./notice_model')
 }

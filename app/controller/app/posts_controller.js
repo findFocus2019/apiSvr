@@ -31,12 +31,18 @@ class PostsController extends Controller {
 
     let timestamp = ctx.body.timestamp
     let type = ctx.body.type || 1 // 分类
+    let recommend = ctx.body.recommend || 0 // 推荐
 
     let where = {}
     where.update_time = {
       [Op.lte]: timestamp
     }
     where.type = type
+
+    if (recommend) {
+      where.recommend = recommend
+      where.type = 2
+    }
     this.logger.info(ctx.uuid, 'list()', 'where', where)
 
     let postsModel = new this.models.posts_model
@@ -369,9 +375,9 @@ class PostsController extends Controller {
 
     // 是否有评测资格
     let userModel = new this.models.user_model
-    let userInfo = await userModel.getInfoByUserId(userId)
-    if (userInfo.post_pub == 0) {
-      return this._fail('无评测资格')
+    let user = await userModel.model().findByPk(userId)
+    if (user.share_level != 1) {
+      return this._fail(ctx, '无评测资格')
     }
 
     let postData = {
@@ -391,7 +397,7 @@ class PostsController extends Controller {
     let post = await postsModel.model().create(postData)
 
     if (!post) {
-      return this._fail('发表失败')
+      return this._fail(ctx, '发表失败')
     }
 
     ctx.ret.data = {

@@ -125,7 +125,8 @@ module.exports = {
     last_signin_time: FIELDS.defaultInt(),
     last_signin_ip: FIELDS.stringLen(24),
     share_level: FIELDS.tinyInt(),
-    auth_token: FIELDS.stringLen(64)
+    auth_token: FIELDS.stringLen(64),
+    password_trade: FIELDS.stringLen(32)
   }, {
     ...commonOpts,
     tableName: 't_user'
@@ -143,8 +144,7 @@ module.exports = {
     // balance: FIELDS.bigInt(),
     // score: FIELDS.bigInt()
     balance: FIELDS.money('balance'),
-    score: FIELDS.money('score'),
-    post_pub: FIELDS.tinyInt()
+    score: FIELDS.money('score')
   }, {
     ...commonOpts,
     tableName: 't_user_info'
@@ -315,5 +315,14 @@ module.exports = {
     ...commonOpts,
     tableName: 't_schedule'
   }],
-
+  notice: [{
+    ...commonFields,
+    status: getStatusFields(0),
+    title: FIELDS.stringLen(64),
+    info: FIELDS.stringLen(1000),
+    content: FIELDS.text
+  }, {
+    ...commonOpts,
+    tableName: 't_notice'
+  }],
 }

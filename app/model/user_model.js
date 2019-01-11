@@ -58,6 +58,15 @@ class UserModel extends Model {
     }
 
     ctx.body.user_id = userAuth.user_id
+
+    this.model().findByPk(userAuth.user_id).then((user) => {
+      user.last_signin_time = parseInt(Date.now() / 1000)
+      user.last_signin_ip = ctx.ip
+      user.save()
+    }).catch((err) => {
+      this.logger.error(ctx.uuid, err.message || 'log sign err')
+    })
+
     return ctx.ret
 
   }

@@ -38,7 +38,7 @@ module.exports = {
   },
 
   userApplyTypes: {
-    PUB_POST: 'pub_post'
+    SHARE_LEVEL: 'share_level'
   },
 
   userAddressCountLimit: 5
