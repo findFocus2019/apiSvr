@@ -41,5 +41,12 @@ module.exports = {
     SHARE_LEVEL: 'share_level'
   },
 
-  userAddressCountLimit: 5
+  userAddressCountLimit: 5,
+
+  oss: {
+    region: 'oss-cn-shenzhen',
+    accessKeyId: 'LTAIuZAB2acD7SpJ',
+    accessKeySecret: 'FMpk7JlIIGbhSCS5q0A5VZOSk5uthV',
+    bucket: 'kxm-img',
+  },
 }
