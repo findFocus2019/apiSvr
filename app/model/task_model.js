@@ -65,32 +65,34 @@ class TaskModel extends Model {
     let limitIdCount = task.limit_id
     console.log(ctx.uuid, 'logByName() type', type)
 
-    let whereLog = {}
-    whereLog.type = type
-    whereLog.user_id = data.user_id
-    if (type == 'day') {
-      whereLog.log_date = dateUtils.dateFormat(null, 'YYYYMMDD')
-    }
-    if (limitIdCount) {
-      whereLog.model_id = data.model_id
-      // 限制id了，限制数量就为limitIpCount
-      limitCount = limitIdCount
-    }
-    if (limitIpCount) {
-      whereLog.ip = data.ip
-      // 限制ip了，限制数量就为limitIpCount
-      limitCount = limitIpCount
-    }
-    console.log(ctx.uuid, 'logByName() whereLog', whereLog)
-    // 判断数量限制
-    let count = await this.logsModel().count({
-      where: whereLog
-    })
-    console.log(ctx.uuid, 'logByName() count', count)
-    if (count >= limitCount) {
-      ret.code = 1
-      ret.message = '超过收益数量限制'
-      return ret
+    if (limitCount && limitIpCount && limitIdCount) {
+      let whereLog = {}
+      whereLog.type = type
+      whereLog.user_id = data.user_id
+      if (type == 'day') {
+        whereLog.log_date = dateUtils.dateFormat(null, 'YYYYMMDD')
+      }
+      if (limitIdCount) {
+        whereLog.model_id = data.model_id
+        // 限制id了，限制数量就为limitIpCount
+        limitCount = limitIdCount
+      }
+      if (limitIpCount) {
+        whereLog.ip = data.ip
+        // 限制ip了，限制数量就为limitIpCount
+        limitCount = limitIpCount
+      }
+      console.log(ctx.uuid, 'logByName() whereLog', whereLog)
+      // 判断数量限制
+      let count = await this.logsModel().count({
+        where: whereLog
+      })
+      console.log(ctx.uuid, 'logByName() count', count)
+      if (count >= limitCount && limitCount > 0) {
+        ret.code = 1
+        ret.message = '超过收益数量限制'
+        return ret
+      }
     }
 
     // 记录
@@ -102,7 +104,7 @@ class TaskModel extends Model {
     }
 
     // 保存用户数据
-    userInfo.balance = userInfo.balance + task.balance
+    // userInfo.balance = userInfo.balance + task.balance // 用户收益不直接到用户账户，vip带可以提取
     userInfo.score = userInfo.score + task.score
 
     let userInfoSaveOpts = {}

@@ -480,7 +480,115 @@ class UserController extends Controller {
     return ctx.ret
   }
 
+  /**
+   * 每日签到
+   * @param {*} ctx 
+   */
+  async dailySign(ctx) {
+    this.logger.info(ctx.uuid, 'dailySign()', 'body', ctx.body, 'query', ctx.query)
+    let userId = ctx.body.user_id
 
+    let userModel = new this.models.user_model
+    let t = await userModel.getTrans()
+    try {
+
+      let lastDailySign = await userModel.dailySignModel().findOne({
+        where: {
+          user_id: userId
+        },
+        order: [
+          ['create_time', 'desc']
+        ]
+      })
+      this.logger.info(ctx.uuid, 'dailySign()', 'lastDailySign', lastDailySign)
+
+      let continuesNum = lastDailySign ? lastDailySign.continues_num : 0
+      let lastTimeDay = lastDailySign ? lastDailySign.create_time : 0
+      let dayPlusDate = this.utils.date_utils.dateFormat(lastTimeDay + 24 * 3600, 'YYYYMMDD')
+      let today = this.utils.date_utils.dateFormat(null, 'YYYYMMDD')
+      this.logger.info(ctx.uuid, 'dailySign()', 'dayPlusDate', dayPlusDate)
+      this.logger.info(ctx.uuid, 'dailySign()', 'today', today)
+
+      if (dayPlusDate == today) {
+        continuesNum++
+      } else {
+        continuesNum = 1
+      }
+
+      let dailySignRet = await userModel.dailySignModel().create({
+        user_id: userId,
+        continues_num: continuesNum
+      }, {
+        transaction: t
+      })
+      this.logger.info(ctx.uuid, 'dailySign()', 'dailySignRet', dailySignRet)
+      if (!dailySignRet) {
+        throw new Error('保存记录失败')
+      }
+
+      if (continuesNum == 7) {
+        // 现金奖励
+        let taskModel = new this.models.task_model
+        let taskData = {
+          user_id: userId,
+          model_id: 0,
+          ip: ctx.ip
+        }
+        let taskLogRet = await taskModel.logByName(ctx, this.config.tasks.DAILY_SIGN_7, taskData, t)
+        this.logger.info(ctx.uuid, 'dailySign()', 'taskLogRet', taskLogRet)
+        if (taskLogRet.code != 0) {
+          throw new Error(taskLogRet.message)
+        }
+      }
+
+      t.commit()
+    } catch (err) {
+      t.rollback()
+      return this._fail(err.message || 'err')
+    }
+
+    this.logger.info(ctx.uuid, 'dailySign()', 'ret', ctx.ret)
+    return ctx.ret
+  }
+
+  /**
+   * 计算现金收益，vip功能
+   * @param {*} ctx 
+   */
+  async balanceGet(ctx) {
+    let {
+      amount,
+      password
+    } = ctx.body
+  }
+
+  /**
+   * vip下单
+   * @param {*} ctx 
+   */
+  async vipOrderCreate(ctx) {
+
+    let userId = ctx.body.userId
+    let type = ctx.body.type // 支付方式
+    let password = ctx.body.password
+    try {
+      // 验证密码
+
+      // 计算用户vip起始时间
+
+      // 创建订单数据
+
+      // 创建订单数据，默认vip代金券商品
+
+      // 去支付平台下单
+    } catch (err) {
+
+      ctx.ret.code = 1
+      ctx.ret.message = err.message || 'err'
+    }
+
+    return ctx.ret
+  }
 }
 
 module.exports = UserController

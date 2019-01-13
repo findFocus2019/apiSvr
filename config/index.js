@@ -12,6 +12,7 @@ module.exports = {
 
   tasks: {
     REGISTER: 'register', // 用户注册
+    DAILY_SIGN_7: 'daily_sign_7', // 连续7天签到
     POSTS_VIEW: 'posts_view', //文章阅读
   },
   taskType: {

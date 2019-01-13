@@ -133,6 +133,9 @@ class AuthController extends Controller {
       verify_code,
       type
     } = ctx.body
+    let inviteCode = ctx.body.invite_code
+    let pid = 0
+    let pUser
 
     // type 0:注册 1:忘记密码 2:老用户绑定 3:3方登录绑定
 
@@ -142,8 +145,20 @@ class AuthController extends Controller {
       ctx.ret.message = '验证码错误'
       return ctx.ret
     }
-
     let userModel = new this.models.user_model()
+
+    if (inviteCode) {
+      let pUser = await userModel.model().findOne({
+        uuid: inviteCode
+      })
+      if (!pUser) {
+        return this._fail(ctx, '邀请码错误')
+      } else {
+        pid = pUser.id
+      }
+    }
+
+
     let user = await userModel.model().findOne({
       where: {
         mobile: mobile
@@ -161,7 +176,8 @@ class AuthController extends Controller {
       password = cryptoUtils.hmacMd5(password, '')
       user = await userModel.model().create({
         mobile: mobile,
-        password: password
+        password: password,
+        pid: pid
       })
       this.logger.info(ctx.uuid, 'register()', 'user.create', user)
 
@@ -187,12 +203,12 @@ class AuthController extends Controller {
         }
       }
 
-
       user.password = cryptoUtils.hmacMd5(password, '')
       await user.save()
 
       ctx.ret.message = '重置密码成功'
     } else if (type == 3) {
+      // 第三方登录
       password = cryptoUtils.hmacMd5(password, '')
       if (user) {
         if (user.password != '' && user.password != password) {
@@ -206,7 +222,8 @@ class AuthController extends Controller {
       } else {
         user = await userModel.model().create({
           mobile: mobile,
-          password: password
+          password: password,
+          pid: pid
         })
         this.logger.info(ctx.uuid, 'register(3)', 'user.create', user)
 
@@ -264,7 +281,7 @@ class AuthController extends Controller {
       let t = await userModel.getTrans()
       let taskModel = new this.models.task_model
       let taskData = {
-        user_id: user.id,
+        user_id: pid,
         model_id: 0,
         ip: ctx.ip
       }

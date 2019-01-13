@@ -120,13 +120,15 @@ module.exports = {
     password: FIELDS.stringLen(32),
     pid: FIELDS.bigInt(),
     vip: FIELDS.tinyInt(),
+    vip_startline: FIELDS.defaultInt(),
     vip_deadline: FIELDS.defaultInt(),
     login_type: FIELDS.tinyInt(),
     last_signin_time: FIELDS.defaultInt(),
     last_signin_ip: FIELDS.stringLen(24),
     share_level: FIELDS.tinyInt(),
     auth_token: FIELDS.stringLen(64),
-    password_trade: FIELDS.stringLen(32)
+    password_trade: FIELDS.stringLen(32),
+    uuid: FIELDS.uuid()
   }, {
     ...commonOpts,
     tableName: 't_user'
@@ -182,6 +184,15 @@ module.exports = {
   }, {
     ...commonOpts,
     tableName: 't_user_address'
+  }],
+  userDailySign: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    user_id: FIELDS.bigInt(),
+    continues_num: FIELDS.defaultInt()
+  }, {
+    ...commonOpts,
+    tableName: 't_user_daily_sign'
   }],
   oAuth: [{
     ...commonFields,
