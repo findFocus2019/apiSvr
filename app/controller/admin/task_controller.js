@@ -57,6 +57,45 @@ class TaskController extends Controller {
     return ctx.ret
 
   }
+
+  async logs(ctx) {
+
+    this.logger.info(ctx.uuid, 'logs()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+
+    let TaskModel = new this.models.task_model
+    let taskLogsModel = TaskModel.logsModel()
+    let taskModel = TaskModel.model()
+    let userInfoModel = (new this.models.user_model).infoModel()
+
+    taskLogsModel.belongsTo(taskModel, {
+      targetKey: 'id',
+      foreignKey: 'task_id'
+    })
+    taskLogsModel.belongsTo(userInfoModel, {
+      argetKey: 'user_id',
+      foreignKey: 'user_id'
+    })
+    let queryRet = await taskLogsModel.findAndCountAll({
+      where: {},
+      offset: (page - 1) * limit,
+      limit: limit,
+      order: [
+        ['create_time', 'desc']
+      ],
+      include: [{
+        model: taskModel,
+        attributes: ['id', 'name', 'title']
+      }, {
+        model: userInfoModel,
+        attributes: ['id', 'nickname', 'mobile']
+      }],
+    })
+
+    ctx.ret.data = queryRet
+    return ctx.ret
+  }
 }
 
 module.exports = TaskController

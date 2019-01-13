@@ -238,6 +238,7 @@ module.exports = {
     balance: FIELDS.money('balance'),
     score: FIELDS.money('score'),
     user_id: FIELDS.bigInt(),
+    task_id: FIELDS.bigInt(),
     model_id: FIELDS.bigInt(),
     ip: FIELDS.stringLen(32),
     log_date: FIELDS.stringLen(8)
