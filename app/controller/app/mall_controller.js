@@ -73,6 +73,44 @@ class MallController extends Controller {
   }
 
   /**
+   * 商品评价列表
+   * @param {*} ctx 
+   */
+  async goodsRateList(ctx) {
+    this.logger.info(ctx.uuid, 'goodsRateList()', 'body', ctx.body, 'query', ctx.query)
+
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+
+    let goodsId = ctx.body.goods_id
+
+    let where = {}
+    where.goods_id = goodsId
+    this.logger.info(ctx.uuid, 'goodsRateList()', 'where', where)
+
+    let mallModel = new this.models.mall_model
+    let orderRateModel = mallModel.orderRateModel()
+    let queryRet = await orderRateModel.findAndCountAll({
+      where: where,
+      offset: (page - 1) * limit,
+      limit: limit,
+      order: [
+        ['update_time', 'desc']
+      ]
+    })
+
+    ctx.ret.data = {
+      rows: queryRet.rows || [],
+      count: queryRet.count || 0,
+      page: page,
+      limit: limit
+    }
+    this.logger.info(ctx.uuid, 'goodsRateList()', 'ret', ctx.ret)
+
+    return ctx.ret
+  }
+
+  /**
    * 商品详情
    * @param {*} ctx 
    */
@@ -205,6 +243,16 @@ class MallController extends Controller {
         throw new Error('积分不足')
       }
 
+      // 减去积分和收益
+      userInfo.score = userInfo.score - score
+      userInfo.balance = userInfo.balance - balance
+      let userInfoUpdateRet = await userInfo.save({
+        transaction: t
+      })
+      if (!userInfoUpdateRet) {
+        throw new Error('更新用户积分余额失败')
+      }
+
       let orderData = {
         user_id: userId,
         goods_ids: '-' + goodsIds.join('-') + '-',
@@ -220,11 +268,17 @@ class MallController extends Controller {
       }
 
       orderData.order_no = this._createOrderNo(ctx)
+      orderData.status = (amount == 0) ? 1 : 0 // 不用在线支付的默认支付成功
       let order = await mallModel.orderModel().create(orderData, {
         transaction: t
       })
       if (!order) {
         throw new Error('创建订单失败')
+      }
+
+      if (amount == 0) {
+        // 直接支付成功了
+        ctx.ret.code = 2
       }
 
       t.commit()
@@ -247,36 +301,239 @@ class MallController extends Controller {
   }
 
   /**
-   * 第三方支付下单&非第三方支付确认支付
+   * 返利
+   * @param {*} ctx 
+   * @param {*} items 
+   */
+  _rabate(ctx, items, t = null) {
+
+  }
+
+  /**
+   * 第三方支付下单
    */
   async orderPayPre() {
 
   }
+
+  /**
+   * 确认支付
+   */
+  async orderPayConfirm() {
+
+  }
+
   /**
    * 订单列表
    */
-  async orderList() {
+  async orderList(ctx) {
 
+    this.logger.info(ctx.uuid, 'orderList()', 'body', ctx.body, 'query', ctx.query)
+
+    let userId = ctx.body.user_id
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+
+    let where = {}
+    where.user_id = userId
+    this.logger.info(ctx.uuid, 'orderList()', 'where', where)
+
+    let mallModel = new this.models.mall_model
+    let orderModel = mallModel.orderModel()
+    let queryRet = await orderModel.findAndCountAll({
+      where: where,
+      offset: (page - 1) * limit,
+      limit: limit,
+      order: [
+        ['update_time', 'desc']
+      ],
+    })
+
+    ctx.ret.data = {
+      rows: queryRet.rows || [],
+      count: queryRet.count || 0,
+      page: page,
+      limit: limit
+    }
+    this.logger.info(ctx.uuid, 'orderList()', 'ret', ctx.ret)
+
+    return ctx.ret
   }
 
   /**
    * 订单详情
    */
-  async orderInfo() {
+  async orderInfo(ctx) {
 
+    this.logger.info(ctx.uuid, 'orderInfo()', 'body', ctx.body, 'query', ctx.query)
+
+    let userId = ctx.body.user_id
+    let orderId = ctx.body.order_id
+
+    let mallModel = new this.models.mall_model
+    let orderModel = mallModel.orderModel()
+
+    let order = await orderModel.findByPk(orderId)
+    if (order.user_id != userId) {
+      return this._fail(ctx, '无效数据')
+    }
+
+    ctx.ret.data = {
+      info: order
+    }
+
+    return ctx.ret
   }
 
   /**
    * 取消订单
    */
-  async orderCancel() {
+  async orderCancel(ctx) {
+    this.logger.info(ctx.uuid, 'orderCancel()', 'body', ctx.body, 'query', ctx.query)
+
+    let userId = ctx.body.user_id
+    let orderId = ctx.body.order_id
+
+    let mallModel = new this.models.mall_model
+    let orderModel = mallModel.orderModel()
+    let userModel = new this.models.user_model
+    let t = await mallModel.getTrans()
+
+    try {
+      let order = await orderModel.findByPk(orderId)
+      if (order.user_id != userId) {
+        throw new Error('无效数据')
+      }
+
+      // 判断是否可以取消
+      if (order.status != 0) {
+        throw new Error('已支付订单无法取消')
+      }
+
+      // 更新用户信息
+      let userInfo = await userModel.getInfoByUserId(userId)
+      userInfo.balance = userInfo.balance + order.balance
+      userInfo.score = userInfo.score + order.score
+      let userInfoRet = await userInfo.save({
+        transaction: t
+      })
+      if (!userInfoRet) {
+        throw new Error('更新用户信息失败')
+      }
+
+      let ecardId = order.ecard_id
+      let userEcard = await userModel.ecardModel().findByPk(ecardId)
+      userEcard.amount = userEcard.amount + order.ecard
+      let userEcardRet = await userEcard.save({
+        transaction: t
+      })
+      if (!userEcardRet) {
+        throw new Error('更新用户e卡失败')
+      }
+      // 更新商品库存
+
+      let items = order.goods_items
+      for (let index = 0; index < items.length; index++) {
+        let item = items[index]
+        let goods = await mallModel.goodsModel().findByPk(item.good_id)
+        if (goods.stock != -1) {
+          goods.stock = goods.stock + item.num
+          let goodsRet = await goods.save({
+            transaction: t
+          })
+          if (!goodsRet) {
+            throw new Error('更新商品库存失败')
+          }
+        }
+      }
+
+      t.commit()
+    } catch (err) {
+      t.rollback()
+      return this._fail(ctx, err.message)
+    }
+
+    return ctx.ret
 
   }
 
   /**
-   * 完成支付
+   * 完成订单（确认收货)
    */
-  async orderComplete() {
+  async orderComplete(ctx) {
+
+    this.logger.info(ctx.uuid, 'orderComplete()', 'body', ctx.body, 'query', ctx.query)
+
+    let userId = ctx.body.user_id
+    let orderId = ctx.body.order_id
+
+    let mallModel = new this.models.mall_model
+    let orderModel = mallModel.orderModel()
+
+    let order = await orderModel.findByPk(orderId)
+    if (order.user_id != userId && order.status != 2) {
+      return this._fail(ctx, '订单错误')
+    }
+
+    order.status = 3
+    await order.save()
+
+    return ctx.ret
+  }
+
+  /**
+   * 评价
+   */
+  async orderRate(ctx) {
+    this.logger.info(ctx.uuid, 'orderRate()', 'body', ctx.body, 'query', ctx.query)
+
+    let userId = ctx.body.user_id
+    let orderId = ctx.body.order_id
+
+    let mallModel = new this.models.mall_model
+    let orderModel = mallModel.orderModel()
+
+    let order = await orderModel.findByPk(orderId)
+    if (order.user_id != userId && order.status != 3) {
+      return this._fail(ctx, '订单错误')
+    }
+
+    let t = await mallModel.getTrans()
+    try {
+      let orderReteModel = mallModel.orderRateModel()
+
+      let orderRate = await orderReteModel.create({
+        user_id: userId,
+        order_id: orderId,
+        goods_id: 0,
+        level: ctx.body.level,
+        info: ctx.body.info
+      })
+      if (!orderRate) {
+        throw new Error('保存订单评价失败')
+      }
+
+      let items = ctx.body.items
+      for (let index = 0; index < items.length; index++) {
+        const item = items[index]
+        let orderRate = await orderReteModel.create({
+          user_id: userId,
+          order_id: orderId,
+          goods_id: item.goods_id,
+          level: item.level,
+          info: item.info
+        })
+        if (!orderRate) {
+          throw new Error('保存商品评价失败')
+        }
+      }
+      t.commit()
+    } catch (err) {
+      t.rollback()
+      return this._fail(ctx, err.message)
+    }
+
+    return ctx.ret
 
   }
 }

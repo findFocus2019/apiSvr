@@ -373,6 +373,18 @@ module.exports = {
     tableName: 't_order'
   }],
   payment: [],
+  orderRate: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    user_id: FIELDS.bigInt(),
+    order_id: FIELDS.bigInt(),
+    goods_id: FIELDS.bigInt(),
+    level: FIELDS.tinyInt(),
+    info: FIELDS.text()
+  }, {
+    ...commonOpts,
+    tableName: 't_order_rate'
+  }],
   schedule: [{
     ...commonFields,
     status: getStatusFields(1),

@@ -2,7 +2,8 @@ const Model = require('./../../lib/model')
 const {
   goods,
   order,
-  payment
+  payment,
+  orderRate
 } = require('./../../config/models')
 
 class AdminModel extends Model {
@@ -17,6 +18,10 @@ class AdminModel extends Model {
 
   paymentModel() {
     return this.db().define('payment', payment[0], payment[1])
+  }
+
+  orderRateModel() {
+    return this.db().define('order_rate', orderRate[0], orderRate[1])
   }
 
   /**
