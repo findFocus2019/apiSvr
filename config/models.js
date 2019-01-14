@@ -194,6 +194,18 @@ module.exports = {
     ...commonOpts,
     tableName: 't_user_daily_sign'
   }],
+  userEcard: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    user_id: FIELDS.bigInt(),
+    ecard_id: FIELDS.bigInt(),
+    name: FIELDS.stringLen(64),
+    price: FIELDS.money('price'),
+    amount: FIELDS.money('amount')
+  }, {
+    ...commonOpts,
+    tableName: 't_user_ecard'
+  }],
   oAuth: [{
     ...commonFields,
     status: getStatusFields(1),
@@ -317,6 +329,50 @@ module.exports = {
     ...commonOpts,
     tableName: 't_share'
   }],
+  goods: [{
+    ...commonFields,
+    status: getStatusFields(0),
+    type: FIELDS.tinyInt(),
+    category: FIELDS.stringLen(24),
+    title: FIELDS.stringLen(255),
+    cover: FIELDS.stringLen(255),
+    description: FIELDS.stringLen(1000),
+    content: FIELDS.text(),
+    imgs: FIELDS.text(),
+    stock: FIELDS.defaultInt(),
+    price_cost: FIELDS.money('price_cost'),
+    price_sell: FIELDS.money('price_sell'),
+    price_vip: FIELDS.money('price_vip'),
+    price_score: FIELDS.money('price_score'),
+    rabate_share: FIELDS.money('rabate_share'),
+    rabate_post: FIELDS.money('rabate_post'),
+    uuid: FIELDS.uuid()
+  }, {
+    ...commonOpts,
+    tableName: 't_goods'
+  }],
+  order: [{
+    ...commonFields,
+    status: getStatusFields(0),
+    type: FIELDS.tinyInt(),
+    category: FIELDS.stringLen(24),
+    user_id: FIELDS.bigInt(),
+    pay_type: FIELDS.tinyInt(),
+    goods_ids: FIELDS.stringLen(512),
+    goods_items: FIELDS.jsonArr('goods_items'),
+    stock: FIELDS.defaultInt(),
+    amount: FIELDS.money('amount'),
+    balance: FIELDS.money('balance'),
+    ecard: FIELDS.money('ecard'),
+    score: FIELDS.money('score'),
+    ecard_id: FIELDS.defaultInt(),
+    address: FIELDS.jsonObj('address'),
+    order_no: FIELDS.stringLen(64)
+  }, {
+    ...commonOpts,
+    tableName: 't_order'
+  }],
+  payment: [],
   schedule: [{
     ...commonFields,
     status: getStatusFields(1),

@@ -33,6 +33,10 @@ module.exports = {
     exclude: ['info', 'content']
   },
 
+  goodsListAttributes: {
+    exclude: ['content']
+  },
+
   shareCategory: {
     POSTS: 'posts',
     GOODS: 'goods'

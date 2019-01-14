@@ -6,7 +6,8 @@ const {
   oAuth,
   userApply,
   userAddress,
-  dailySign
+  dailySign,
+  userEcard
 } = require('./../../config/models')
 const uuid = require('uuid')
 
@@ -38,6 +39,10 @@ class UserModel extends Model {
 
   dailySignModel() {
     return this.db().define('user_daily_sign', dailySign[0], dailySign[1])
+  }
+
+  ecardModel() {
+    return this.db().define('user_ecard', userEcard[0], userEcard[1])
   }
 
   async checkAuth(ctx) {
