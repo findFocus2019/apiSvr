@@ -24,6 +24,11 @@ module.exports = {
     ONE: 'one'
   },
 
+  categoryType: {
+    GOODS: 'goods',
+    POSTS: 'posts'
+  },
+
   newsApi: {
     appId: '85387',
     secret: '5e62271be7b8464ab05d44e078ce8064'

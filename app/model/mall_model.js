@@ -3,10 +3,16 @@ const {
   goods,
   order,
   payment,
-  orderRate
+  orderRate,
+  orderAfter,
+  category
 } = require('./../../config/models')
 
-class AdminModel extends Model {
+class MallModel extends Model {
+
+  categoryModel() {
+    return this.db().define('category', category[0], category[1])
+  }
 
   goodsModel() {
     return this.db().define('goods', goods[0], goods[1])
@@ -24,6 +30,10 @@ class AdminModel extends Model {
     return this.db().define('order_rate', orderRate[0], orderRate[1])
   }
 
+  orderAfterModel() {
+    return this.db().define('order_after', orderAfter[0], orderAfter[1])
+  }
+
   /**
    * 获取商品分类
    * @param {*} type 
@@ -39,4 +49,4 @@ class AdminModel extends Model {
   }
 }
 
-module.exports = AdminModel
+module.exports = MallModel

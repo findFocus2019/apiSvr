@@ -60,7 +60,7 @@ class UserModel extends Model {
         token: token
       }
     })
-    // this.logger.info(ctx.uuid, 'UserController._init_ user ', userAuth)
+    // console.info(ctx.uuid, 'UserController._init_ user ', userAuth)
     if (!userAuth) {
       ctx.ret.code = -100
       ctx.ret.message = 'token check fail'
@@ -74,7 +74,7 @@ class UserModel extends Model {
       user.last_signin_ip = ctx.ip
       user.save()
     }).catch((err) => {
-      this.logger.error(ctx.uuid, err.message || 'log sign err')
+      console.error(ctx.uuid, err.message || 'log sign err')
     })
 
     return ctx.ret

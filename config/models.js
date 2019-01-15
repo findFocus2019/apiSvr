@@ -385,6 +385,22 @@ module.exports = {
     ...commonOpts,
     tableName: 't_order_rate'
   }],
+  orderAfter: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    user_id: FIELDS.bigInt(),
+    order_id: FIELDS.bigInt(),
+    goods_id: FIELDS.bigInt(),
+    imgs: FIELDS.jsonArr('imgs'),
+    info: FIELDS.text(),
+    type: FIELDS.tinyInt(),
+    order_status: FIELDS.tinyInt(),
+    name: FIELDS.stringLen(64),
+    mobile: FIELDS.stringLen(16)
+  }, {
+    ...commonOpts,
+    tableName: 't_order_after'
+  }],
   schedule: [{
     ...commonFields,
     status: getStatusFields(1),
@@ -400,9 +416,32 @@ module.exports = {
     status: getStatusFields(0),
     title: FIELDS.stringLen(64),
     info: FIELDS.stringLen(1000),
-    content: FIELDS.text
+    push: FIELDS.tinyInt()
   }, {
     ...commonOpts,
     tableName: 't_notice'
+  }],
+  config: [{
+    ...commonFields,
+    status: getStatusFields(0),
+    name: FIELDS.stringLen(24),
+    title: FIELDS.stringLen(64),
+    type: FIELDS.stringLen(12),
+    content: FIELDS.stringLen(1000),
+  }, {
+    ...commonOpts,
+    tableName: 't_config'
+  }],
+  category: [{
+    ...commonFields,
+    status: getStatusFields(0),
+    name: FIELDS.stringLen(24),
+    title: FIELDS.stringLen(64),
+    type: FIELDS.stringLen(12),
+    pid: FIELDS.bigInt(),
+    sort: FIELDS.defaultInt()
+  }, {
+    ...commonOpts,
+    tableName: 't_category'
   }],
 }

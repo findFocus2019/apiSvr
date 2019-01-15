@@ -4,6 +4,7 @@ module.exports = {
   posts_model: require('./posts_model'),
   schedule_model: require('./schedule_model'),
   share_model: require('./share_model'),
+  mall_model: require('./mall_model'),
   notice_model: require('./notice_model'),
-  mall_model: require('./mall_model')
+  config_model: require('./config_model')
 }

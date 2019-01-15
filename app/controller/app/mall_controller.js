@@ -317,7 +317,7 @@ class MallController extends Controller {
   }
 
   /**
-   * 确认支付
+   * 确认支付(前端回调确认支付)
    */
   async orderPayConfirm() {
 
@@ -535,6 +535,84 @@ class MallController extends Controller {
 
     return ctx.ret
 
+  }
+
+  /**
+   * 申请售后
+   * @param {*} ctx 
+   */
+  async orderAfter(ctx) {
+    this.logger.info(ctx.uuid, 'orderAfter()', 'body', ctx.body, 'query', ctx.query)
+
+    let userId = ctx.body.user_id
+    let orderId = ctx.body.order_id
+    let goodsId = ctx.body.goods_id
+
+    let mallModel = new this.models.mall_model
+    let orderModel = mallModel.orderModel()
+
+    let order = await orderModel.findByPk(orderId)
+    if (order.user_id != userId && order.status != 3) {
+      return this._fail(ctx, '订单错误')
+    }
+
+    let orderAfterModel = mallModel.orderAfterModel()
+
+    let orderAfter = await orderAfterModel.create({
+      user_id: userId,
+      order_id: orderId,
+      goods_id: goodsId,
+      imgs: ctx.body.imgs,
+      info: ctx.body.info,
+      name: ctx.body.name,
+      mobile: ctx.body.mobile,
+      type: ctx.body.type || 1,
+      order_status: ctx.body.status || 3
+    })
+    if (!orderAfter) {
+      return this._fail(ctx, '保存数据失败')
+    }
+
+    return ctx.ret
+
+  }
+
+  /**
+   * 售后列表
+   * @param {*} ctx 
+   */
+  async orderAfterList(ctx) {
+    this.logger.info(ctx.uuid, 'orderAfterList()', 'body', ctx.body, 'query', ctx.query)
+
+    let userId = ctx.body.user_id
+
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+
+    let mallModel = new this.models.mall_model
+
+    let orderAfterModel = mallModel.orderAfterModel()
+
+    let queryRet = await orderAfterModel.findAndCountAll({
+      where: {
+        user_id: userId
+      },
+      offset: (page - 1) * limit,
+      limit: limit,
+      order: [
+        ['update_time', 'desc']
+      ],
+    })
+
+    ctx.ret.data = {
+      rows: queryRet.rows || [],
+      count: queryRet.count || 0,
+      page: page,
+      limit: limit
+    }
+    this.logger.info(ctx.uuid, 'orderAfterList()', 'ret', ctx.ret)
+
+    return ctx.ret
   }
 }
 
