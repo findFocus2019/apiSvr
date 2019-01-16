@@ -15,17 +15,22 @@ class ShareModel extends Model {
    * @param {*} data 
    */
   async getShareItem(ctx, data) {
+    console.log('================', data)
     let share = await this.model().findOne({
-      user_id: data.user_id,
-      category: data.category,
-      item_id: data.item_id
+      where: {
+        user_id: data.user_id,
+        category: data.category,
+        post_id: data.post_id,
+        goods_id: data.goods_id
+      }
     })
 
     if (!share) {
       share = await this.model().create({
         user_id: data.user_id,
         category: data.category,
-        item_id: data.item_id
+        post_id: data.post_id,
+        goods_id: data.goods_id
       })
     }
 

@@ -4,12 +4,13 @@ const Op = require('sequelize').Op
 class PostsController extends Controller {
 
   async _init_(ctx) {
+    this.logger.info(ctx.uuid, '_init_()', 'token', ctx.token)
     if (ctx.token) {
       let userModel = new this.models.user_model
       await userModel.checkAuth(ctx)
     }
 
-    if (ctx.body.hasOwnProperty('user_id') && ctx.body.user_id) {
+    if (!ctx.body.hasOwnProperty('user_id') || !ctx.body.user_id) {
       let unLimitRoutes = ['list', 'commentList']
       if (unLimitRoutes.indexOf(ctx.route.action) < 0) {
         ctx.ret.code = -100
@@ -183,7 +184,9 @@ class PostsController extends Controller {
       t.commit()
     }
 
-    ctx.ret.data.id = comment.id
+    ctx.ret.data = {
+      id: comment.id
+    }
     return ctx.ret
 
   }
@@ -193,6 +196,58 @@ class PostsController extends Controller {
    * @param {*} ctx 
    */
   async commentList(ctx) {
+    this.logger.info(ctx.uuid, 'commentList()', 'body', ctx.body, 'query', ctx.query)
+
+    let postId = ctx.body.post_id
+    let pid = ctx.body.pid || 0
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+    let timestamp = ctx.body.timestamp
+
+    let postsModel = new this.models.posts_model
+    let post = await postsModel.model().findOne({
+      where: {
+        uuid: postId
+      }
+    })
+    if (!post) {
+      throw new Error('无效条目')
+    }
+
+    postId = post.id
+
+    let commentModel = postsModel.commentModel()
+    let userModel = (new this.models.user_model())
+    let userInfoModel = userModel.infoModel()
+    commentModel.belongsTo(userInfoModel, {
+      targetKey: 'user_id',
+      foreignKey: 'user_id'
+    })
+
+    let where = {}
+    where.post_id = postId
+    where.pid = pid
+    where.status = 1
+    where.update_time = {
+      [Op.lte]: timestamp
+    }
+    let offset = (page - 1) * limit
+
+    let queryRet = await commentModel.findAndCountAll({
+      where: where,
+      offset: offset,
+      limit: limit,
+      order: [
+        ['create_time', 'desc']
+      ],
+      include: [{
+        model: userInfoModel,
+        attributes: ['id', 'nickname', 'mobile', 'avatar']
+      }]
+    })
+
+    ctx.ret.data = queryRet
+    return ctx.ret
 
   }
 
@@ -245,12 +300,14 @@ class PostsController extends Controller {
         view_date: this.utils.date_utils.dateFormat(null, 'YYYYMMDD')
       })
 
-      this.logger.info(ctx.uuid, 'viewAction() comment', view)
+      this.logger.info(ctx.uuid, 'viewAction() view', view)
       if (!view) {
         throw new Error('添加失败')
       }
 
-      ctx.ret.data.id = view.id
+      ctx.ret.data = {
+        id: view.id
+      }
       t.commit()
     } catch (err) {
       t.rollback()
@@ -321,45 +378,10 @@ class PostsController extends Controller {
       t.commit()
     }
 
-    ctx.ret.data.id = like.id
-    return ctx.ret
-  }
-
-  /**
-   * 分享操作
-   * @param {*} ctx 
-   */
-  async shareAction(ctx) {
-
-    this.logger.info(ctx.uuid, 'shareAction()', 'body', ctx.body, 'query', ctx.query)
-    let userId = ctx.body.user_id
-    let postId = ctx.body.post_id
-
-    if (!postId) {
-      return this._fail(ctx, '参数错误')
+    ctx.ret.data = {
+      id: like.id
     }
-
-    let postsModel = new this.models.posts_model
-
-    let post = await postsModel.model().findOne({
-      where: {
-        uuid: postId
-      }
-    })
-    if (!post) {
-      return this._fail(ctx, '无效条目')
-    }
-
-    let shareModel = new this.models.share_model
-    let share = await shareModel.getShareItem(ctx, {
-      user_id: userId,
-      category: this.config.shareCategory.POSTS,
-      item_id: postId
-    })
-
-    ctx.ret.data.share = share
     return ctx.ret
-
   }
 
   /**

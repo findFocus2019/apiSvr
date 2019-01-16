@@ -84,6 +84,194 @@ class PostsController extends Controller {
 
     return ctx.ret
   }
+
+  /**
+   * 阅读记录
+   * @param {*} ctx 
+   */
+  async viewList(ctx) {
+    this.logger.info(ctx.uuid, 'body', ctx.body, 'query', ctx.query)
+
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+    let offset = (page - 1) * limit
+    let where = {}
+
+    let search = ctx.body.search || ''
+    if (search) {
+      where.mobile = {
+        [Op.like]: '%' + search + '%'
+      }
+    }
+
+    let userModel = (new this.models.user_model())
+    let userInfoModel = userModel.infoModel()
+    let PostsModel = (new this.models.posts_model)
+    let postsModel = PostsModel.model()
+    let viewModel = PostsModel.viewModel()
+
+    viewModel.belongsTo(userInfoModel, {
+      targetKey: 'user_id',
+      foreignKey: 'user_id'
+    })
+    viewModel.belongsTo(postsModel, {
+      targetKey: 'id',
+      foreignKey: 'post_id'
+    })
+
+    let queryRet = await viewModel.findAndCountAll({
+      where: where,
+      offset: offset,
+      limit: limit,
+      order: [
+        ['create_time', 'desc']
+      ],
+      include: [{
+        model: userInfoModel,
+        attributes: ['id', 'nickname', 'mobile']
+      }, {
+        model: postsModel,
+        attributes: ['id', 'uuid', 'title']
+      }]
+    })
+
+    this.logger.info(ctx.uuid, 'queryRet', queryRet)
+    ctx.ret.data = queryRet
+    return ctx.ret
+  }
+
+  /**
+   * 收藏记录
+   * @param {*} ctx 
+   */
+  async likeList(ctx) {
+    this.logger.info(ctx.uuid, 'likeList()', 'body', ctx.body, 'query', ctx.query)
+
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+    let offset = (page - 1) * limit
+    let where = {}
+
+    let search = ctx.body.search || ''
+    if (search) {
+      where.mobile = {
+        [Op.like]: '%' + search + '%'
+      }
+    }
+
+    let userModel = (new this.models.user_model())
+    let userInfoModel = userModel.infoModel()
+    let PostsModel = (new this.models.posts_model)
+    let postsModel = PostsModel.model()
+    let likeModel = PostsModel.likeModel()
+
+    likeModel.belongsTo(userInfoModel, {
+      targetKey: 'user_id',
+      foreignKey: 'user_id'
+    })
+    likeModel.belongsTo(postsModel, {
+      targetKey: 'id',
+      foreignKey: 'post_id'
+    })
+
+    let queryRet = await likeModel.findAndCountAll({
+      where: where,
+      offset: offset,
+      limit: limit,
+      order: [
+        ['create_time', 'desc']
+      ],
+      include: [{
+        model: userInfoModel,
+        attributes: ['id', 'nickname', 'mobile']
+      }, {
+        model: postsModel,
+        attributes: ['id', 'uuid', 'title']
+      }]
+    })
+
+    this.logger.info(ctx.uuid, 'likeList()', 'queryRet', queryRet)
+    ctx.ret.data = queryRet
+    return ctx.ret
+  }
+
+  /**
+   * 评论记录
+   * @param {*} ctx 
+   */
+  async commentList(ctx) {
+    this.logger.info(ctx.uuid, 'commentList()', 'body', ctx.body, 'query', ctx.query)
+
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+    let offset = (page - 1) * limit
+    let where = {}
+
+    let search = ctx.body.search || ''
+    if (search) {
+      where.mobile = {
+        [Op.like]: '%' + search + '%'
+      }
+    }
+
+    let userModel = (new this.models.user_model())
+    let userInfoModel = userModel.infoModel()
+    let PostsModel = (new this.models.posts_model)
+    let postsModel = PostsModel.model()
+    let commentModel = PostsModel.commentModel()
+
+    commentModel.belongsTo(userInfoModel, {
+      targetKey: 'user_id',
+      foreignKey: 'user_id'
+    })
+    commentModel.belongsTo(postsModel, {
+      targetKey: 'id',
+      foreignKey: 'post_id'
+    })
+
+    let queryRet = await commentModel.findAndCountAll({
+      where: where,
+      offset: offset,
+      limit: limit,
+      order: [
+        ['create_time', 'desc']
+      ],
+      include: [{
+        model: userInfoModel,
+        attributes: ['id', 'nickname', 'mobile']
+      }, {
+        model: postsModel,
+        attributes: ['id', 'uuid', 'title']
+      }]
+    })
+
+    this.logger.info(ctx.uuid, 'likeList()', 'queryRet', queryRet)
+    ctx.ret.data = queryRet
+    return ctx.ret
+  }
+
+  /**
+   * 评论修改
+   * @param {*} ctx 
+   */
+  async commentUpdate(ctx) {
+    this.logger.info(ctx.uuid, 'commentUpdate()', 'body', ctx.body, 'query', ctx.query)
+
+    let body = ctx.body
+
+    let PostsModel = (new this.models.posts_model)
+    let commentModel = PostsModel.commentModel()
+
+    let comment = await commentModel.findByPk(body.id)
+    if (!comment) {
+      return this._fail(ctx, '无效数据')
+    }
+
+    let updateRet = await comment.update(body)
+    this.logger.info(ctx.uuid, 'commentUpdate()', 'updateRet', updateRet)
+    ctx.ret.data = updateRet
+    return ctx.ret
+  }
 }
 
 module.exports = PostsController

@@ -180,7 +180,9 @@ class UserController extends Controller {
     })
     this.logger.info(ctx.uuid, 'address()', 'rows', rows)
 
-    ctx.ret.data.list = rows
+    ctx.ret.data = {
+      list: rows
+    }
     return ctx.ret
   }
 
@@ -201,7 +203,7 @@ class UserController extends Controller {
       return this._fail(ctx, '无效数据')
     }
 
-    await address.destory()
+    await address.destroy()
 
     return ctx.ret
   }
@@ -256,6 +258,78 @@ class UserController extends Controller {
 
     return ctx.ret
 
+
+  }
+
+  /**
+   * 分享操作
+   * @param {*} ctx 
+   */
+  async shareAction(ctx) {
+
+    this.logger.info(ctx.uuid, 'shareAction()', 'body', ctx.body, 'query', ctx.query)
+    let userId = ctx.body.user_id
+    let postId = ctx.body.post_id || 0
+    let goodsId = ctx.body.goods_id || 0
+    let category = ctx.body.category
+
+    if (Object.values(this.config.shareCategory).indexOf(category) < 0) {
+      return this._fail(ctx, '分享类型错误')
+    }
+
+    if (!postId && category == this.config.shareCategory.POSTS) {
+      return this._fail(ctx, '参数错误:post_id')
+    }
+
+    if (!goodsId && category == this.config.shareCategory.GOODS) {
+      return this._fail(ctx, '参数错误:goods_id')
+    }
+
+    if (postId) {
+      let postsModel = new this.models.posts_model
+      let post = await postsModel.model().findOne({
+        where: {
+          uuid: postId
+        }
+      })
+      if (!post) {
+        return this._fail(ctx, '无效分享条目')
+      }
+
+      postId = post.id
+
+      if (post.goods_id) {
+        goodsId = post.goods_id
+      }
+    }
+
+    if (goodsId) {
+      let goodsModel = (new this.models.mall_model).goodsModel()
+      let goods = await goodsModel.findOne({
+        where: {
+          uuid: goodsId
+        }
+      })
+      if (!goods) {
+        return this._fail(ctx, '无效商品分享条目')
+      }
+
+      goodsId = goods.id
+    }
+
+
+    let shareModel = new this.models.share_model
+    let share = await shareModel.getShareItem(ctx, {
+      user_id: userId,
+      category: category,
+      post_id: postId,
+      goods_id: goodsId
+    })
+
+    ctx.ret.data = {
+      share: share
+    }
+    return ctx.ret
 
   }
 
@@ -504,10 +578,16 @@ class UserController extends Controller {
 
       let continuesNum = lastDailySign ? lastDailySign.continues_num : 0
       let lastTimeDay = lastDailySign ? lastDailySign.create_time : 0
+      let lastTimeDate = this.utils.date_utils.dateFormat(lastTimeDay, 'YYYYMMDD')
       let dayPlusDate = this.utils.date_utils.dateFormat(lastTimeDay + 24 * 3600, 'YYYYMMDD')
       let today = this.utils.date_utils.dateFormat(null, 'YYYYMMDD')
+      this.logger.info(ctx.uuid, 'dailySign()', 'lastTimeDate', lastTimeDate)
       this.logger.info(ctx.uuid, 'dailySign()', 'dayPlusDate', dayPlusDate)
       this.logger.info(ctx.uuid, 'dailySign()', 'today', today)
+
+      if (lastTimeDate == today) {
+        throw new Error('已签到')
+      }
 
       if (dayPlusDate == today) {
         continuesNum++
@@ -517,7 +597,7 @@ class UserController extends Controller {
 
       let dailySignRet = await userModel.dailySignModel().create({
         user_id: userId,
-        continues_num: continuesNum
+        continues_num: continuesNum > 7 ? 1 : continuesNum
       }, {
         transaction: t
       })
@@ -544,7 +624,7 @@ class UserController extends Controller {
       t.commit()
     } catch (err) {
       t.rollback()
-      return this._fail(err.message || 'err')
+      return this._fail(ctx, err.message || 'err')
     }
 
     this.logger.info(ctx.uuid, 'dailySign()', 'ret', ctx.ret)

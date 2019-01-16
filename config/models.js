@@ -177,7 +177,6 @@ module.exports = {
     ...commonFields,
     status: getStatusFields(1),
     user_id: FIELDS.bigInt(),
-    type: FIELDS.stringLen(12),
     info: FIELDS.stringLen(255),
     name: FIELDS.stringLen(64),
     mobile: FIELDS.stringLen(16)
@@ -323,7 +322,8 @@ module.exports = {
     status: getStatusFields(1),
     user_id: FIELDS.bigInt(),
     category: FIELDS.stringLen(12),
-    item_id: FIELDS.bigInt(),
+    post_id: FIELDS.bigInt(),
+    goods_id: FIELDS.bigInt(),
     uuid: FIELDS.uuid()
   }, {
     ...commonOpts,

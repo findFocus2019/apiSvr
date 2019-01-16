@@ -96,7 +96,7 @@ class TaskModel extends Model {
     }
 
     // 记录
-    let taskLog = this.log(ctx, data.user_id, type, task.score, task.balance, data.model_id, data.ip, t)
+    let taskLog = this.log(ctx, data.user_id, task.id, type, task.score, task.balance, data.model_id, data.ip, t)
     if (!taskLog) {
       ret.code = 1
       ret.message = '保存记录失败'
@@ -146,7 +146,7 @@ class TaskModel extends Model {
    * @param {*} ip 
    * @param {*} t 
    */
-  async log(ctx, userId, type = 'day', score = 0, balance = 0, modelId = 0, ip = '', t = null) {
+  async log(ctx, userId, taskId, type = 'day', score = 0, balance = 0, modelId = 0, ip = '', t = null) {
     let opts = {}
     if (t) {
       opts.transaction = t
@@ -158,7 +158,8 @@ class TaskModel extends Model {
       balance: balance,
       model_id: modelId,
       ip: ip,
-      log_date: dateUtils.dateFormat(null, 'YYYYMMDD')
+      log_date: dateUtils.dateFormat(null, 'YYYYMMDD'),
+      task_id: taskId
     }, opts)
 
     console.log('log task log :', taskLog.id)
