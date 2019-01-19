@@ -64,6 +64,63 @@ class MallController extends Controller {
 
   }
 
+  async goodsList(ctx) {
+    this.logger.info(ctx.uuid, 'goodsList()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limt || 10
+    let offset = (page - 1) * limit
+
+    let where = {}
+    let mallModel = new this.models.mall_model
+    let queryRet = await mallModel.goodsModel().findAndCountAll({
+      where: where,
+      offset: offset,
+      limit: limit,
+      order: [
+        ['create_time', 'desc']
+      ],
+      attributes: {
+        exclude: ['update_time', 'content']
+      }
+    })
+
+    ctx.ret.data = queryRet
+    return ctx.ret
+  }
+
+  async goodsInfo(ctx) {
+    this.logger.info(ctx.uuid, 'goodsInfo()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    let mallModel = new this.models.mall_model
+    let id = ctx.body.id
+    let info = await mallModel.goodsModel().findByPk(id)
+
+    ctx.ret.data = {
+      info: info
+    }
+    this.logger.info(ctx.uuid, 'goodsInfo()', 'ret', ctx.ret)
+    return ctx.ret
+  }
+
+  async goodsUpdate(ctx) {
+    this.logger.info(ctx.uuid, 'goodsUpdate()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    let mallModel = new this.models.mall_model
+
+    let data = ctx.body
+    let goods
+    if (data.id) {
+      goods = await mallModel.goodsModel().findByPk(data.id)
+      await goods.update(data)
+    } else {
+      goods = await mallModel.goodsModel().create(data)
+    }
+
+    ctx.ret.data = {
+      info: goods
+    }
+    this.logger.info(ctx.uuid, 'goodsUpdate()', 'ret', ctx.ret)
+    return ctx.ret
+  }
 }
 
 module.exports = MallController

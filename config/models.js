@@ -341,9 +341,11 @@ module.exports = {
     imgs: FIELDS.text(),
     stock: FIELDS.defaultInt(),
     price_cost: FIELDS.money('price_cost'),
+    price_market: FIELDS.money('price_market'),
     price_sell: FIELDS.money('price_sell'),
     price_vip: FIELDS.money('price_vip'),
-    price_score: FIELDS.money('price_score'),
+    price_score_sell: FIELDS.money('price_score_sell'),
+    price_score_vip: FIELDS.money('price_score_vip'),
     rabate_share: FIELDS.money('rabate_share'),
     rabate_post: FIELDS.money('rabate_post'),
     uuid: FIELDS.uuid()
