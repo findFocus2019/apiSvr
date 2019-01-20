@@ -259,7 +259,7 @@ module.exports = {
   }],
   posts: [{
     ...commonFields,
-    status: getStatusFields(1),
+    status: getStatusFields(0),
     title: FIELDS.stringLen(255),
     type: FIELDS.tinyInt(),
     category: FIELDS.tinyInt(),
