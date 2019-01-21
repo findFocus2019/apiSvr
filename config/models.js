@@ -356,7 +356,7 @@ module.exports = {
   order: [{
     ...commonFields,
     status: getStatusFields(0),
-    type: FIELDS.tinyInt(),
+    order_type: FIELDS.tinyInt(),
     category: FIELDS.stringLen(24),
     user_id: FIELDS.bigInt(),
     pay_type: FIELDS.tinyInt(),
@@ -365,11 +365,13 @@ module.exports = {
     stock: FIELDS.defaultInt(),
     amount: FIELDS.money('amount'),
     balance: FIELDS.money('balance'),
-    ecard: FIELDS.money('ecard'),
     score: FIELDS.money('score'),
+    ecard: FIELDS.money('ecard'),
     ecard_id: FIELDS.defaultInt(),
     address: FIELDS.jsonObj('address'),
-    order_no: FIELDS.stringLen(64)
+    invoice: FIELDS.jsonObj('invoice'),
+    order_no: FIELDS.stringLen(64),
+    is_vip: FIELDS.tinyInt()
   }, {
     ...commonOpts,
     tableName: 't_order'
@@ -386,6 +388,23 @@ module.exports = {
   }, {
     ...commonOpts,
     tableName: 't_order_rate'
+  }],
+  orderRabate: [{
+    ...commonFields,
+    status: getStatusFields(1),
+    user_id: FIELDS.bigInt(),
+    order_id: FIELDS.bigInt(),
+    goods_id: FIELDS.bigInt(),
+    num_rabate: FIELDS.money('num_rabate'),
+    num_rabate_share: FIELDS.money('num_rabate_share'),
+    num_rabate_post: FIELDS.money('num_rabate_post'),
+    num_rabate_invite: FIELDS.money('num_rabate_post'),
+    share_user_id: FIELDS.bigInt(),
+    post_user_id: FIELDS.bigInt(),
+    invite_user_id: FIELDS.bigInt(),
+  }, {
+    ...commonOpts,
+    tableName: 't_order_rabate'
   }],
   orderAfter: [{
     ...commonFields,

@@ -143,13 +143,14 @@ class MallController extends Controller {
     this.logger.info(ctx.uuid, 'orderCreate()', 'body', ctx.body, 'query', ctx.query)
 
     let userId = ctx.body.user_id
-    let isVip = 1
 
     let items = ctx.body.items
+    let orderType = ctx.body.order_type || 1 // 1:自营 2:京东
     let payType = ctx.body.pay_type || 1 // 1：Eka 2：账户余额 3：在线支付
     let useScore = ctx.body.score || 0 // 是否使用积分
     let ecardId = ctx.body.ecard_id || 0
     let address = ctx.body.address
+    let invoice = ctx.body.invoice
     let remark = ctx.body.remark || ''
 
     if (payType == 1 && ecardId == 0) {
@@ -159,7 +160,9 @@ class MallController extends Controller {
     let mallModel = new this.models.mall_model
     let goodsModel = mallModel.goodsModel()
     let userModel = new this.models.user_model
-    let userInfo = userModel.getInfoByUserId(userId)
+    // let shareModel = new this.models.share_model
+    // let postsModel = new this.models.posts_model
+    let userInfo = await userModel.getInfoByUserId(userId)
 
     let t = await mallModel.getTrans()
     try {
@@ -171,11 +174,14 @@ class MallController extends Controller {
       let balance = 0 // 余额支付费用
       let score = 0
 
+      let isVip = await userModel.isVip(userId)
+
       for (let index = 0; index < items.length; index++) {
         let item = items[index]
         let num = item.num
         let goods = await goodsModel.findByPk(item.goods_id)
-        let goodsFee = isVip ? goods.price_sell : goods.price_vip
+        let goodsFee = isVip ? goods.price_vip : goods.price_sell
+        let scoreItem = isVip ? goods.price_score_vip : goods.price_score_sell
 
         // 判断库存
         if (num > goods.stock && goods.stock != -1) {
@@ -192,9 +198,9 @@ class MallController extends Controller {
         }
 
         // 计算费用
-        if (useScore) {
-          score += item.score // TODO 讲价
-          goodsFee = goodsFee - score
+        score += scoreItem // TODO 讲价
+        if (!useScore) {
+          goodsFee = goodsFee * 1 + scoreItem / 1000
         }
         if (payType == 1) {
           ecard += goodsFee
@@ -203,6 +209,8 @@ class MallController extends Controller {
         } else if (payType == 3) {
           amount += goodsFee
         }
+
+        item.num_rabate = goodsFee - (useScore ? (scoreItem / 1000) : 0) * 1
 
         goodsIds.push(item.goods_id)
         goodsItems.push(item)
@@ -264,7 +272,10 @@ class MallController extends Controller {
         score: score,
         ecard_id: ecardId,
         address: address,
-        remark: remark
+        invoice: invoice,
+        remark: remark,
+        order_type: orderType,
+        is_vip: isVip
       }
 
       orderData.order_no = this._createOrderNo(ctx)
@@ -275,6 +286,8 @@ class MallController extends Controller {
       if (!order) {
         throw new Error('创建订单失败')
       }
+
+      // 就不在这里计算返利了
 
       if (amount == 0) {
         // 直接支付成功了
@@ -300,12 +313,138 @@ class MallController extends Controller {
     return orderNo
   }
 
+  async _rabateItems(ctx, orderId, t = null) {
+    let mallModel = new this.models.mall_model
+
+    let order = await mallModel.orderModel().findByPk(orderId)
+    let items = order.goods_items
+
+    try {
+      for (let index = 0; index < items.length; index++) {
+        const item = items[index]
+        let rabateRet = await this._rabateItem(ctx, order, item, t)
+        if (rabateRet.code != 0) {
+          throw new Error('计算返利错误')
+        }
+      }
+
+      let opts = {}
+      if (t) {
+        opts.transaction = t
+      }
+      order.rabate = 1
+      let orderRet = await order.save(opts)
+      if (!orderRet) {
+        throw new Error('订单返利记录错误')
+      }
+
+    } catch (err) {
+      ctx.ret.code = 1
+      ctx.ret.message = err.message
+    }
+
+    return ctx.ret
+  }
+  /**
+   * 计算返利
+   * @param {*} ctx 
+   * @param {*} order 
+   * @param {*} item 
+   * @param {*} t 
+   */
+  async _rabateItem(ctx, order, item, t = null) {
+
+    let userId = ctx.body.user_id
+    let userModel = new this.models.user_model
+    let shareModel = new this.models.share_model
+    let postsModel = new this.models.posts_model
+    let mallModel = new this.models.mall_model
+    let orderRabateModel = mallModel.orderRabateModel()
+    let user = await userModel.model().findByPk(userId)
+
+    // 记录返利
+    let inviteUserId = 0
+    let shareUserId = 0
+    let postUserId = 0
+    let numRabateShare = 0
+    let numRabatePost = 0
+    let numRabateInvite = 0
+
+    if (user.pid) {
+      let inviteUser = await userModel.getInviteUser(user.pid)
+      if (inviteUser) {
+        inviteUserId = 0
+      }
+    }
+
+    let shareId = item.share_id
+    let share = await shareModel.model().findByPk(shareId)
+    shareUserId = share.user_id
+
+    if (share.post_id) {
+      let post = await postsModel.model().findByPk(share.post_id)
+      // if (post.user_id != shareUserId) {
+      //   postUserId = post.user_id
+      // }
+      postUserId = post.user_id
+
+    }
+
+    let numRabate = item.num_rabate
+    if (!shareUserId && !postUserId) {
+      if (inviteUserId) {
+        numRabateInvite = numRabate
+      }
+
+    } else {
+      if (shareUserId && !postUserId) {
+        numRabatePost = numRabate * 70 / 100
+        if (inviteUserId) {
+          numRabateInvite = numRabate * 30 / 100
+        }
+      } else if (!shareUserId && postUserId) {
+        numRabateShare = numRabate * 50 / 100
+        if (inviteUserId) {
+          numRabateInvite = numRabate * 50 / 100
+        }
+      } else {
+        numRabatePost = numRabate * 30 / 100
+        numRabateShare = numRabate * 40 / 100
+        if (inviteUserId) {
+          numRabateInvite = numRabate * 30 / 100
+        }
+      }
+
+
+    }
+
+    let opts = {}
+    if (t) {
+      opts.transaction = t
+    }
+    let orderItem = await orderRabateModel.create({
+      user_id: userId,
+      order_id: order.id,
+      goods_id: item.goods_id,
+      num_rabate: numRabate,
+      num_rabate_share: numRabateShare,
+      num_rabate_post: numRabatePost,
+      num_rabate_invite: numRabateInvite
+    }, opts)
+    if (!orderItem) {
+      ctx.ret.code = 1
+      ctx.ret.message = ''
+    }
+
+    return ctx.ret
+
+  }
   /**
    * 返利
    * @param {*} ctx 
    * @param {*} items 
    */
-  _rabate(ctx, items, t = null) {
+  _rabate(ctx, orderId, t = null) {
 
   }
 
@@ -319,8 +458,32 @@ class MallController extends Controller {
   /**
    * 确认支付(前端回调确认支付)
    */
-  async orderPayConfirm() {
+  async orderPayConfirm(ctx) {
 
+    let body = ctx.body
+    let orderId = body.order_id
+
+    let mallModel = new this.models.mall_model
+    let orderModel = mallModel.orderModel()
+
+    let t = await mallModel.getTrans()
+
+    try {
+
+      let order = await orderModel.findByPk(orderId)
+      let items = order.goods_items
+      let rabateRet = await this._rabate(ctx, items, t)
+      if (rabateRet.code != 0) {
+        throw new Error(rabateRet.message)
+      }
+
+      t.commit()
+    } catch (err) {
+      t.rollback()
+      return this._fail(ctx, err.message)
+    }
+
+    return ctx.ret
   }
 
   /**
