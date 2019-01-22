@@ -43,14 +43,45 @@ class MallModel extends Model {
    * 获取商品分类
    * @param {*} type 
    */
-  getGoodsCategory(type = 2) {
-    let sql = 'select category from t_goods group by category where type = :type'
+  async getGoodsCategoryJd(type = 2) {
+    let sql = 'select category as name from t_goods where type = :type group by category '
     let rows = this.query(sql, {
       type: type
     })
 
-    return rows
+    let datas = []
+    rows.forEach(item => {
+      datas.push({
+        id: item.category,
+        name: item.category
+      })
+    })
+    return datas
 
+  }
+
+  async getGoodsCategory() {
+    let list = await this.categoryModel().findAll({
+      where: {
+        status: 1,
+        pid: 0,
+        type: 'goods'
+      },
+      order: [
+        ['sort', 'asc'],
+        ['create_time', 'desc']
+      ]
+    })
+
+    let datas = []
+    list.forEach(item => {
+      datas.push({
+        id: item.name,
+        name: item.title
+      })
+    })
+
+    return datas
   }
 }
 

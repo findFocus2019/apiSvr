@@ -10,13 +10,29 @@ class MallController extends Controller {
     }
 
     if (!ctx.body.hasOwnProperty('user_id') || !ctx.body.user_id) {
-      let unLimitRoutes = ['goodsList', 'goodsInfo']
+      let unLimitRoutes = ['goodsList', 'goodsInfo', 'categorys']
       if (unLimitRoutes.indexOf(ctx.route.action) < 0) {
         ctx.ret.code = -100
         ctx.ret.message = '请先登录进行操作'
         return ctx.ret
       }
     }
+  }
+
+  async categorys(ctx) {
+    let mallModel = new this.models.mall_model
+
+    let type = ctx.body.type || 1
+    if (type == 1) {
+      let categorys = await mallModel.getGoodsCategory()
+      ctx.ret.data = categorys
+    } else {
+      let categorys = await mallModel.getGoodsCategoryJd()
+      ctx.ret.data = categorys
+    }
+
+    return ctx.ret
+
   }
 
   /**
@@ -31,12 +47,16 @@ class MallController extends Controller {
 
     let timestamp = ctx.body.timestamp
     let type = ctx.body.type || 1 // 分类
+    let category = ctx.body.category || ''
 
     let where = {}
     where.update_time = {
       [Op.lte]: timestamp
     }
     where.type = type
+    if (category) {
+      where.category = category
+    }
     this.logger.info(ctx.uuid, 'goodsList()', 'where', where)
 
     let mallModel = new this.models.mall_model

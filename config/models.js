@@ -348,7 +348,8 @@ module.exports = {
     price_score_vip: FIELDS.money('price_score_vip'),
     rabate_share: FIELDS.money('rabate_share'),
     rabate_post: FIELDS.money('rabate_post'),
-    uuid: FIELDS.uuid()
+    uuid: FIELDS.uuid(),
+    sales: FIELDS.defaultInt()
   }, {
     ...commonOpts,
     tableName: 't_goods'
@@ -371,7 +372,8 @@ module.exports = {
     address: FIELDS.jsonObj('address'),
     invoice: FIELDS.jsonObj('invoice'),
     order_no: FIELDS.stringLen(64),
-    is_vip: FIELDS.tinyInt()
+    is_vip: FIELDS.tinyInt(),
+    rabate: FIELDS.tinyInt()
   }, {
     ...commonOpts,
     tableName: 't_order'
