@@ -46,8 +46,12 @@ class MallController extends Controller {
     let limit = ctx.body.limit || 10
 
     let timestamp = ctx.body.timestamp
+    let search = ctx.body.search || ''
     let type = ctx.body.type || 1 // 分类
     let category = ctx.body.category || ''
+    if (category === 'all') {
+      category = ''
+    }
 
     let where = {}
     where.update_time = {
@@ -56,6 +60,11 @@ class MallController extends Controller {
     where.type = type
     if (category) {
       where.category = category
+    }
+    if (search) {
+      where.title = {
+        [Op.like]: '%' + search + '%'
+      }
     }
     this.logger.info(ctx.uuid, 'goodsList()', 'where', where)
 

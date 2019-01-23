@@ -49,7 +49,10 @@ class MallModel extends Model {
       type: type
     })
 
-    let datas = []
+    let datas = [{
+      id: 'all',
+      name: '全部'
+    }]
     rows.forEach(item => {
       datas.push({
         id: item.category,
@@ -73,7 +76,10 @@ class MallModel extends Model {
       ]
     })
 
-    let datas = []
+    let datas = [{
+      id: 'all',
+      name: '全部'
+    }]
     list.forEach(item => {
       datas.push({
         id: item.name,
