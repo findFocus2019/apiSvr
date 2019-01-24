@@ -4,7 +4,7 @@ const {
   order,
   payment,
   orderRate,
-  orderRabate,
+  orderItem,
   orderAfter,
   category
 } = require('./../../config/models')
@@ -31,8 +31,8 @@ class MallModel extends Model {
     return this.db().define('order_rate', orderRate()[0], orderRate()[1])
   }
 
-  orderRabateModel() {
-    return this.db().define('order_rate', orderRabate()[0], orderRabate()[1])
+  orderItemModel() {
+    return this.db().define('order_item', orderItem()[0], orderItem()[1])
   }
 
   orderAfterModel() {

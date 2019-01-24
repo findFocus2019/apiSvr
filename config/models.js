@@ -383,10 +383,12 @@ module.exports = {
         price_vip: FIELDS.money('price_vip'),
         price_score_sell: FIELDS.money('price_score_sell'),
         price_score_vip: FIELDS.money('price_score_vip'),
-        rabate_share: FIELDS.money('rabate_share'),
-        rabate_post: FIELDS.money('rabate_post'),
+        rabate_rate: FIELDS.defaultInt(),
+        rabate_rate_vip: FIELDS.defaultInt(),
         uuid: FIELDS.uuid(),
-        sales: FIELDS.defaultInt()
+        sales: FIELDS.defaultInt(),
+        img_1: FIELDS.stringLen(255),
+        img_2: FIELDS.stringLen(255)
       }, {
         ...commonOpts,
         tableName: 't_goods'
@@ -434,7 +436,7 @@ module.exports = {
       tableName: 't_order_rate'
     }]
   },
-  orderRabate: () => {
+  orderItem: () => {
     return [{
       ...commonFieldGet(),
       status: getStatusFields(1),
@@ -450,7 +452,7 @@ module.exports = {
       invite_user_id: FIELDS.bigInt(),
     }, {
       ...commonOpts,
-      tableName: 't_order_rabate'
+      tableName: 't_order_item'
     }]
   },
   orderAfter: () => {

@@ -212,6 +212,14 @@ class MallController extends Controller {
         let goodsFee = isVip ? goods.price_vip : goods.price_sell
         let scoreItem = isVip ? goods.price_score_vip : goods.price_score_sell
 
+        let numRabate = 0 // 利润
+        if (isVip) {
+          numRabate = (goodsFee - goods.price_cost) * goods.rabate_rate_vip / 100
+        } else {
+          numRabate = (goodsFee - goods.price_cost) * goods.rabate_rate / 100
+        }
+        item.num_rabate = numRabate
+
         // 判断库存
         if (num > goods.stock && goods.stock != -1) {
           throw new Error(`${item.title}库存不足`)
@@ -260,13 +268,13 @@ class MallController extends Controller {
         }
 
         // 减去ecard金额
-        userEcard.amount = (userEcard.amount < ecard) ? 0 : (userEcard.amount - ecard)
-        let userEcardRet = await userEcard.save({
-          transaction: t
-        })
-        if (!userEcardRet) {
-          throw new Error('记录ecard使用失败')
-        }
+        // userEcard.amount = (userEcard.amount < ecard) ? 0 : (userEcard.amount - ecard)
+        // let userEcardRet = await userEcard.save({
+        //   transaction: t
+        // })
+        // if (!userEcardRet) {
+        //   throw new Error('记录ecard使用失败')
+        // }
 
 
       } else if (payType == 2) {
@@ -281,19 +289,19 @@ class MallController extends Controller {
       }
 
       // 减去积分和收益
-      userInfo.score = userInfo.score - score
-      userInfo.balance = userInfo.balance - balance
-      let userInfoUpdateRet = await userInfo.save({
-        transaction: t
-      })
-      if (!userInfoUpdateRet) {
-        throw new Error('更新用户积分余额失败')
-      }
+      // userInfo.score = userInfo.score - score
+      // userInfo.balance = userInfo.balance - balance
+      // let userInfoUpdateRet = await userInfo.save({
+      //   transaction: t
+      // })
+      // if (!userInfoUpdateRet) {
+      //   throw new Error('更新用户积分余额失败')
+      // }
 
       let orderData = {
         user_id: userId,
         goods_ids: '-' + goodsIds.join('-') + '-',
-        goodsItems: goodsItems,
+        // goodsItems: goodsItems,
         pay_type: payType,
         amount: amount,
         balance: balance,
@@ -317,10 +325,13 @@ class MallController extends Controller {
       }
 
       // 就不在这里计算返利了
+      // 生成goodsItems
+      this._creareOrderItems(ctx, order.id, t)
+
 
       if (amount == 0) {
         // 直接支付成功了
-        ctx.ret.code = 2
+        // ctx.ret.code = 2
       }
 
       t.commit()
@@ -342,7 +353,13 @@ class MallController extends Controller {
     return orderNo
   }
 
-  async _rabateItems(ctx, orderId, t = null) {
+  /**
+   * 记录orderItems
+   * @param {*} ctx 
+   * @param {*} orderId 
+   * @param {*} t 
+   */
+  async _creareOrderItems(ctx, orderId, t = null) {
     let mallModel = new this.models.mall_model
 
     let order = await mallModel.orderModel().findByPk(orderId)
@@ -351,21 +368,21 @@ class MallController extends Controller {
     try {
       for (let index = 0; index < items.length; index++) {
         const item = items[index]
-        let rabateRet = await this._rabateItem(ctx, order, item, t)
+        let rabateRet = await this._creareOrderItem(ctx, order, item, t)
         if (rabateRet.code != 0) {
-          throw new Error('计算返利错误')
+          throw new Error('记录订单商品错误')
         }
       }
 
-      let opts = {}
-      if (t) {
-        opts.transaction = t
-      }
-      order.rabate = 1
-      let orderRet = await order.save(opts)
-      if (!orderRet) {
-        throw new Error('订单返利记录错误')
-      }
+      // let opts = {}
+      // if (t) {
+      //   opts.transaction = t
+      // }
+      // order.rabate = 1
+      // let orderRet = await order.save(opts)
+      // if (!orderRet) {
+      //   throw new Error('订单返利记录错误')
+      // }
 
     } catch (err) {
       ctx.ret.code = 1
@@ -374,21 +391,22 @@ class MallController extends Controller {
 
     return ctx.ret
   }
+
   /**
-   * 计算返利
+   * 记录订单商品
    * @param {*} ctx 
    * @param {*} order 
    * @param {*} item 
    * @param {*} t 
    */
-  async _rabateItem(ctx, order, item, t = null) {
+  async _creareOrderItem(ctx, order, item, t = null) {
 
     let userId = ctx.body.user_id
     let userModel = new this.models.user_model
     let shareModel = new this.models.share_model
     let postsModel = new this.models.posts_model
     let mallModel = new this.models.mall_model
-    let orderRabateModel = mallModel.orderRabateModel()
+    let orderItemModel = mallModel.orderItemModel()
     let user = await userModel.model().findByPk(userId)
 
     // 记录返利
@@ -400,6 +418,7 @@ class MallController extends Controller {
     let numRabateInvite = 0
 
     if (user.pid) {
+      // 邀请人
       let inviteUser = await userModel.getInviteUser(user.pid)
       if (inviteUser) {
         inviteUserId = 0
@@ -416,27 +435,34 @@ class MallController extends Controller {
       //   postUserId = post.user_id
       // }
       postUserId = post.user_id
-
     }
+
+    let postId = item.post_id
+    let post = await postsModel.model().findByPk(postId)
+    postUserId = post.user_id
 
     let numRabate = item.num_rabate
     if (!shareUserId && !postUserId) {
+      // 商城直接购买
       if (inviteUserId) {
         numRabateInvite = numRabate
       }
 
     } else {
       if (shareUserId && !postUserId) {
+        // 分享直接购买
         numRabatePost = numRabate * 70 / 100
         if (inviteUserId) {
           numRabateInvite = numRabate * 30 / 100
         }
       } else if (!shareUserId && postUserId) {
+        // 评测购买
         numRabateShare = numRabate * 50 / 100
         if (inviteUserId) {
           numRabateInvite = numRabate * 50 / 100
         }
       } else {
+        // 评测分享
         numRabatePost = numRabate * 30 / 100
         numRabateShare = numRabate * 40 / 100
         if (inviteUserId) {
@@ -451,7 +477,7 @@ class MallController extends Controller {
     if (t) {
       opts.transaction = t
     }
-    let orderItem = await orderRabateModel.create({
+    let orderItem = await orderItemModel.create({
       user_id: userId,
       order_id: order.id,
       goods_id: item.goods_id,
@@ -460,6 +486,7 @@ class MallController extends Controller {
       num_rabate_post: numRabatePost,
       num_rabate_invite: numRabateInvite
     }, opts)
+
     if (!orderItem) {
       ctx.ret.code = 1
       ctx.ret.message = ''
@@ -468,12 +495,11 @@ class MallController extends Controller {
     return ctx.ret
 
   }
+
   /**
-   * 返利
-   * @param {*} ctx 
-   * @param {*} items 
+   * 订单确认，不需要在线支付的直接成功
    */
-  _rabate(ctx, orderId, t = null) {
+  orderConfirm() {
 
   }
 
