@@ -14,35 +14,35 @@ const uuid = require('uuid')
 class UserModel extends Model {
 
   model() {
-    return this.db().define('user', user(0)[1], user[1])
+    return this.db().define('user', user()[0], user[1])
   }
 
   oAuthModel() {
-    return this.db().define('oauth', oAuth(0)[1], oAuth[1])
+    return this.db().define('oauth', oAuth()[0], oAuth[1])
   }
 
   infoModel() {
-    return this.db().define('user_info', userInfo(0)[1], userInfo[1])
+    return this.db().define('user_info', userInfo()[0], userInfo[1])
   }
 
   authModel() {
-    return this.db().define('user_auth', userAuth(0)[1], userAuth[1])
+    return this.db().define('user_auth', userAuth()[0], userAuth[1])
   }
 
   applyModel() {
-    return this.db().define('user_apply', userApply(0)[1], userApply[1])
+    return this.db().define('user_apply', userApply()[0], userApply[1])
   }
 
   addressModel() {
-    return this.db().define('user_address', userAddress(0)[1], userAddress[1])
+    return this.db().define('user_address', userAddress()[0], userAddress[1])
   }
 
   dailySignModel() {
-    return this.db().define('user_daily_sign', userDailySign(0)[1], userDailySign[1])
+    return this.db().define('user_daily_sign', userDailySign()[0], userDailySign[1])
   }
 
   ecardModel() {
-    return this.db().define('user_ecard', userEcard(0)[1], userEcard[1])
+    return this.db().define('user_ecard', userEcard()[0], userEcard[1])
   }
 
   async checkAuth(ctx) {

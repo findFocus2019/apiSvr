@@ -12,31 +12,31 @@ const {
 class MallModel extends Model {
 
   categoryModel() {
-    return this.db().define('category', category(0)[1], category()[1])
+    return this.db().define('category', category()[0], category()[1])
   }
 
   goodsModel() {
-    return this.db().define('goods', goods()(0)[1], goods()()[1])
+    return this.db().define('goods', goods()()[0], goods()()[1])
   }
 
   orderModel() {
-    return this.db().define('order', order(0)[1], order()[1])
+    return this.db().define('order', order()[0], order()[1])
   }
 
   paymentModel() {
-    return this.db().define('payment', payment(0)[1], payment()[1])
+    return this.db().define('payment', payment()[0], payment()[1])
   }
 
   orderRateModel() {
-    return this.db().define('order_rate', orderRate(0)[1], orderRate()[1])
+    return this.db().define('order_rate', orderRate()[0], orderRate()[1])
   }
 
   orderRabateModel() {
-    return this.db().define('order_rate', orderRabate(0)[1], orderRabate()[1])
+    return this.db().define('order_rate', orderRabate()[0], orderRabate()[1])
   }
 
   orderAfterModel() {
-    return this.db().define('order_after', orderAfter(0)[1], orderAfter()[1])
+    return this.db().define('order_after', orderAfter()[0], orderAfter()[1])
   }
 
   /**
