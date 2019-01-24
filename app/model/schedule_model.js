@@ -6,7 +6,7 @@ const {
 class ScheduleModel extends Model {
 
   model() {
-    return this.db().define('user', schedule[0], schedule[1])
+    return this.db().define('user', schedule(0)[1], schedule()[1])
   }
 }
 

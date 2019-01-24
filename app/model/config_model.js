@@ -6,7 +6,7 @@ const {
 class NoticeModel extends Model {
 
   model() {
-    return this.db().define('notice', config[0], config[1])
+    return this.db().define('notice', config(0)[1], config()[1])
   }
 }
 

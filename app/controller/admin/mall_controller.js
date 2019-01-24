@@ -104,6 +104,7 @@ class MallController extends Controller {
 
   async goodsUpdate(ctx) {
     this.logger.info(ctx.uuid, 'goodsUpdate()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    delete ctx.body.update_time
     let mallModel = new this.models.mall_model
 
     let data = ctx.body

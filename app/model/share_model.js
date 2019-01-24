@@ -6,7 +6,7 @@ const {
 class ShareModel extends Model {
 
   model() {
-    return this.db().define('share', share[0], share[1])
+    return this.db().define('share', share(0)[1], share()[1])
   }
 
   /**

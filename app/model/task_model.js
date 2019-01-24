@@ -9,15 +9,15 @@ const {
 
 class TaskModel extends Model {
   model() {
-    return this.db().define('task', task[0], task[1])
+    return this.db().define('task', task(0)[1], task()[1])
   }
 
   logsModel() {
-    return this.db().define('task_logs', taskLogs[0], taskLogs[1])
+    return this.db().define('task_logs', taskLogs(0)[1], taskLogs()[1])
   }
 
   userInfoModel() {
-    return this.db().define('user_info', userInfo[0], userInfo[1])
+    return this.db().define('user_info', userInfo(0)[1], userInfo()[1])
   }
 
   /**
