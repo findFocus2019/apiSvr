@@ -557,4 +557,21 @@ module.exports = {
       tableName: 't_category'
     }]
   },
+  album: () => {
+    return [{
+      ...commonFieldGet(),
+      status: getStatusFields(0),
+      description: FIELDS.stringLen(1000),
+      type: FIELDS.stringLen(12),
+      title: FIELDS.stringLen(64),
+      url: FIELDS.stringLen(255),
+      img: FIELDS.stringLen(255),
+      thumb: FIELDS.stringLen(255),
+      sort: FIELDS.defaultInt(),
+      type_id: FIELDS.bigInt()
+    }, {
+      ...commonOpts,
+      tableName: 't_album'
+    }]
+  }
 }
