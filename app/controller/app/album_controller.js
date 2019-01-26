@@ -1,6 +1,6 @@
 const Controller = require('./../../../lib/controller')
 
-class AlbumController extends Controller{
+class AlbumController extends Controller {
   constructor(ctx) {
     // super.constructor()
     super()
@@ -12,7 +12,7 @@ class AlbumController extends Controller{
     })()
   }
 
-    /**
+  /**
    * 分页列表
    */
   async list(ctx) {
@@ -26,14 +26,14 @@ class AlbumController extends Controller{
     where.update_time = {
       [Op.lte]: timestamp
     }
-    let fields =['status','type','sort','type_id']
+    let fields = ['status', 'type', 'sort', 'type_id']
     fields.map(field => {
-      if (ctx.body[fields] && ctx.body[fields]!="") {
+      if (ctx.body[fields] && ctx.body[fields] != "") {
         where[field] = ctx.body[fields]
       }
     })
 
-  
+
     this.logger.info(ctx.uuid, 'AlbumController list()', 'where', where)
 
     let postsModel = new this.models.posts_model
@@ -69,4 +69,4 @@ class AlbumController extends Controller{
   }
 }
 
-module.exports = new AlbumController();
+module.exports = AlbumController

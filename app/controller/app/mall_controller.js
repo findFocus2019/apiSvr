@@ -193,6 +193,8 @@ class MallController extends Controller {
     // let shareModel = new this.models.share_model
     // let postsModel = new this.models.posts_model
     let userInfo = await userModel.getInfoByUserId(userId)
+
+    // 是否是vip不信任前端传递
     let isVip = await userModel.isVip(userId)
     let orderIds = []
 
