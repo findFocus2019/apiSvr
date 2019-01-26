@@ -197,6 +197,22 @@ module.exports = {
       tableName: 't_user_address'
     }]
   },
+  userInvoice: () => {
+    return [{
+      ...commonFieldGet(),
+      status: getStatusFields(1),
+      user_id: FIELDS.bigInt(),
+      category: FIELDS.tinyInt(),
+      type: FIELDS.tinyInt(),
+      title: FIELDS.stringLen(255),
+      company_title: FIELDS.stringLen(255),
+      company_no: FIELDS.stringLen(32),
+      info: FIELDS.tinyInt(),
+    }, {
+      ...commonOpts,
+      tableName: 't_user_invoice'
+    }]
+  },
   userDailySign: () => {
     return [{
       ...commonFieldGet(),
@@ -399,29 +415,42 @@ module.exports = {
     return [{
       ...commonFieldGet(),
       status: getStatusFields(0),
+      order_no: FIELDS.stringLen(64),
       order_type: FIELDS.tinyInt(),
-      category: FIELDS.stringLen(24),
       user_id: FIELDS.bigInt(),
-      pay_type: FIELDS.tinyInt(),
+      payment: FIELDS.jsonObj('payment'),
       goods_ids: FIELDS.stringLen(512),
       goods_items: FIELDS.jsonArr('goods_items'),
-      stock: FIELDS.defaultInt(),
-      amount: FIELDS.money('amount'),
-      balance: FIELDS.money('balance'),
-      score: FIELDS.money('score'),
-      ecard: FIELDS.money('ecard'),
-      ecard_id: FIELDS.defaultInt(),
+      total: FIELDS.money('total'),
+      score: FIELDS.defaultInt(),
       address: FIELDS.jsonObj('address'),
       invoice: FIELDS.jsonObj('invoice'),
-      order_no: FIELDS.stringLen(64),
-      is_vip: FIELDS.tinyInt(),
+      vip: FIELDS.tinyInt(),
       rabate: FIELDS.tinyInt()
     }, {
       ...commonOpts,
       tableName: 't_order'
     }]
   },
-  payment: [],
+  payment: () => {
+    return [{
+      ...commonFieldGet(),
+      status: getStatusFields(0),
+      order_ids: FIELDS.text(),
+      user_id: FIELDS.bigInt(),
+      pay_type: FIELDS.tinyInt(),
+      pay_method: FIELDS.stringLen(24),
+      amount: FIELDS.money('amount'),
+      balance: FIELDS.money('balance'),
+      ecard: FIELDS.money('ecard'),
+      ecard_id: FIELDS.bigInt(),
+      content: FIELDS.jsonObj('content'),
+      uuid: FIELDS.uuid()
+    }, {
+      ...commonOpts,
+      tableName: 't_payment'
+    }]
+  },
   orderRate: () => {
     return [{
       ...commonFieldGet(),
@@ -443,6 +472,7 @@ module.exports = {
       user_id: FIELDS.bigInt(),
       order_id: FIELDS.bigInt(),
       goods_id: FIELDS.bigInt(),
+      num: FIELDS.defaultInt(),
       num_rabate: FIELDS.money('num_rabate'),
       num_rabate_share: FIELDS.money('num_rabate_share'),
       num_rabate_post: FIELDS.money('num_rabate_post'),

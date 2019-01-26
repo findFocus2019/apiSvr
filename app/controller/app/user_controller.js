@@ -669,6 +669,44 @@ class UserController extends Controller {
 
     return ctx.ret
   }
+
+  /**
+   * 发票信息
+   * @param {*} ctx 
+   */
+  async invoiceInfo(ctx) {
+    let userId = ctx.body.user_id
+    if (!userId) {
+      ctx.ret.code = 1
+      return ctx.ret
+    }
+
+    let userModel = new this.models.user_model
+    let info = await userModel.getUserInvoice(userId)
+
+    this.logger.info(ctx.uuid, 'info', info)
+    ctx.ret.data = info
+    return ctx.ret
+  }
+
+  /**
+   * 更新发票信息
+   * @param {*} ctx 
+   */
+  async invoiceUpdate(ctx) {
+    let userId = ctx.body.user_id
+    let body = ctx.body
+
+    this.logger.info(ctx.uuid, 'body', body)
+
+    let userModel = new this.models.user_model
+    let info = await userModel.getUserInvoice(userId)
+    let updateRet = await info.update(body)
+
+    ctx.ret.data = updateRet
+    return ctx.ret
+
+  }
 }
 
 module.exports = UserController

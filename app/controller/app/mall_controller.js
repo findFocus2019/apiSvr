@@ -4,11 +4,10 @@ const Op = require('sequelize').Op
 class MallController extends Controller {
 
   async _init_(ctx) {
-    if (ctx.token) {
-      let userModel = new this.models.user_model
-      await userModel.checkAuth(ctx)
-    }
+    let userModel = new this.models.user_model
+    await userModel.checkAuth(ctx)
 
+    console.log('ctx.body.user_id=============', ctx.body.user_id)
     if (!ctx.body.hasOwnProperty('user_id') || !ctx.body.user_id) {
       let unLimitRoutes = ['goodsList', 'goodsInfo', 'categorys']
       if (unLimitRoutes.indexOf(ctx.route.action) < 0) {
@@ -173,18 +172,20 @@ class MallController extends Controller {
 
     let userId = ctx.body.user_id
 
-    let items = ctx.body.items
-    let orderType = ctx.body.order_type || 1 // 1:自营 2:京东
-    let payType = ctx.body.pay_type || 1 // 1：Eka 2：账户余额 3：在线支付
+    // let items = ctx.body.items
+    // let orderType = ctx.body.order_type || 1 // 1:自营 2:京东
+
+    let orderDatas = ctx.body.orders
     let useScore = ctx.body.score || 0 // 是否使用积分
-    let ecardId = ctx.body.ecard_id || 0
     let address = ctx.body.address
     let invoice = ctx.body.invoice
     let remark = ctx.body.remark || ''
 
-    if (payType == 1 && ecardId == 0) {
-      this._fail(ctx, '请选择E卡')
-    }
+    // let payType = ctx.body.pay_type || 1 // 1：Eka 2：账户余额 3：在线支付
+    // let ecardId = ctx.body.ecard_id || 0
+    // if (payType == 1 && ecardId == 0) {
+    //   this._fail(ctx, '请选择E卡')
+    // }
 
     let mallModel = new this.models.mall_model
     let goodsModel = mallModel.goodsModel()
@@ -192,146 +193,167 @@ class MallController extends Controller {
     // let shareModel = new this.models.share_model
     // let postsModel = new this.models.posts_model
     let userInfo = await userModel.getInfoByUserId(userId)
+    let orderIds = []
 
     let t = await mallModel.getTrans()
     try {
 
-      let goodsIds = []
-      let goodsItems = []
-      let amount = 0 // 在线支付费用
-      let ecard = 0 // e卡支付费用
-      let balance = 0 // 余额支付费用
-      let score = 0
+      for (let index = 0; index < orderDatas.length; index++) {
+        let orderItem = orderDatas[index]
+        let items = orderItem.items
+        let orderType = orderItem.order_type || 1 // 1:自营 2:京东
 
-      let isVip = await userModel.isVip(userId)
+        let goodsIds = []
+        let goodsItems = []
+        let total = 0 // 订单金额
+        // let amount = 0 // 在线支付费用
+        // let ecard = 0 // e卡支付费用
+        // let balance = 0 // 余额支付费用
+        let score = 0 // 积分金额
 
-      for (let index = 0; index < items.length; index++) {
-        let item = items[index]
-        let num = item.num
-        let goods = await goodsModel.findByPk(item.goods_id)
-        let goodsFee = isVip ? goods.price_vip : goods.price_sell
-        let scoreItem = isVip ? goods.price_score_vip : goods.price_score_sell
+        let isVip = await userModel.isVip(userId)
 
-        let numRabate = 0 // 利润
-        if (isVip) {
-          numRabate = (goodsFee - goods.price_cost) * goods.rabate_rate_vip / 100
-        } else {
-          numRabate = (goodsFee - goods.price_cost) * goods.rabate_rate / 100
-        }
-        item.num_rabate = numRabate
-
-        // 判断库存
-        if (num > goods.stock && goods.stock != -1) {
-          throw new Error(`${item.title}库存不足`)
-        } else {
-          // 更新库存
-          goods.stock = goods.stock - num
-          let stockRet = await goods.save({
-            transaction: t
-          })
-          if (!stockRet) {
-            throw new Error(`${item.title}库存更新失败`)
+        for (let index = 0; index < items.length; index++) {
+          let item = items[index]
+          this.logger.info(ctx.uuid, 'orderCreate() item', item)
+          let num = item.num
+          let totalFee = 0
+          let goods = await goodsModel.findByPk(item.id)
+          this.logger.info(ctx.uuid, 'orderCreate() goods', goods)
+          if (!goods || goods.status != 1) {
+            throw new Error(`${item.title}已下架`)
           }
-        }
 
-        // 计算费用
-        score += scoreItem // TODO 讲价
-        if (!useScore) {
-          goodsFee = goodsFee * 1 + scoreItem / 1000
-        }
-        if (payType == 1) {
-          ecard += goodsFee
-        } else if (payType == 2) {
-          balance += goodsFee
-        } else if (payType == 3) {
-          amount += goodsFee
-        }
-
-        item.num_rabate = goodsFee - (useScore ? (scoreItem / 1000) : 0) * 1
-
-        goodsIds.push(item.goods_id)
-        goodsItems.push(item)
-
-      }
-
-      if (payType == 1) {
-        let userEcard = await userModel.ecardModel().findByPk(ecardId)
-        if (userEcard.amount < ecard) {
-          // 费用不够，收益补上
-          balance = ecard - userEcard.amount
-
-          // 收益不够，支付补
-          if (balance > userInfo.balance) {
-            amount = ecard - userEcard.amount
-            balance = 0
+          // 判断库存
+          if (num > goods.stock && goods.stock != -1) {
+            throw new Error(`${item.title}库存不足`)
+          } else {
+            // 更新库存
+            goods.stock = goods.stock - num
+            let stockRet = await goods.save({
+              transaction: t
+            })
+            if (!stockRet) {
+              throw new Error(`${item.title}库存更新失败`)
+            }
           }
+
+          // 计算费用
+          let goodsFee = isVip ? goods.price_vip : goods.price_sell
+          let scoreItem = isVip ? goods.price_score_vip : goods.price_score_sell
+
+          let numRabate = 0 // 利润
+          if (isVip) {
+            numRabate = (goodsFee - goods.price_cost) * goods.rabate_rate_vip / 100
+          } else {
+            numRabate = (goodsFee - goods.price_cost) * goods.rabate_rate / 100
+          }
+          item.num_rabate = numRabate
+
+          // 计算费用
+          if (!useScore) {
+            // 使用积分
+            totalFee = goodsFee * num + scoreItem / 1000 * num
+          } else {
+            // 不使用积分
+            score += scoreItem //
+            totalFee = goodsFee * num
+          }
+          total += totalFee
+
+          // if (!useScore) {
+          //   goodsFee = goodsFee * 1 + scoreItem / 1000
+          // }
+          // if (payType == 1) {
+          //   ecard += goodsFee
+          // } else if (payType == 2) {
+          //   balance += goodsFee
+          // } else if (payType == 3) {
+          //   amount += goodsFee
+          // }
+
+          goodsIds.push(item.id)
+          goodsItems.push(item)
+
         }
 
-        // 减去ecard金额
-        // userEcard.amount = (userEcard.amount < ecard) ? 0 : (userEcard.amount - ecard)
-        // let userEcardRet = await userEcard.save({
-        //   transaction: t
-        // })
-        // if (!userEcardRet) {
-        //   throw new Error('记录ecard使用失败')
+        // 判断积分是否足够
+        if (score > userInfo.score) {
+          throw new Error('积分不足')
+        }
+
+        // if (payType == 1) {
+        //   let userEcard = await userModel.ecardModel().findByPk(ecardId)
+        //   if (userEcard.amount < ecard) {
+        //     // 费用不够，收益补上
+        //     balance = ecard - userEcard.amount
+
+        //     // 收益不够，支付补
+        //     if (balance > userInfo.balance) {
+        //       amount = ecard - userEcard.amount
+        //       balance = 0
+        //     }
+        //   }
+
+
+
+
+        // } else if (payType == 2) {
+        //   if (balance > userInfo.balance) {
+        //     throw new Error('账户余额不足，请换其他支付方式')
+        //   }
         // }
 
+        // 减去积分和收益
+        // userInfo.score = userInfo.score - score
+        // userInfo.balance = userInfo.balance - balance
+        // let userInfoUpdateRet = await userInfo.save({
+        //   transaction: t
+        // })
+        // if (!userInfoUpdateRet) {
+        //   throw new Error('更新用户积分余额失败')
+        // }
 
-      } else if (payType == 2) {
-        if (balance > userInfo.balance) {
-          throw new Error('账户余额不足，请换其他支付方式')
+        this.logger.info(ctx.uuid, 'orderCreate() goodsItems', goodsItems)
+        let orderData = {
+          user_id: userId,
+          goods_ids: '-' + goodsIds.join('-') + '-',
+          order_type: orderType,
+          goods_items: goodsItems,
+          // pay_type: payType,
+          // amount: amount,
+          // balance: balance,
+          // ecard: ecard,
+          // ecard_id: ecardId,
+          total: total,
+          score: score,
+          address: address,
+          invoice: invoice,
+          remark: remark,
+          vip: isVip
         }
+
+        orderData.order_no = this._createOrderNo(ctx)
+        orderData.status = 0
+        let order = await mallModel.orderModel().create(orderData, {
+          transaction: t
+        })
+        if (!order) {
+          throw new Error('创建订单失败')
+        }
+
+        // 生成goodsItems
+        orderData.id = order.id
+        let orderItemsRet = await this._creareOrderItems(ctx, orderData, t)
+        if (orderItemsRet.code !== 0) {
+          throw new Error(orderItemsRet.message)
+        }
+
+        orderIds.push(order.id)
       }
 
-      // 判断积分是否足够
-      if (score > userInfo.score) {
-        throw new Error('积分不足')
-      }
-
-      // 减去积分和收益
-      // userInfo.score = userInfo.score - score
-      // userInfo.balance = userInfo.balance - balance
-      // let userInfoUpdateRet = await userInfo.save({
-      //   transaction: t
-      // })
-      // if (!userInfoUpdateRet) {
-      //   throw new Error('更新用户积分余额失败')
-      // }
-
-      let orderData = {
-        user_id: userId,
-        goods_ids: '-' + goodsIds.join('-') + '-',
-        // goodsItems: goodsItems,
-        pay_type: payType,
-        amount: amount,
-        balance: balance,
-        ecard: ecard,
-        score: score,
-        ecard_id: ecardId,
-        address: address,
-        invoice: invoice,
-        remark: remark,
-        order_type: orderType,
-        is_vip: isVip
-      }
-
-      orderData.order_no = this._createOrderNo(ctx)
-      orderData.status = (amount == 0) ? 1 : 0 // 不用在线支付的默认支付成功
-      let order = await mallModel.orderModel().create(orderData, {
-        transaction: t
-      })
-      if (!order) {
-        throw new Error('创建订单失败')
-      }
-
-      // 就不在这里计算返利了
-      // 生成goodsItems
-      this._creareOrderItems(ctx, order.id, t)
-
-
-      if (amount == 0) {
-        // 直接支付成功了
-        // ctx.ret.code = 2
+      ctx.ret.data = {
+        ids: orderIds
       }
 
       t.commit()
@@ -359,10 +381,11 @@ class MallController extends Controller {
    * @param {*} orderId 
    * @param {*} t 
    */
-  async _creareOrderItems(ctx, orderId, t = null) {
-    let mallModel = new this.models.mall_model
-
-    let order = await mallModel.orderModel().findByPk(orderId)
+  async _creareOrderItems(ctx, order, t = null) {
+    // let mallModel = new this.models.mall_model
+    // this.logger.info(ctx.uuid, '_creareOrderItems orderId', orderId)
+    // let order = await mallModel.orderModel().findByPk(orderId)
+    // this.logger.info(ctx.uuid, '_creareOrderItems order', order)
     let items = order.goods_items
 
     try {
@@ -425,21 +448,22 @@ class MallController extends Controller {
       }
     }
 
-    let shareId = item.share_id
-    let share = await shareModel.model().findByPk(shareId)
-    shareUserId = share.user_id
-
-    if (share.post_id) {
-      let post = await postsModel.model().findByPk(share.post_id)
-      // if (post.user_id != shareUserId) {
-      //   postUserId = post.user_id
-      // }
-      postUserId = post.user_id
+    let shareId = item.share_id || 0
+    if (shareId) {
+      let share = await shareModel.model().findByPk(shareId)
+      shareUserId = share ? share.user_id : 0
+      let sharePostId = share ? share.post_id : 0
+      if (sharePostId) {
+        let post = await postsModel.model().findByPk(share.post_id)
+        postUserId = post ? post.user_id : 0
+      }
     }
 
-    let postId = item.post_id
-    let post = await postsModel.model().findByPk(postId)
-    postUserId = post.user_id
+    let postId = item.post_id || 0
+    if (postId) {
+      let post = await postsModel.model().findByPk(postId)
+      postUserId = post ? post.user_id : 0
+    }
 
     let numRabate = item.num_rabate
     if (!shareUserId && !postUserId) {
@@ -477,7 +501,7 @@ class MallController extends Controller {
     if (t) {
       opts.transaction = t
     }
-    let orderItem = await orderItemModel.create({
+    let data = {
       user_id: userId,
       order_id: order.id,
       goods_id: item.goods_id,
@@ -485,7 +509,9 @@ class MallController extends Controller {
       num_rabate_share: numRabateShare,
       num_rabate_post: numRabatePost,
       num_rabate_invite: numRabateInvite
-    }, opts)
+    }
+    this.logger.info(ctx.uuid, '_creareOrderItem', data)
+    let orderItem = await orderItemModel.create(data, opts)
 
     if (!orderItem) {
       ctx.ret.code = 1

@@ -7,47 +7,53 @@ const {
   userApply,
   userAddress,
   userDailySign,
-  userEcard
+  userEcard,
+  userInvoice
 } = require('./../../config/models')
 const uuid = require('uuid')
 
 class UserModel extends Model {
 
   model() {
-    return this.db().define('user', user()[0], user[1])
+    return this.db().define('user', user()[0], user()[1])
   }
 
   oAuthModel() {
-    return this.db().define('oauth', oAuth()[0], oAuth[1])
+    return this.db().define('oauth', oAuth()[0], oAuth()[1])
   }
 
   infoModel() {
-    return this.db().define('user_info', userInfo()[0], userInfo[1])
+    return this.db().define('user_info', userInfo()[0], userInfo()[1])
   }
 
   authModel() {
-    return this.db().define('user_auth', userAuth()[0], userAuth[1])
+    return this.db().define('user_auth', userAuth()[0], userAuth()[1])
   }
 
   applyModel() {
-    return this.db().define('user_apply', userApply()[0], userApply[1])
+    return this.db().define('user_apply', userApply()[0], userApply()[1])
   }
 
   addressModel() {
-    return this.db().define('user_address', userAddress()[0], userAddress[1])
+    return this.db().define('user_address', userAddress()[0], userAddress()[1])
+  }
+
+  invoiceModel() {
+    return this.db().define('user_invoice', userInvoice()[0], userInvoice()[1])
   }
 
   dailySignModel() {
-    return this.db().define('user_daily_sign', userDailySign()[0], userDailySign[1])
+    return this.db().define('user_daily_sign', userDailySign()[0], userDailySign()[1])
   }
 
   ecardModel() {
-    return this.db().define('user_ecard', userEcard()[0], userEcard[1])
+    return this.db().define('user_ecard', userEcard()[0], userEcard()[1])
   }
 
   async checkAuth(ctx) {
 
     let token = ctx.query.token || ctx.body.token || ''
+    console.log(ctx.uuid, 'UserController._init_ token ', token)
     if (!token) {
       ctx.ret.code = -101
       ctx.ret.message = 'token err'
@@ -60,7 +66,7 @@ class UserModel extends Model {
         token: token
       }
     })
-    // console.info(ctx.uuid, 'UserController._init_ user ', userAuth)
+    console.log(ctx.uuid, 'UserController._init_ user ', userAuth)
     if (!userAuth) {
       ctx.ret.code = -100
       ctx.ret.message = 'token check fail'
@@ -110,7 +116,7 @@ class UserModel extends Model {
    * @param {*} auth 
    */
   async authLogin(auth) {
-    console.log(JSON.stringify(auth))
+    // console.log(JSON.stringify(auth))
     auth.token = uuid.v4()
 
     let userAuth = await this.authModel().findOne({
@@ -202,6 +208,25 @@ class UserModel extends Model {
     } else {
       return false
     }
+  }
+
+  /**
+   * 获取用户发票信息
+   * @param {*} userId 
+   */
+  async getUserInvoice(userId) {
+    let userInvoice = await this.invoiceModel().findOne({
+      where: {
+        user_id: userId
+      }
+    })
+    if (!userInvoice) {
+      userInvoice = await this.invoiceModel().create({
+        user_id: userId
+      })
+    }
+    return userInvoice
+
   }
 
 }

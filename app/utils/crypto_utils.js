@@ -16,9 +16,9 @@ class CryptUtils {
    * @param {*} key 
    */
   hmacMd5Obj(obj = {}, key) {
-    console.log('hmacObj', obj)
+    // console.log('hmacObj', obj)
     let sortStr = this.objSortToBase64(obj)
-    console.log('base64SortStr:', sortStr)
+    // console.log('base64SortStr:', sortStr)
     let hash = crypto.createHmac('sha256', key)
     hash.update(sortStr)
     let signStr = hash.digest('hex')
