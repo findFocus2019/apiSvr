@@ -193,6 +193,7 @@ class MallController extends Controller {
     // let shareModel = new this.models.share_model
     // let postsModel = new this.models.posts_model
     let userInfo = await userModel.getInfoByUserId(userId)
+    let isVip = await userModel.isVip(userId)
     let orderIds = []
 
     let t = await mallModel.getTrans()
@@ -206,18 +207,18 @@ class MallController extends Controller {
         let goodsIds = []
         let goodsItems = []
         let total = 0 // 订单金额
+        let totalVip = 0
         // let amount = 0 // 在线支付费用
         // let ecard = 0 // e卡支付费用
         // let balance = 0 // 余额支付费用
         let score = 0 // 积分金额
-
-        let isVip = await userModel.isVip(userId)
+        let scoreVip = 0
 
         for (let index = 0; index < items.length; index++) {
           let item = items[index]
           this.logger.info(ctx.uuid, 'orderCreate() item', item)
           let num = item.num
-          let totalFee = 0
+          // let totalFee = 0
           let goods = await goodsModel.findByPk(item.id)
           this.logger.info(ctx.uuid, 'orderCreate() goods', goods)
           if (!goods || goods.status != 1) {
@@ -238,28 +239,33 @@ class MallController extends Controller {
             }
           }
 
-          // 计算费用
-          let goodsFee = isVip ? goods.price_vip : goods.price_sell
-          let scoreItem = isVip ? goods.price_score_vip : goods.price_score_sell
+          total += goods.price_sell * num
+          totalVip += goods.price_vip * num
+          score += goods.price_score_sell / 1000 * num
+          scoreVip += goods.price_score_vip / 1000 * num
 
-          let numRabate = 0 // 利润
-          if (isVip) {
-            numRabate = (goodsFee - goods.price_cost) * goods.rabate_rate_vip / 100
-          } else {
-            numRabate = (goodsFee - goods.price_cost) * goods.rabate_rate / 100
-          }
-          item.num_rabate = numRabate
+          // 计算返利费用
+          // let goodsFee = isVip ? goods.price_vip : goods.price_sell
+          // let scoreItem = isVip ? goods.price_score_vip : goods.price_score_sell
+
+          // let numRabate = 0 // 利润
+          // if (isVip) {
+          //   numRabate = (goodsFee - goods.price_cost) * goods.rabate_rate_vip / 100
+          // } else {
+          //   numRabate = (goodsFee - goods.price_cost) * goods.rabate_rate / 100
+          // }
+          // item.num_rabate = numRabate
 
           // 计算费用
-          if (!useScore) {
-            // 使用积分
-            totalFee = goodsFee * num + scoreItem / 1000 * num
-          } else {
-            // 不使用积分
-            score += scoreItem //
-            totalFee = goodsFee * num
-          }
-          total += totalFee
+          // if (!useScore) {
+          //   // 使用积分
+          //   totalFee = goodsFee * num + scoreItem / 1000 * num
+          // } else {
+          //   // 不使用积分
+          //   score += scoreItem //
+          //   totalFee = goodsFee * num
+          // }
+          // total += totalFee
 
           // if (!useScore) {
           //   goodsFee = goodsFee * 1 + scoreItem / 1000
@@ -326,11 +332,15 @@ class MallController extends Controller {
           // ecard: ecard,
           // ecard_id: ecardId,
           total: total,
+          total_vip: totalVip,
           score: score,
+          score_vip: scoreVip,
           address: address,
           invoice: invoice,
           remark: remark,
-          vip: isVip
+          vip: isVip,
+          score_use: useScore
+
         }
 
         orderData.order_no = this._createOrderNo(ctx)
@@ -343,11 +353,11 @@ class MallController extends Controller {
         }
 
         // 生成goodsItems
-        orderData.id = order.id
-        let orderItemsRet = await this._creareOrderItems(ctx, orderData, t)
-        if (orderItemsRet.code !== 0) {
-          throw new Error(orderItemsRet.message)
-        }
+        // orderData.id = order.id
+        // let orderItemsRet = await this._creareOrderItems(ctx, orderData, t)
+        // if (orderItemsRet.code !== 0) {
+        //   throw new Error(orderItemsRet.message)
+        // }
 
         orderIds.push(order.id)
       }
@@ -532,7 +542,25 @@ class MallController extends Controller {
   /**
    * 第三方支付下单
    */
-  async orderPayPre() {
+  async orderPayPre(ctx) {
+
+    let userId = ctx.body.user_id
+    let orderIds = ctx.body.order_ids
+    let payType = ctx.body.pay_type
+    let payMethod = ctx.body.pay_method
+
+    // ecard支付，余额支付必须使用密码
+    let password = ctx.body.password || ''
+
+
+    ctx.ret.data = {
+      pay_type: 1,
+      info: {
+        // 第三方下单数据
+      }
+    }
+
+    return ctx.ret
 
   }
 

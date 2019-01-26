@@ -422,10 +422,13 @@ module.exports = {
       goods_ids: FIELDS.stringLen(512),
       goods_items: FIELDS.jsonArr('goods_items'),
       total: FIELDS.money('total'),
+      total_vip: FIELDS.money('total_vip'),
       score: FIELDS.defaultInt(),
+      score_vip: FIELDS.defaultInt(),
       address: FIELDS.jsonObj('address'),
       invoice: FIELDS.jsonObj('invoice'),
       vip: FIELDS.tinyInt(),
+      score_use: FIELDS.tinyInt(),
       rabate: FIELDS.tinyInt()
     }, {
       ...commonOpts,
