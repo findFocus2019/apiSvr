@@ -1,4 +1,4 @@
-const Controller = require('./../../../lib/controller')
+const Controller = require('../../../lib/controller')
 const Op = require('sequelize').Op
 
 class AlbumController extends Controller {
