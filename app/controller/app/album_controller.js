@@ -1,4 +1,5 @@
 const Controller = require('./../../../lib/controller')
+const Op = require('sequelize').Op
 
 class AlbumController extends Controller {
   constructor(ctx) {
@@ -21,11 +22,8 @@ class AlbumController extends Controller {
 
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
-    let timestamp = ctx.body.timestamp
     let where = {}
-    where.update_time = {
-      [Op.lte]: timestamp
-    }
+  
     let fields = ['status', 'type', 'sort', 'type_id']
     fields.map(field => {
       if (ctx.body[fields] && ctx.body[fields] != "") {
@@ -36,8 +34,8 @@ class AlbumController extends Controller {
 
     this.logger.info(ctx.uuid, 'AlbumController list()', 'where', where)
 
-    let postsModel = new this.models.posts_model
-    let queryRet = await postsModel.model().findAndCountAll({
+    let albumModel = new this.models.album_model
+    let queryRet = await albumModel.model().findAndCountAll({
       where: where,
       offset: (page - 1) * limit,
       limit: limit,
@@ -47,21 +45,11 @@ class AlbumController extends Controller {
       attributes: this.config.postListAttributes
     })
 
-    let whereNew = where
-    whereNew.update_time = {
-      [Op.gt]: timestamp
-    }
-    this.logger.info(ctx.uuid, 'list()', 'whereNew', whereNew)
-    let newCount = await postsModel.model().count({
-      where: where
-    })
-
     ctx.ret.data = {
       rows: queryRet.rows || [],
       count: queryRet.count || 0,
       page: page,
-      limit: limit,
-      newCount: newCount
+      limit: limit
     }
     this.logger.info(ctx.uuid, 'AlbumController list()', 'ret', ctx.ret)
 
@@ -70,3 +58,4 @@ class AlbumController extends Controller {
 }
 
 module.exports = AlbumController
+

@@ -10,4 +10,4 @@ class AlbumModel extends Model{
 
 }
 
-module.exports = new AlbumModel()
+module.exports = AlbumModel
