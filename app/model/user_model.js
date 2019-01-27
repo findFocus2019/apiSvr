@@ -229,6 +229,35 @@ class UserModel extends Model {
 
   }
 
+  async ecardUse(ctx, userId, ecardId, amount, t = null) {
+    let ecard = await this.ecardModel().findOne({
+      where: {
+        id: ecardId,
+        user_id: userEcard
+      }
+    })
+    if (!ecard && ecard.amount <= 0 && ecard.status != 1) {
+      return false
+    }
+
+    if (ecard.amount < amount) {
+      return false
+    }
+
+    ecard.amount = ecard.amount - amount
+    ecard.status = ecard.amount <= 0 ? 0 : 1
+
+    let opt = {}
+    if (t) opt.transaction = t
+    let update = await ecard.save(opt)
+
+    if (update) {
+      return true
+    } else {
+      return false
+    }
+  }
+
 }
 
 module.exports = UserModel

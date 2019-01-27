@@ -172,31 +172,21 @@ class MallController extends Controller {
 
     let userId = ctx.body.user_id
 
-    // let items = ctx.body.items
-    // let orderType = ctx.body.order_type || 1 // 1:自营 2:京东
-
     let orderDatas = ctx.body.orders
     let useScore = ctx.body.score || 0 // 是否使用积分
     let address = ctx.body.address
     let invoice = ctx.body.invoice
     let remark = ctx.body.remark || ''
 
-    // let payType = ctx.body.pay_type || 1 // 1：Eka 2：账户余额 3：在线支付
-    // let ecardId = ctx.body.ecard_id || 0
-    // if (payType == 1 && ecardId == 0) {
-    //   this._fail(ctx, '请选择E卡')
-    // }
-
     let mallModel = new this.models.mall_model
     let goodsModel = mallModel.goodsModel()
     let userModel = new this.models.user_model
-    // let shareModel = new this.models.share_model
-    // let postsModel = new this.models.posts_model
     let userInfo = await userModel.getInfoByUserId(userId)
 
     // 是否是vip不信任前端传递
     let isVip = await userModel.isVip(userId)
     let orderIds = []
+    let totals = 0
 
     let t = await mallModel.getTrans()
     try {
@@ -210,9 +200,6 @@ class MallController extends Controller {
         let goodsItems = []
         let total = 0 // 订单金额
         let totalVip = 0
-        // let amount = 0 // 在线支付费用
-        // let ecard = 0 // e卡支付费用
-        // let balance = 0 // 余额支付费用
         let score = 0 // 积分金额
         let scoreVip = 0
 
@@ -243,84 +230,19 @@ class MallController extends Controller {
 
           total += goods.price_sell * num
           totalVip += goods.price_vip * num
-          score += goods.price_score_sell / 1000 * num
-          scoreVip += goods.price_score_vip / 1000 * num
-
-          // 计算返利费用
-          // let goodsFee = isVip ? goods.price_vip : goods.price_sell
-          // let scoreItem = isVip ? goods.price_score_vip : goods.price_score_sell
-
-          // let numRabate = 0 // 利润
-          // if (isVip) {
-          //   numRabate = (goodsFee - goods.price_cost) * goods.rabate_rate_vip / 100
-          // } else {
-          //   numRabate = (goodsFee - goods.price_cost) * goods.rabate_rate / 100
-          // }
-          // item.num_rabate = numRabate
-
-          // 计算费用
-          // if (!useScore) {
-          //   // 使用积分
-          //   totalFee = goodsFee * num + scoreItem / 1000 * num
-          // } else {
-          //   // 不使用积分
-          //   score += scoreItem //
-          //   totalFee = goodsFee * num
-          // }
-          // total += totalFee
-
-          // if (!useScore) {
-          //   goodsFee = goodsFee * 1 + scoreItem / 1000
-          // }
-          // if (payType == 1) {
-          //   ecard += goodsFee
-          // } else if (payType == 2) {
-          //   balance += goodsFee
-          // } else if (payType == 3) {
-          //   amount += goodsFee
-          // }
+          score += goods.price_score_sell * num
+          scoreVip += goods.price_score_vip * num
 
           goodsIds.push(item.id)
           goodsItems.push(item)
 
         }
 
-        // 判断积分是否足够
-        if (score > userInfo.score) {
+        // 
+        let scoreCost = isVip ? scoreVip : score
+        if (scoreCost > userInfo.score) {
           throw new Error('积分不足')
         }
-
-        // if (payType == 1) {
-        //   let userEcard = await userModel.ecardModel().findByPk(ecardId)
-        //   if (userEcard.amount < ecard) {
-        //     // 费用不够，收益补上
-        //     balance = ecard - userEcard.amount
-
-        //     // 收益不够，支付补
-        //     if (balance > userInfo.balance) {
-        //       amount = ecard - userEcard.amount
-        //       balance = 0
-        //     }
-        //   }
-
-
-
-
-        // } else if (payType == 2) {
-        //   if (balance > userInfo.balance) {
-        //     throw new Error('账户余额不足，请换其他支付方式')
-        //   }
-        // }
-
-        // 减去积分和收益
-        // userInfo.score = userInfo.score - score
-        // userInfo.balance = userInfo.balance - balance
-        // let userInfoUpdateRet = await userInfo.save({
-        //   transaction: t
-        // })
-        // if (!userInfoUpdateRet) {
-        //   throw new Error('更新用户积分余额失败')
-        // }
 
         this.logger.info(ctx.uuid, 'orderCreate() goodsItems', goodsItems)
         let orderData = {
@@ -328,11 +250,6 @@ class MallController extends Controller {
           goods_ids: '-' + goodsIds.join('-') + '-',
           order_type: orderType,
           goods_items: goodsItems,
-          // pay_type: payType,
-          // amount: amount,
-          // balance: balance,
-          // ecard: ecard,
-          // ecard_id: ecardId,
           total: total,
           total_vip: totalVip,
           score: score,
@@ -341,8 +258,7 @@ class MallController extends Controller {
           invoice: invoice,
           remark: remark,
           vip: isVip,
-          score_use: useScore
-
+          score_use: useScore ? 1 : 0
         }
 
         orderData.order_no = this._createOrderNo(ctx)
@@ -354,18 +270,13 @@ class MallController extends Controller {
           throw new Error('创建订单失败')
         }
 
-        // 生成goodsItems
-        // orderData.id = order.id
-        // let orderItemsRet = await this._creareOrderItems(ctx, orderData, t)
-        // if (orderItemsRet.code !== 0) {
-        //   throw new Error(orderItemsRet.message)
-        // }
-
         orderIds.push(order.id)
+        totals += isVip ? (useScore ? totalVip : totalVip + scoreVip) : (useScore ? total : total + score)
       }
 
       ctx.ret.data = {
-        ids: orderIds
+        ids: orderIds,
+        totals: totals
       }
 
       t.commit()
@@ -444,6 +355,8 @@ class MallController extends Controller {
     let orderItemModel = mallModel.orderItemModel()
     let user = await userModel.model().findByPk(userId)
 
+    let numRabate = order.vip ? item.price_vip - item.price_cost : item.price_sell - item.price_cost
+
     // 记录返利
     let inviteUserId = 0
     let shareUserId = 0
@@ -477,7 +390,6 @@ class MallController extends Controller {
       postUserId = post ? post.user_id : 0
     }
 
-    let numRabate = item.num_rabate
     if (!shareUserId && !postUserId) {
       // 商城直接购买
       if (inviteUserId) {
@@ -541,25 +453,147 @@ class MallController extends Controller {
 
   }
 
+  async _payThirdUnifiedorder(ctx) {
+
+    // TODO
+    ctx.ret.data = {
+      info: {}
+    }
+    return ctx.ret
+  }
   /**
-   * 第三方支付下单
+   * 支付下单
    */
   async orderPayPre(ctx) {
 
+    this.logger.info(ctx.uuid, 'orderPayPre() body', ctx.body)
     let userId = ctx.body.user_id
     let orderIds = ctx.body.order_ids
-    let payType = ctx.body.pay_type
     let payMethod = ctx.body.pay_method
+    let payType = ctx.body.pay_type || 1 // 1：Eka 2：账户余额 3：在线支付
 
-    // ecard支付，余额支付必须使用密码
-    let password = ctx.body.password || ''
+    if (!orderIds.length) {
+      return this._fail(ctx, '订单错误')
+    }
 
+    let ecardId = ctx.body.ecard_id || 0
+    if (payType == 1 && ecardId == 0) {
+      return this._fail(ctx, '请选择代金券')
+    }
 
-    ctx.ret.data = {
-      pay_type: 1,
-      info: {
-        // 第三方下单数据
+    let userModel = new this.models.user_model
+    let mallModel = new this.models.mall_model
+    let orderModel = mallModel.orderModel()
+    let paymentModel = mallModel.paymentModel()
+
+    let t = await mallModel.getTrans()
+    try {
+
+      let isVip = await userModel.isVip(userId)
+      let userInfo = await userModel.getInfoByUserId(userId)
+      let userBalance = userInfo.balance
+
+      let total = 0 // 总金额
+      let scoreNum = 0
+      for (let index = 0; index < orderIds.length; index++) {
+        let orderId = orderIds[index]
+        let order = await orderModel.findByPk(orderId)
+
+        // 
+        if (order.status != 0) {
+          throw new Error('订单已支付')
+        }
+
+        let scoreUse = order.score_use
+
+        let totalFee = isVip ? order.total_vip : order.total
+        let score = isVip ? order.score_vip : order.score
+
+        total += scoreUse ? totalFee : totalFee + score
+        scoreNum += scoreUse ? score * 1000 : 0
       }
+
+      let amount = 0
+      let balance = 0
+      let ecard = 0
+      let info = {}
+      let paymentUuid = this.utils.uuid_utils.v4()
+
+      if (payType == 1) {
+        // ecard
+        let userEcard = await userModel.ecardModel().findByPk(ecardId)
+        if (userEcard.amount < total) {
+          // 用余额补
+          if (payMethod == 'ecard') {
+            throw new Error('请选择代金券补齐方式')
+          }
+
+          if (payMethod == 'balance') {
+            balance = total - userEcard.amount
+            if (balance > userBalance) {
+              throw new Error('账户余额不足')
+            }
+          } else if (payMethod == 'wx' || payMethod == 'alipay') {
+            amount = total - userEcard.amount
+          }
+
+          ecard = userEcard.amount
+        }
+      } else if (payType == 2) {
+        // 余额支付
+        balance = total
+        if (balance > userBalance) {
+          throw new Error('账户余额不足')
+        }
+      } else if (payType == 3) {
+        amount = total
+      }
+
+      if (amount > 0) {
+        // 去3方支付下单
+        let payThirdRet = await this._payThirdUnifiedorder(ctx, payMethod, paymentUuid)
+        if (payThirdRet.code != 0) {
+          throw new Error(payThirdRet.message)
+        }
+
+        info = payThirdRet.data.info
+      }
+
+      // 生成payment
+      let payment = await paymentModel.create({
+        user_id: userId,
+        order_ids: '-' + orderIds.join('-') + '-',
+        pay_type: payType,
+        pay_method: payMethod,
+        amount: amount,
+        balance: balance,
+        ecard: ecard,
+        ecard_id: ecardId,
+        score: scoreNum,
+        info: info,
+        uuid: paymentUuid
+      })
+
+      if (!payment) {
+        throw new Error('生成支付记录失败')
+      }
+
+      ctx.ret.data = {
+        id: payment.id,
+        uuid: payment.uuid,
+        type: payType,
+        method: payMethod,
+        info: info, // 第三方下单数据
+        amount: amount
+
+      }
+
+      t.commit()
+
+    } catch (err) {
+
+      t.rollback()
+      return this._fail(ctx, err.message)
     }
 
     return ctx.ret
@@ -571,21 +605,84 @@ class MallController extends Controller {
    */
   async orderPayConfirm(ctx) {
 
-    let body = ctx.body
-    let orderId = body.order_id
+    let userId = ctx.body.user_id
+    let paymentId = ctx.body.payment_id
+
+    // ecard支付，余额支付必须使用密码
+    let password = ctx.body.password || ''
 
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
+    let paymentModel = mallModel.paymentModel()
+    // let orderItemsModel = mallModel.orderItemModel()
+    let userModel = new this.models.user_model
 
     let t = await mallModel.getTrans()
 
     try {
 
-      let order = await orderModel.findByPk(orderId)
-      let items = order.goods_items
-      let rabateRet = await this._rabate(ctx, items, t)
-      if (rabateRet.code != 0) {
-        throw new Error(rabateRet.message)
+      let payment = await paymentModel.findByPk(paymentId)
+
+      let payType = payment.pay_type
+      let payMethod = payment.pay_method
+
+      // 验证密码
+      if ([1, 2].indexOf(payType) > -1 && ['wx', 'alipay'].indexOf(payMethod) < 0) {
+        // 使用e卡或者余额支付，不用在线支付补，要验证密码
+        let user = await userModel.model().findByPk(userId)
+        let userTradePassword = user.password_trade
+        if (!userTradePassword) {
+          throw new Error('请先设置支付密码')
+        }
+
+        password = this.utils.crypto_utils.hmacMd5(password)
+        if (password != userTradePassword) {
+          throw new Error('请输入正确的支付密码')
+        }
+      }
+
+      if (payment.balance) {
+        // 更新用户信息
+        let userInfo = await userModel.getInfoByUserId(userId)
+        userInfo.balance = userInfo.balance - payment.balance
+        userInfo.score = userInfo.score - payment.score
+        let userInfoRet = await userInfo.save({
+          transaction: t
+        })
+        if (!userInfoRet) {
+          throw new Error('更新用户信息失败')
+        }
+
+      }
+
+      if (payment.ecard) {
+        let ecardId = payment.ecard_id
+        let userEcard = await userModel.ecardModel().findByPk(ecardId)
+        let amount = userEcard.amount - payment.ecard
+        userEcard.amount = amount
+        userEcard.status = amount ? 1 : 0
+        let userEcardRet = await userEcard.save({
+          transaction: t
+        })
+        if (!userEcardRet) {
+          throw new Error('更新用户e卡失败')
+        }
+      }
+
+
+      let orderIds = payment.order_ids.substr(1, payment.order_ids.length - 2).split('-')
+
+      for (let index = 0; index < orderIds.length; index++) {
+        const orderId = orderIds[index]
+
+        let order = await orderModel.findByPk(orderId)
+        // let items = order.goods_items
+        // 这里不计算返利，记录返利，7天后结算 TODO
+        let rabateRet = await this._creareOrderItems(ctx, order, t)
+        // let rabateRet = await this._rabate(ctx, items, t)
+        if (rabateRet.code != 0) {
+          throw new Error(rabateRet.message)
+        }
       }
 
       t.commit()
@@ -670,7 +767,7 @@ class MallController extends Controller {
 
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
-    let userModel = new this.models.user_model
+    // let userModel = new this.models.user_model
     let t = await mallModel.getTrans()
 
     try {
@@ -684,28 +781,8 @@ class MallController extends Controller {
         throw new Error('已支付订单无法取消')
       }
 
-      // 更新用户信息
-      let userInfo = await userModel.getInfoByUserId(userId)
-      userInfo.balance = userInfo.balance + order.balance
-      userInfo.score = userInfo.score + order.score
-      let userInfoRet = await userInfo.save({
-        transaction: t
-      })
-      if (!userInfoRet) {
-        throw new Error('更新用户信息失败')
-      }
 
-      let ecardId = order.ecard_id
-      let userEcard = await userModel.ecardModel().findByPk(ecardId)
-      userEcard.amount = userEcard.amount + order.ecard
-      let userEcardRet = await userEcard.save({
-        transaction: t
-      })
-      if (!userEcardRet) {
-        throw new Error('更新用户e卡失败')
-      }
       // 更新商品库存
-
       let items = order.goods_items
       for (let index = 0; index < items.length; index++) {
         let item = items[index]
@@ -719,6 +796,14 @@ class MallController extends Controller {
             throw new Error('更新商品库存失败')
           }
         }
+      }
+
+      order.status = -1
+      let updateRet = await order.save({
+        transaction: t
+      })
+      if (!updateRet) {
+        throw new Error('更新订单信息失败')
       }
 
       t.commit()

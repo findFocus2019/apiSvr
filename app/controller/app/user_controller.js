@@ -707,6 +707,29 @@ class UserController extends Controller {
     return ctx.ret
 
   }
+
+  async listEcard(ctx) {
+    let userId = ctx.body.user_id
+    let body = ctx.body
+
+    this.logger.info(ctx.uuid, 'body', body)
+
+    let userModel = new this.models.user_model
+    let list = await userModel.ecardModel().findAll({
+      where: {
+        user_id: userId
+      },
+      order: [
+        ['status', 'desc'],
+        ['create_time', 'desc']
+      ]
+    })
+
+    ctx.ret.data = {
+      list: list
+    }
+    return ctx.ret
+  }
 }
 
 module.exports = UserController

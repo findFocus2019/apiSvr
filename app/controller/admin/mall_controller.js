@@ -68,10 +68,21 @@ class MallController extends Controller {
     this.logger.info(ctx.uuid, 'goodsList()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
 
     let page = ctx.body.page || 1
-    let limit = ctx.body.limt || 10
+    let limit = ctx.body.limit || 10
     let offset = (page - 1) * limit
+    let search = ctx.body.search
 
     let where = {}
+    if (search) {
+      where.title = {
+        [Op.like]: '%' + search + '%'
+      }
+    }
+    if (search) {
+      where.title = {
+        [Op.like]: '%' + search + '%'
+      }
+    }
     let mallModel = new this.models.mall_model
     let queryRet = await mallModel.goodsModel().findAndCountAll({
       where: where,
@@ -120,6 +131,108 @@ class MallController extends Controller {
       info: goods
     }
     this.logger.info(ctx.uuid, 'goodsUpdate()', 'ret', ctx.ret)
+    return ctx.ret
+  }
+
+  async orderList(ctx) {
+    this.logger.info(ctx.uuid, 'orderList()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+    let offset = (page - 1) * limit
+    let search = ctx.body.search
+    let userId = ctx.body.user_id || 0
+    let status = ctx.body.status || ''
+
+    let where = {}
+    if (search) {
+      where.order_no = {
+        [Op.like]: '%' + search + '%'
+      }
+    }
+    if (userId) {
+      where.user_id = userId
+    }
+    if (status !== '') {
+      where.status = status
+    }
+    let mallModel = new this.models.mall_model
+    let orderModel = mallModel.orderModel()
+    let userInfoModel = (new this.models.user_model).infoModel()
+    orderModel.belongsTo(userInfoModel, {
+      targetKey: 'user_id',
+      foreignKey: 'user_id'
+    })
+
+    let queryRet = await orderModel.findAndCountAll({
+      where: where,
+      offset: offset,
+      limit: limit,
+      order: [
+        ['create_time', 'desc']
+      ],
+      attributes: {
+        exclude: ['update_time']
+      },
+      include: [{
+        model: userInfoModel,
+        attributes: ['id', 'nickname', 'mobile']
+      }]
+    })
+
+    ctx.ret.data = queryRet
+    this.logger.info(ctx.uuid, 'orderList()', 'ret', ctx.ret)
+    return ctx.ret
+  }
+
+  async paymentList(ctx) {
+    this.logger.info(ctx.uuid, 'paymentList()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+    let offset = (page - 1) * limit
+    let search = ctx.body.search
+    let userId = ctx.body.user_id || 0
+    let status = ctx.body.status || ''
+
+    let where = {}
+    if (search) {
+      // where.title = {
+      //   [Op.like]: '%' + search + '%'
+      // }
+    }
+    if (userId) {
+      where.user_id = userId
+    }
+    if (status !== '') {
+      where.status = status
+    }
+    let mallModel = new this.models.mall_model
+    let paymentModel = mallModel.paymentModel()
+    let userInfoModel = (new this.models.user_model).infoModel()
+    paymentModel.belongsTo(userInfoModel, {
+      targetKey: 'user_id',
+      foreignKey: 'user_id'
+    })
+
+    let queryRet = await paymentModel.findAndCountAll({
+      where: where,
+      offset: offset,
+      limit: limit,
+      order: [
+        ['create_time', 'desc']
+      ],
+      attributes: {
+        exclude: ['update_time', 'info']
+      },
+      include: [{
+        model: userInfoModel,
+        attributes: ['id', 'nickname', 'mobile']
+      }]
+    })
+
+    ctx.ret.data = queryRet
+    this.logger.info(ctx.uuid, 'paymentList()', 'ret', ctx.ret)
     return ctx.ret
   }
 }

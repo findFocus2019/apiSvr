@@ -229,7 +229,6 @@ module.exports = {
       ...commonFieldGet(),
       status: getStatusFields(1),
       user_id: FIELDS.bigInt(),
-      ecard_id: FIELDS.bigInt(),
       name: FIELDS.stringLen(64),
       price: FIELDS.money('price'),
       amount: FIELDS.money('amount')
@@ -423,8 +422,8 @@ module.exports = {
       goods_items: FIELDS.jsonArr('goods_items'),
       total: FIELDS.money('total'),
       total_vip: FIELDS.money('total_vip'),
-      score: FIELDS.defaultInt(),
-      score_vip: FIELDS.defaultInt(),
+      score: FIELDS.money('score'),
+      score_vip: FIELDS.money('score_vip'),
       address: FIELDS.jsonObj('address'),
       invoice: FIELDS.jsonObj('invoice'),
       vip: FIELDS.tinyInt(),
@@ -447,8 +446,9 @@ module.exports = {
       balance: FIELDS.money('balance'),
       ecard: FIELDS.money('ecard'),
       ecard_id: FIELDS.bigInt(),
-      content: FIELDS.jsonObj('content'),
-      uuid: FIELDS.uuid()
+      info: FIELDS.jsonObj('info'),
+      uuid: FIELDS.stringLen(64),
+      score: FIELDS.money('score')
     }, {
       ...commonOpts,
       tableName: 't_payment'
