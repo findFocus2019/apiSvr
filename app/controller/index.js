@@ -63,6 +63,7 @@ router.post('/:group/:module/:action', async (req, res) => {
     })
   }
 
+  console.log('content ========', content)
   // 主装上下文
   let ctx = {
     uuid: uuid || req.uuid || 'uuid',
@@ -70,7 +71,7 @@ router.post('/:group/:module/:action', async (req, res) => {
     query: content.query || {},
     body: content.body || {},
     session: content.session || {},
-    token: req.query.token || content.body.token || '',
+    token: content.query.token || content.body.token || '',
     ret: {
       code: 0,
       message: ''

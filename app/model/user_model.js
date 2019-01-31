@@ -66,11 +66,13 @@ class UserModel extends Model {
         token: token
       }
     })
-    console.log(ctx.uuid, 'UserController._init_ user ', userAuth)
+
     if (!userAuth) {
       ctx.ret.code = -100
       ctx.ret.message = 'token check fail'
       return ctx.ret
+    } else {
+      console.log(ctx.uuid, 'UserController._init_ user ', userAuth.token || null)
     }
 
     ctx.body.user_id = userAuth.user_id

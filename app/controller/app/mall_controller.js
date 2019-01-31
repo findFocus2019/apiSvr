@@ -4,11 +4,15 @@ const Op = require('sequelize').Op
 class MallController extends Controller {
 
   async _init_(ctx) {
-    let userModel = new this.models.user_model
-    await userModel.checkAuth(ctx)
+
+    console.log('ctx.body.token=============', ctx.token)
+    if (ctx.token) {
+      let userModel = new this.models.user_model
+      await userModel.checkAuth(ctx)
+    }
 
     console.log('ctx.body.user_id=============', ctx.body.user_id)
-    if (!ctx.body.hasOwnProperty('user_id') || !ctx.body.user_id) {
+    if (!ctx.body.user_id) {
       let unLimitRoutes = ['goodsList', 'goodsInfo', 'categorys']
       if (unLimitRoutes.indexOf(ctx.route.action) < 0) {
         ctx.ret.code = -100
@@ -53,6 +57,7 @@ class MallController extends Controller {
     }
 
     let where = {}
+    where.status = 1
     where.update_time = {
       [Op.lte]: timestamp
     }
