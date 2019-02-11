@@ -4,20 +4,39 @@ const Op = require('sequelize').Op
 class PostsController extends Controller {
 
   async _init_(ctx) {
-    this.logger.info(ctx.uuid, '_init_()', 'token', ctx.token)
-    if (ctx.token) {
-      let userModel = new this.models.user_model
-      await userModel.checkAuth(ctx)
+
+    let needCheckToken = true
+    let unLimitRoutes = ['list', 'commentList', 'channels', 'info']
+    if (unLimitRoutes.indexOf(ctx.route.action) > -1) {
+      needCheckToken = false
     }
 
-    if (!ctx.body.hasOwnProperty('user_id') || !ctx.body.user_id) {
-      let unLimitRoutes = ['list', 'commentList']
-      if (unLimitRoutes.indexOf(ctx.route.action) < 0) {
-        ctx.ret.code = -100
-        ctx.ret.message = '请先登录进行操作'
-        return ctx.ret
+    console.log('ctx.body.token=============', ctx.token)
+    if (needCheckToken) {
+      let userModel = new this.models.user_model
+      let checkRet = await userModel.checkAuth(ctx)
+      if (checkRet.code !== 0) {
+        return this._fail(ctx, checkRet.message)
       }
+    } else {
+      console.log(ctx.uuid, 'ctx.body.user_id=============', ctx.body.user_id)
     }
+
+  }
+
+
+  async channels(ctx) {
+
+    this.logger.info(ctx.uuid, 'channels()', 'body', ctx.body, 'query', ctx.query)
+    // let type = ctx.body.type || 1
+    // let postModel = new this.models.posts_model
+    // let channels = await postModel.channelByType(type)
+
+    let channels = this.config.postChannels
+
+    this.logger.info(ctx.uuid, 'channels()', 'channels', channels)
+    ctx.ret.data = channels
+    return ctx.ret
   }
 
   /**
@@ -31,18 +50,33 @@ class PostsController extends Controller {
     let limit = ctx.body.limit || 10
 
     let timestamp = ctx.body.timestamp
-    let type = ctx.body.type || 1 // 分类
+    let type = ctx.body.type || 0 // 分类
     let recommend = ctx.body.recommend || 0 // 推荐
+    let channel = ctx.body.channel || '' // 频道
+    let category = ctx.body.category || ''
+    if (channel == 'all') {
+      channel = ''
+    }
 
     let where = {}
-    where.update_time = {
+    where.status = 1
+    where.create_time = {
       [Op.lte]: timestamp
     }
-    where.type = type
+    if (type) {
+      where.type = type
+    }
 
     if (recommend) {
       where.recommend = recommend
-      where.type = 2
+      // where.type = 2
+    }
+    if (channel) {
+      where.channel = channel
+    }
+
+    if (category) {
+      where.category = category
     }
     this.logger.info(ctx.uuid, 'list()', 'where', where)
 
@@ -52,7 +86,8 @@ class PostsController extends Controller {
       offset: (page - 1) * limit,
       limit: limit,
       order: [
-        ['update_time', 'desc']
+        ['create_time', 'desc'],
+        ['id', 'desc']
       ],
       attributes: this.config.postListAttributes
     })
@@ -66,12 +101,32 @@ class PostsController extends Controller {
       where: where
     })
 
+    let rows = []
+    let userModel = new this.models.user_model
+    // let mallModel = new this.models.mall_model
+    // let goodsModel = mallModel.goodsModel()
+
+    for (let index = 0; index < queryRet.rows.length; index++) {
+
+      let row = queryRet.rows[index]
+      row.dataValues.publish_time = this.utils.date_utils.dateFormat(row.pub_date, 'YYYY-MM-DD HH:mm')
+
+      if (row.user_id) {
+        let userInfo = await userModel.getInfoByUserId(row.user_id)
+        row.dataValues.user_avatar = userInfo.avatar
+        row.dataValues.user_nickname = userInfo.nickname
+      }
+
+      rows.push(row)
+    }
+
     ctx.ret.data = {
-      rows: queryRet.rows || [],
+      rows: rows || [],
       count: queryRet.count || 0,
       page: page,
       limit: limit,
-      newCount: newCount
+      newCount: newCount,
+      timestamp: timestamp
     }
     this.logger.info(ctx.uuid, 'list()', 'ret', ctx.ret)
 
@@ -89,15 +144,17 @@ class PostsController extends Controller {
 
     let info = await postsModel.model().findOne({
       where: {
-        uuid: postId
+        id: postId
       }
     })
 
     // 更新阅读量
-    info.views = info.views++
+    let updateTime = info.update_time
+    info.views = info.views + 1
+    info.update_time = updateTime
     await info.save()
 
-    ctx.ret.data.info = info
+    // ctx.ret.data = info.dataValues
     this.logger.info(ctx.uuid, 'info()', 'info', info)
 
     // 用户登录后的数据
@@ -110,13 +167,26 @@ class PostsController extends Controller {
       let commentCount = await postsModel.commentModel().count({
         post_id: info.id
       })
-      ctx.ret.data.isLike = isLike ? 1 : 0
-      ctx.ret.data.commentCount = commentCount
+
+      let userModel = new this.models.user_model
+      let isColletion = await userModel.isCollectPost(userId, info.id)
+
+      info.dataValues.isLike = isLike ? 1 : 0
+      info.dataValues.isCollection = isColletion
+      info.dataValues.commentCount = commentCount
     } else {
-      ctx.ret.data.isLike = -1
-      ctx.ret.data.commentCount = -1
+      info.dataValues.isLike = -1
+      info.dataValues.isCollection = -1
+      info.dataValues.commentCount = -1
     }
 
+    info.content = info.content.replace(/&amp;/g, '&')
+
+    let publishTime = this.utils.date_utils.dateFormat(info.pub_date, 'YYYY-MM-DD HH:mm')
+    this.logger.info(ctx.uuid, 'info()', 'publishTime', publishTime)
+    info.dataValues.publish_time = publishTime
+
+    ctx.ret.data = info
     return ctx.ret
   }
 
@@ -177,16 +247,23 @@ class PostsController extends Controller {
       ip: ctx.ip
     }
     let taskRet = await taskModel.logByName(ctx, 'posts_comment', taskData, t)
+    let score = 0
+    let balance = 0
     this.logger.info(ctx.uuid, 'commentAction() taskRet', taskRet)
     if (taskRet.code != 0) {
       t.rollback()
     } else {
+      score = taskRet.data.score || 0
+      balance = taskRet.data.balance || 0
       t.commit()
     }
 
     ctx.ret.data = {
-      id: comment.id
+      id: comment.id,
+      score: score,
+      balance: balance
     }
+    this.logger.info(ctx.uuid, 'commentAction() ctx.ret', ctx.ret)
     return ctx.ret
 
   }
@@ -246,9 +323,86 @@ class PostsController extends Controller {
       }]
     })
 
-    ctx.ret.data = queryRet
+    let rows = []
+    for (let index = 0; index < queryRet.rows.length; index++) {
+      let comment = queryRet.rows[index]
+      comment.dataValues.create_date = this.utils.date_utils.dateFormat(comment.create_time, 'YYYY-MM-DD HH:mm')
+
+      where.pid = comment.id
+      let queryReplyRet = await commentModel.findAndCountAll({
+        where: where,
+        offset: 0,
+        limit: 5,
+        order: [
+          ['create_time', 'desc']
+        ],
+        include: [{
+          model: userInfoModel,
+          attributes: ['id', 'nickname', 'mobile', 'avatar']
+        }]
+      })
+
+      comment.dataValues.replys = queryReplyRet.rows
+
+      let likes = await postsModel.getCommentLikeCount(comment.id)
+      comment.dataValues.likes = likes
+
+      rows.push(comment)
+    }
+    ctx.ret.data = {
+      rows: rows,
+      count: queryRet.count,
+      page: page,
+      timestamp: timestamp
+    }
     return ctx.ret
 
+  }
+
+  async commentDetail(ctx) {
+    this.logger.info(ctx.uuid, 'commentDetail()', 'body', ctx.body, 'query', ctx.query)
+
+    let commentId = ctx.body.comment_id
+
+    let postsModel = new this.models.posts_model
+    let commentModel = postsModel.commentModel()
+    let userModel = (new this.models.user_model())
+    let userInfoModel = userModel.infoModel()
+    commentModel.belongsTo(userInfoModel, {
+      targetKey: 'user_id',
+      foreignKey: 'user_id'
+    })
+
+    let comment = await commentModel.findByPk(commentId, {
+      include: [{
+        model: userInfoModel,
+        attributes: ['id', 'nickname', 'mobile', 'avatar']
+      }]
+    })
+
+    comment.dataValues.create_date = this.utils.date_utils.dateFormat(comment.create_time, 'YYYY-MM-DD HH:mm')
+
+    let where = {}
+    where.pid = comment.id
+    let queryReplyRet = await commentModel.findAndCountAll({
+      where: where,
+      order: [
+        ['create_time', 'desc']
+      ],
+      include: [{
+        model: userInfoModel,
+        attributes: ['id', 'nickname', 'mobile', 'avatar']
+      }]
+    })
+
+    comment.dataValues.replys = queryReplyRet.rows
+
+    let likes = await postsModel.getCommentLikeCount(comment.id)
+    comment.dataValues.likes = likes
+
+    ctx.ret.data = comment
+
+    return ctx.ret
   }
 
   /**
@@ -287,9 +441,14 @@ class PostsController extends Controller {
         model_id: postId,
         ip: ctx.ip
       }
+      let score = 0
+      let balance = 0
       let taskRet = await taskModel.logByName(ctx, 'posts_view', taskData, t)
       if (taskRet.code != 0) {
         throw new Error(taskRet.message)
+      } else {
+        score = taskRet.data.score || 0
+        balance = taskRet.data.balance || 0
       }
       this.logger.info(ctx.uuid, 'viewAction() taskRet', taskRet)
 
@@ -306,7 +465,9 @@ class PostsController extends Controller {
       }
 
       ctx.ret.data = {
-        id: view.id
+        id: view.id,
+        score: score,
+        balance: balance
       }
       t.commit()
     } catch (err) {
@@ -348,9 +509,12 @@ class PostsController extends Controller {
       post_id: postId,
       // ip: ctx.ip
     }
-    let like = await postsModel.likeModel().findOne(likeData)
+    this.logger.info(ctx.uuid, 'likeAction()', 'likeData', likeData)
+    let like = await postsModel.likeModel().findOne({
+      where: likeData
+    })
     if (like) {
-      return this._fail(ctx, '重复操作')
+      return this._fail(ctx, '请不要重复点赞')
 
     }
 
@@ -362,6 +526,11 @@ class PostsController extends Controller {
       return this._fail(ctx, '添加失败')
     }
 
+    let updateTime = post.update_time
+    post.likes = post.likes + 1
+    post.update_time = updateTime
+    await post.save()
+
     // 记录收益
     let taskModel = new this.models.task_model
     let t = await taskModel.getTrans()
@@ -372,18 +541,89 @@ class PostsController extends Controller {
     }
     let taskRet = await taskModel.logByName(ctx, 'posts_like', taskData, t)
     this.logger.info(ctx.uuid, 'likeAction() taskRet', taskRet)
+    let score = 0
+    let balance = 0
     if (taskRet.code != 0) {
       t.rollback()
     } else {
+      score = taskRet.data.score || 0
+      balance = taskRet.data.balance || 0
       t.commit()
     }
 
     ctx.ret.data = {
-      id: like.id
+      id: like.id,
+      score: score,
+      balance: balance
     }
     return ctx.ret
   }
 
+  async commentLikeAction(ctx) {
+    this.logger.info(ctx.uuid, 'commentLikeAction()', 'body', ctx.body, 'query', ctx.query)
+    let userId = ctx.body.user_id
+    let commentId = ctx.body.comment_id
+
+    if (!commentId) {
+      return this._fail(ctx, '参数错误')
+    }
+
+    let postsModel = new this.models.posts_model
+
+    let comment = await postsModel.commentModel().findByPk(commentId)
+    if (!comment) {
+      return this._fail(ctx, '无效条目')
+    }
+
+    let likeData = {
+      user_id: userId,
+      comment_id: commentId,
+      // ip: ctx.ip
+    }
+    this.logger.info(ctx.uuid, 'commentLikeAction()', 'likeData', likeData)
+    let like = await postsModel.likeModel().findOne({
+      where: likeData
+    })
+    if (like) {
+      return this._fail(ctx, '请不要重复点赞')
+
+    }
+
+    likeData.ip = ctx.ip
+    like = await postsModel.likeModel().create(likeData)
+
+    this.logger.info(ctx.uuid, 'commentLikeAction() like', like)
+    if (!like) {
+      return this._fail(ctx, '添加失败')
+    }
+
+    // 记录收益
+    let taskModel = new this.models.task_model
+    let t = await taskModel.getTrans()
+    let taskData = {
+      user_id: userId,
+      model_id: commentId,
+      ip: ctx.ip
+    }
+    let taskRet = await taskModel.logByName(ctx, 'post_comment_like', taskData, t)
+    this.logger.info(ctx.uuid, 'likeAction() taskRet', taskRet)
+    let score = 0
+    let balance = 0
+    if (taskRet.code != 0) {
+      t.rollback()
+    } else {
+      score = taskRet.data.score || 0
+      balance = taskRet.data.balance || 0
+      t.commit()
+    }
+
+    ctx.ret.data = {
+      id: like.id,
+      score: score,
+      balance: balance
+    }
+    return ctx.ret
+  }
   /**
    * 发布评测
    */
@@ -391,27 +631,86 @@ class PostsController extends Controller {
 
     this.logger.info(ctx.uuid, 'postAction()', 'body', ctx.body, 'query', ctx.query)
     let userId = ctx.body.user_id
-    let goodsId = ctx.body.goods_id
+    // let goodsId = ctx.body.goods_id
     let body = ctx.body
     // TODO 校验goodsID
 
     // 是否有评测资格
     let userModel = new this.models.user_model
-    let user = await userModel.model().findByPk(userId)
+    let user = await userModel.getInfoByUserId(userId)
     if (user.share_level != 1) {
       return this._fail(ctx, '无评测资格')
+    }
+
+    let contents = body.contents
+    let video = body.video_url || ''
+    let audio = body.audio_url || ''
+    let goods = body.goods
+    let goodsId = goods.id
+
+    let contentsFormat = (contents) => {
+      let description = ''
+      let imgs = []
+      let html = ''
+      let cover = ''
+      contents.forEach((content, i) => {
+        if (i == 0) {
+          description = content.text.substring(0, 80)
+        }
+
+        html += `<p>${content.text}</p>`
+
+        if (content.type == 'image') {
+          if (!cover) {
+            cover = content.urls[0]
+          }
+
+          content.urls.forEach(url => {
+            html += `<p><img src="${url}" /></p>`
+            imgs.push({
+              width: 0,
+              height: 0,
+              url: url
+            })
+          })
+        }
+      })
+
+      return {
+        description,
+        imgs,
+        html,
+        cover
+      }
+    }
+
+    let {
+      description,
+      imgs,
+      html,
+      cover
+    } = contentsFormat(contents)
+
+    if (!cover) {
+      // 用商品的封面图
+      let mallModel = new this.models.mall_model
+      let goods = await mallModel.goodsModel().findByPk(goodsId)
+      cover = goods.cover
     }
 
     let postData = {
       type: 3,
       title: body.title,
-      content: body.content,
-      cover: body.cover || '',
-      imgs: body.imgs || [],
-      video: body.video || '',
-      audio: body.audio || '',
+      description: description,
+      content: html,
+      cover: cover,
+      imgs: imgs,
+      video: video,
+      audio: audio,
       goods_id: goodsId,
-      user_id: userId
+      user_id: userId,
+      pub_date: parseInt(Date.now() / 1000),
+      status: 0
     }
     this.logger.info(ctx.uuid, 'postAction()', 'postData', postData)
 
@@ -422,9 +721,17 @@ class PostsController extends Controller {
       return this._fail(ctx, '发表失败')
     }
 
+    // 获得积分 TODO
+    let score = 0
+    let balance = 0
+
     ctx.ret.data = {
-      uuid: post.uuid
+      id: post.id,
+      uuid: post.uuid,
+      score: score,
+      balance: balance
     }
+
     this.logger.info(ctx.uuid, 'postAction()', 'ret', ctx.ret)
     return ctx.ret
 

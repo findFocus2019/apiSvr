@@ -36,6 +36,16 @@ class ShareModel extends Model {
 
     return share
   }
+
+  async getShareCountByUserId(userId) {
+    let count = await this.model().count({
+      where: {
+        user_id: userId
+      }
+    })
+
+    return count
+  }
 }
 
 module.exports = ShareModel

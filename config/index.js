@@ -12,8 +12,10 @@ module.exports = {
 
   tasks: {
     REGISTER: 'register', // 用户注册
+    DAILY_SIGN: 'daily_sign',
     DAILY_SIGN_7: 'daily_sign_7', // 连续7天签到
     POSTS_VIEW: 'posts_view', //文章阅读
+
   },
   taskType: {
     day: '每日任务',
@@ -59,4 +61,23 @@ module.exports = {
     accessKeySecret: 'FMpk7JlIIGbhSCS5q0A5VZOSk5uthV',
     bucket: 'kxm-img',
   },
+
+  postChannels: [
+    '国内',
+    '国际',
+    '体育',
+    '军事',
+    '娱乐',
+    '社会',
+    '财经',
+    '科技',
+    '游戏',
+    '教育',
+    '女人'
+  ],
+
+  miniApp: {
+    appId: 'wx2e40960c5cfb7723',
+    appSecret: '0908b751cef2388e00847eb29e8303ad'
+  }
 }

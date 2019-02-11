@@ -248,8 +248,16 @@ class AuthController extends Controller {
         // 更新用户信息
         let userInfo = await userModel.getInfoByUserId(user.id)
         this.logger.info(ctx.uuid, 'register(3)', 'user.userInfo', userInfo)
-        userInfo.avatar = oauthRet.avatar
-        userInfo.nickname = oauthRet.nickname
+        if (!userInfo.avatar) {
+          userInfo.avatar = oauthRet.avatar
+        }
+        if (!userInfo.nickname) {
+          userInfo.nickname = oauthRet.nickname
+        }
+        if (!userInfo.openid) {
+          userInfo.openid = oauthRet.openid
+        }
+
         await userInfo.save()
       }
 

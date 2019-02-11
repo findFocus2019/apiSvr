@@ -61,38 +61,36 @@ class TaskModel extends Model {
 
     let type = task.dataValues.type
     let limitCount = task.limit_count // 限制用户次数
-    let limitIpCount = task.limit_id
+    let limitIpCount = task.limit_ip
     let limitIdCount = task.limit_id
     console.log(ctx.uuid, 'logByName() type', type)
 
-    if (limitCount && limitIpCount && limitIdCount) {
-      let whereLog = {}
-      whereLog.type = type
-      whereLog.user_id = data.user_id
-      if (type == 'day') {
-        whereLog.log_date = dateUtils.dateFormat(null, 'YYYYMMDD')
-      }
-      if (limitIdCount) {
-        whereLog.model_id = data.model_id
-        // 限制id了，限制数量就为limitIpCount
-        limitCount = limitIdCount
-      }
-      if (limitIpCount) {
-        whereLog.ip = data.ip
-        // 限制ip了，限制数量就为limitIpCount
-        limitCount = limitIpCount
-      }
-      console.log(ctx.uuid, 'logByName() whereLog', whereLog)
-      // 判断数量限制
-      let count = await this.logsModel().count({
-        where: whereLog
-      })
-      console.log(ctx.uuid, 'logByName() count', count)
-      if (count >= limitCount && limitCount > 0) {
-        ret.code = 1
-        ret.message = '超过收益数量限制'
-        return ret
-      }
+    let whereLog = {}
+    whereLog.type = type
+    whereLog.user_id = data.user_id
+    if (type == 'day') {
+      whereLog.log_date = dateUtils.dateFormat(null, 'YYYYMMDD')
+    }
+    if (limitIdCount) {
+      whereLog.model_id = data.model_id
+      // 限制id了，限制数量就为limitIpCount
+      limitCount = limitIdCount
+    }
+    if (limitIpCount) {
+      whereLog.ip = data.ip
+      // 限制ip了，限制数量就为limitIpCount
+      limitCount = limitIpCount
+    }
+    console.log(ctx.uuid, 'logByName() whereLog', whereLog)
+    // 判断数量限制
+    let count = await this.logsModel().count({
+      where: whereLog
+    })
+    console.log(ctx.uuid, 'logByName() count', count)
+    if (count >= limitCount && limitCount > 0) {
+      ret.code = 1
+      ret.message = '超过收益数量限制'
+      return ret
     }
 
     // 记录
@@ -116,6 +114,11 @@ class TaskModel extends Model {
       ret.code = 1
       ret.message = '更新用户资产失败'
       return ret
+    }
+
+    ret.data = {
+      score: task.score,
+      balance: task.balance
     }
 
     console.log(ctx.uuid, 'logByName() ret', ret)
@@ -151,6 +154,8 @@ class TaskModel extends Model {
     if (t) {
       opts.transaction = t
     }
+
+    let status = balance ? 0 : 1
     let taskLog = await this.logsModel().create({
       user_id: userId,
       type: type,
@@ -159,7 +164,8 @@ class TaskModel extends Model {
       model_id: modelId,
       ip: ip,
       log_date: dateUtils.dateFormat(null, 'YYYYMMDD'),
-      task_id: taskId
+      task_id: taskId,
+      status: status
     }, opts)
 
     console.log('log task log :', taskLog.id)
@@ -184,6 +190,54 @@ class TaskModel extends Model {
     })
 
     return count
+  }
+
+  /**
+   * 获取现金总收益
+   * @param {*} userId 
+   * @param {*} status 
+   */
+  async getBalanceSumByUserId(userId, taskId = 0, status = null) {
+    let where = {}
+    where.user_id = userId
+
+    if (taskId) {
+      where.task_id = taskId
+    }
+    if (status !== null) {
+      where.status = status
+    }
+
+    let sum = await this.logsModel().sum('balance', {
+      where: where
+    })
+
+    return (sum / 100) || 0
+  }
+
+  /**
+   * 获取积分中收益
+   * @param {*} userId 
+   * @param {*} taskId 
+   * @param {*} status 
+   */
+  async getScoreSumByTypeAndUser(userId, taskId = 0, status = null) {
+    let where = {}
+    where.user_id = userId
+
+    if (status !== null) {
+      where.status = status
+    }
+
+    if (taskId) {
+      where.task_id = taskId
+    }
+
+    let sum = await this.logsModel().sum('score', {
+      where: where
+    })
+
+    return (sum / 100) || 0
   }
 }
 

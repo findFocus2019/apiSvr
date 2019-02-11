@@ -8,7 +8,8 @@ const {
   userAddress,
   userDailySign,
   userEcard,
-  userInvoice
+  userInvoice,
+  userCollection
 } = require('./../../config/models')
 const uuid = require('uuid')
 
@@ -48,6 +49,10 @@ class UserModel extends Model {
 
   ecardModel() {
     return this.db().define('user_ecard', userEcard()[0], userEcard()[1])
+  }
+
+  collectionModel() {
+    return this.db().define('user_collection', userCollection()[0], userCollection()[1])
   }
 
   async checkAuth(ctx) {
@@ -259,6 +264,46 @@ class UserModel extends Model {
       return false
     }
   }
+
+  async isCollectPost(userId, postId) {
+    let find = await this.collectionModel().findOne({
+      where: {
+        user_id: userId,
+        post_id: postId,
+        status: 1
+      }
+    })
+
+    return find ? 1 : 0
+  }
+
+  async isCollectGoods(userId, goodsId) {
+    let find = await this.collectionModel().findOne({
+      where: {
+        user_id: userId,
+        goods_id: goodsId,
+        status: 1
+      }
+    })
+
+    return find ? 1 : 0
+  }
+
+  async getUserApplyByType(userId, type = 1) {
+    let find = await this.applyModel().findOne({
+      where: {
+        user_id: userId,
+        type: type
+      },
+      order: [
+        ['create_time', 'desc']
+      ]
+    })
+
+    return find
+  }
+
+
 
 }
 

@@ -61,7 +61,7 @@ class Schedule extends Controller {
     let success = 0
     for (let index = 0; index < list.length; index++) {
       const item = list[index]
-      if (item.html) {
+      if (item.html && item.imageurls.length) {
         logger.info('fetchNews()', item.title)
         await this._saveNewsData(item, logger)
         success++
@@ -84,7 +84,7 @@ class Schedule extends Controller {
     newsData.pub_date = dateUtils.getTimestamp(data.pubDate)
     newsData.cover = (data.havePic && data.imageurls.length > 0) ? data.imageurls[0].url : ''
     newsData.imgs = data.imageurls
-    newsData.channel = data.channelName
+    newsData.channel = data.channelName.replace('最新', '')
     newsData.source = data.source
     newsData.link = data.link
     newsData.uuid = data.nid

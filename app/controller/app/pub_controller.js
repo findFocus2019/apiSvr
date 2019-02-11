@@ -1,4 +1,5 @@
 const Controller = require('./../../../lib/controller')
+const request = require('superagent')
 
 class PubController extends Controller {
 
@@ -13,9 +14,9 @@ class PubController extends Controller {
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
 
-    let noticeModel = this.models.notice_model
+    let noticeModel = new this.models.notice_model
 
-    let queryRet = await noticeModel.findAndCountAll({
+    let queryRet = await noticeModel.model().findAndCountAll({
       where: {
         status: 1
       },
@@ -26,12 +27,45 @@ class PubController extends Controller {
       ]
     })
 
+    queryRet.rows.forEach(row => {
+      row.dataValues.create_date = this.utils.date_utils.dateFormat(row.create_time, 'YYYY-MM-DD HH:mm')
+    })
     ctx.ret.data = {
       rows: queryRet.rows,
       count: queryRet.count,
       page: page
     }
 
+    return ctx.ret
+  }
+
+  async configs(ctx) {
+    this.logger.info(ctx.uuid, 'configs()', 'body', ctx.body, 'query', ctx.query)
+    let configModel = new this.models.config_model
+    let rows = await configModel.model().findAll({
+      where: {
+        status: 1
+      }
+    })
+
+    let config = {}
+    rows.forEach(row => {
+      config[row.name] = row.content
+    })
+
+    ctx.ret.data = config
+    return ctx.ret
+  }
+
+  async codeToSession(ctx) {
+    this.logger.info(ctx.uuid, 'codeToSession()', 'body', ctx.body, 'query', ctx.query)
+    let miniApp = this.config.miniApp
+    let jscode = ctx.body.jscode
+    let url = `https://api.weixin.qq.com/sns/jscode2session?appid=${miniApp.appId}&secret=${miniApp.appSecret}&js_code=${jscode}&grant_type=authorization_code`
+    let json = await request.get(url).type('json')
+    // console.log(json.text)
+    this.logger.info(ctx.uuid, 'codeToSession()', 'json', json)
+    ctx.ret.data = JSON.parse(json.text)
     return ctx.ret
   }
 }

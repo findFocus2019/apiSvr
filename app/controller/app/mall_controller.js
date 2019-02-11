@@ -5,20 +5,37 @@ class MallController extends Controller {
 
   async _init_(ctx) {
 
-    console.log('ctx.body.token=============', ctx.token)
-    if (ctx.token) {
-      let userModel = new this.models.user_model
-      await userModel.checkAuth(ctx)
+    // console.log('ctx.body.token=============', ctx.token)
+    // if (ctx.token) {
+    //   let userModel = new this.models.user_model
+    //   await userModel.checkAuth(ctx)
+    // }
+
+    // console.log('ctx.body.user_id=============', ctx.body.user_id)
+    // if (!ctx.body.user_id) {
+    //   let unLimitRoutes = ['goodsList', 'goodsInfo', 'categorys']
+    //   if (unLimitRoutes.indexOf(ctx.route.action) < 0) {
+    //     ctx.ret.code = -100
+    //     ctx.ret.message = '请先登录进行操作'
+    //     return ctx.ret
+    //   }
+    // }
+
+    let needCheckToken = true
+    let unLimitRoutes = ['goodsList', 'goodsInfo', 'categorys']
+    if (unLimitRoutes.indexOf(ctx.route.action) > -1) {
+      needCheckToken = false
     }
 
-    console.log('ctx.body.user_id=============', ctx.body.user_id)
-    if (!ctx.body.user_id) {
-      let unLimitRoutes = ['goodsList', 'goodsInfo', 'categorys']
-      if (unLimitRoutes.indexOf(ctx.route.action) < 0) {
-        ctx.ret.code = -100
-        ctx.ret.message = '请先登录进行操作'
-        return ctx.ret
+    console.log('ctx.body.token=============', ctx.token)
+    if (needCheckToken) {
+      let userModel = new this.models.user_model
+      let checkRet = await userModel.checkAuth(ctx)
+      if (checkRet.code !== 0) {
+        return this._fail(ctx, checkRet.message)
       }
+    } else {
+      console.log(ctx.uuid, 'ctx.body.user_id=============', ctx.body.user_id)
     }
   }
 
@@ -48,7 +65,7 @@ class MallController extends Controller {
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
 
-    let timestamp = ctx.body.timestamp
+    let timestamp = ctx.body.timestamp || parseInt(Date.now() / 1000)
     let search = ctx.body.search || ''
     let type = ctx.body.type || 1 // 分类
     let category = ctx.body.category || ''
@@ -98,7 +115,8 @@ class MallController extends Controller {
       count: queryRet.count || 0,
       page: page,
       limit: limit,
-      newCount: newCount
+      newCount: newCount,
+      timestamp: timestamp
     }
     this.logger.info(ctx.uuid, 'goodsList()', 'ret', ctx.ret)
 
@@ -155,11 +173,18 @@ class MallController extends Controller {
     let mallModel = new this.models.mall_model
     let goodsModel = mallModel.goodsModel()
 
-    let info = await goodsModel.findOne({
-      where: {
-        uuid: goodsId
-      }
-    })
+    let info = await goodsModel.findByPk(goodsId)
+
+    this.logger.info(ctx.uuid, 'goodsInfo()', 'info', info.id)
+    // 收藏
+    let userId = ctx.body.user_id
+    if (userId) {
+      let userModel = new this.models.user_model
+      let isCollect = await userModel.isCollectGoods(userId, info.id)
+      info.dataValues.isCollection = isCollect
+    } else {
+      info.dataValues.isCollection = -1
+    }
 
     this.logger.info(ctx.uuid, 'goodsInfo()', 'info', info)
     ctx.ret.data = {

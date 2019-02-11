@@ -129,7 +129,7 @@ module.exports = {
       login_type: FIELDS.tinyInt(),
       last_signin_time: FIELDS.defaultInt(),
       last_signin_ip: FIELDS.stringLen(24),
-      share_level: FIELDS.tinyInt(),
+      // share_level: FIELDS.tinyInt(),
       auth_token: FIELDS.stringLen(64),
       password_trade: FIELDS.stringLen(32),
       uuid: FIELDS.uuid()
@@ -152,7 +152,11 @@ module.exports = {
       // balance: FIELDS.bigInt(),
       // score: FIELDS.bigInt()
       balance: FIELDS.money('balance'),
-      score: FIELDS.money('score')
+      score: FIELDS.money('score'),
+      share_level: FIELDS.tinyInt(),
+      alipay: FIELDS.stringLen(32),
+      openid: FIELDS.stringLen(32),
+      password_trade: FIELDS.stringLen(32)
     }, {
       ...commonOpts,
       tableName: 't_user_info'
@@ -176,7 +180,7 @@ module.exports = {
       ...commonFieldGet(),
       status: getStatusFields(0),
       user_id: FIELDS.bigInt(),
-      type: FIELDS.stringLen(12),
+      type: FIELDS.tinyInt(),
       info: FIELDS.stringLen(1000),
       remark: FIELDS.stringLen(255)
     }, {
@@ -195,6 +199,20 @@ module.exports = {
     }, {
       ...commonOpts,
       tableName: 't_user_address'
+    }]
+  },
+  userCollection: () => {
+    return [{
+      ...commonFieldGet(),
+      status: getStatusFields(1),
+      user_id: FIELDS.bigInt(),
+      goods_id: FIELDS.bigInt(),
+      post_id: FIELDS.bigInt(),
+      category: FIELDS.stringLen(12),
+      type: FIELDS.tinyInt()
+    }, {
+      ...commonOpts,
+      tableName: 't_user_collection'
     }]
   },
   userInvoice: () => {
@@ -300,7 +318,7 @@ module.exports = {
   posts: () => {
     return [{
       ...commonFieldGet(),
-      status: getStatusFields(0),
+      status: getStatusFields(1),
       title: FIELDS.stringLen(255),
       type: FIELDS.tinyInt(),
       category: FIELDS.tinyInt(),
@@ -309,7 +327,6 @@ module.exports = {
       info: FIELDS.text(),
       content: FIELDS.text(),
       pub_date: FIELDS.defaultInt(),
-      views: FIELDS.defaultInt(),
       cover: FIELDS.stringLen(255),
       video: FIELDS.stringLen(255),
       audio: FIELDS.stringLen(255),
@@ -317,6 +334,9 @@ module.exports = {
       channel: FIELDS.stringLen(32),
       source: FIELDS.stringLen(32),
       link: FIELDS.stringLen(255),
+      views: FIELDS.defaultInt(),
+      likes: FIELDS.defaultInt(),
+      shares: FIELDS.defaultInt(),
       user_id: FIELDS.bigInt(),
       admin_id: FIELDS.bigInt(),
       goods_id: FIELDS.bigInt(),
@@ -346,6 +366,7 @@ module.exports = {
       status: getStatusFields(1),
       user_id: FIELDS.bigInt(),
       post_id: FIELDS.bigInt(),
+      comment_id: FIELDS.bigInt(),
       ip: FIELDS.stringLen(32)
     }, {
       ...commonOpts,
@@ -524,7 +545,9 @@ module.exports = {
       status: getStatusFields(0),
       title: FIELDS.stringLen(64),
       info: FIELDS.stringLen(1000),
-      push: FIELDS.tinyInt()
+      content: FIELDS.text(),
+      push: FIELDS.tinyInt(),
+      cover: FIELDS.stringLen(255),
     }, {
       ...commonOpts,
       tableName: 't_notice'

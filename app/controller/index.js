@@ -52,10 +52,10 @@ router.post('/:group/:module/:action', async (req, res) => {
   } = req.body
 
   // 验证签名
-  console.log('sign key', signKey)
-  console.log(req.body)
+  // console.log('sign key', signKey)
+  // console.log(req.body)
   let signContent = cryptoUtils.hmacMd5Obj(content, signKey)
-  console.log(sign, signContent)
+  // console.log(sign, signContent)
   if (sign != signContent) {
     return res.status(400).json({
       code: -1,
@@ -63,7 +63,7 @@ router.post('/:group/:module/:action', async (req, res) => {
     })
   }
 
-  console.log('content ========', content)
+  // console.log('content ========', content)
   // 主装上下文
   let ctx = {
     uuid: uuid || req.uuid || 'uuid',

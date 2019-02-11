@@ -45,7 +45,7 @@ class MallModel extends Model {
    */
   async getGoodsCategoryJd(type = 2) {
     let sql = 'select category as name from t_goods where type = :type group by category '
-    let rows = this.query(sql, {
+    let rows = await this.query(sql, {
       type: type
     })
 
