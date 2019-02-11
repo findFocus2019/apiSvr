@@ -58,5 +58,5 @@ module.exports = {
     accessKeyId: 'LTAIuZAB2acD7SpJ',
     accessKeySecret: 'FMpk7JlIIGbhSCS5q0A5VZOSk5uthV',
     bucket: 'kxm-img',
-  },
+  }
 }
