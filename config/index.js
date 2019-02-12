@@ -79,5 +79,7 @@ module.exports = {
   miniApp: {
     appId: 'wx2e40960c5cfb7723',
     appSecret: '0908b751cef2388e00847eb29e8303ad'
-  }
+  },
+
+  defaultInivteUserId: 1
 }

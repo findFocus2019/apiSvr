@@ -345,10 +345,7 @@ class MallController extends Controller {
    * @param {*} t 
    */
   async _creareOrderItems(ctx, order, t = null) {
-    // let mallModel = new this.models.mall_model
-    // this.logger.info(ctx.uuid, '_creareOrderItems orderId', orderId)
-    // let order = await mallModel.orderModel().findByPk(orderId)
-    // this.logger.info(ctx.uuid, '_creareOrderItems order', order)
+
     let items = order.goods_items
 
     try {
@@ -359,17 +356,6 @@ class MallController extends Controller {
           throw new Error('记录订单商品错误')
         }
       }
-
-      // let opts = {}
-      // if (t) {
-      //   opts.transaction = t
-      // }
-      // order.rabate = 1
-      // let orderRet = await order.save(opts)
-      // if (!orderRet) {
-      //   throw new Error('订单返利记录错误')
-      // }
-
     } catch (err) {
       ctx.ret.code = 1
       ctx.ret.message = err.message
@@ -395,7 +381,7 @@ class MallController extends Controller {
     let orderItemModel = mallModel.orderItemModel()
     let user = await userModel.model().findByPk(userId)
 
-    let numRabate = order.vip ? item.price_vip - item.price_cost : item.price_sell - item.price_cost
+    let numRabate = order.vip ? (item.price_vip * 100 - item.price_cost * 100) / 100 : (item.price_sell * 100 - item.price_cost * 100) / 100
 
     // 记录返利
     let inviteUserId = 0
@@ -409,8 +395,10 @@ class MallController extends Controller {
       // 邀请人
       let inviteUser = await userModel.getInviteUser(user.pid)
       if (inviteUser) {
-        inviteUserId = 0
+        inviteUserId = this.config.defaultInivteUserId
       }
+    } else {
+      inviteUserId = this.config.defaultInivteUserId
     }
 
     let shareId = item.share_id || 0
@@ -458,12 +446,17 @@ class MallController extends Controller {
         }
       }
 
-
     }
 
     let opts = {}
     if (t) {
       opts.transaction = t
+    }
+    let goodsAmount = 0
+    if (order.vip) {
+      goodsAmount = order.score_use ? order.total_vip : (order.total_vip * 100 + order.score_vip * 100) / 100
+    } else {
+      goodsAmount = order.score_use ? order.total : (order.total * 100 + order.score_sell * 100) / 100
     }
     let data = {
       user_id: userId,
@@ -472,7 +465,10 @@ class MallController extends Controller {
       num_rabate: numRabate,
       num_rabate_share: numRabateShare,
       num_rabate_post: numRabatePost,
-      num_rabate_invite: numRabateInvite
+      num_rabate_invite: numRabateInvite,
+      goods_title: item.title,
+      goods_cover: item.cover,
+      goods_amount: goodsAmount
     }
     this.logger.info(ctx.uuid, '_creareOrderItem', data)
     let orderItem = await orderItemModel.create(data, opts)
@@ -645,6 +641,7 @@ class MallController extends Controller {
    */
   async orderPayConfirm(ctx) {
 
+    this.logger.info(ctx.uuid, 'orderPayConfirm() body', ctx.body)
     let userId = ctx.body.user_id
     let paymentId = ctx.body.payment_id
 
@@ -662,6 +659,10 @@ class MallController extends Controller {
     try {
 
       let payment = await paymentModel.findByPk(paymentId)
+      let userInfo = await userModel.getInfoByUserId(userId)
+
+      this.logger.info(ctx.uuid, 'orderPayConfirm() payment', payment)
+      this.logger.info(ctx.uuid, 'orderPayConfirm() userInfo', userInfo)
 
       let payType = payment.pay_type
       let payMethod = payment.pay_method
@@ -669,31 +670,42 @@ class MallController extends Controller {
       // 验证密码
       if ([1, 2].indexOf(payType) > -1 && ['wx', 'alipay'].indexOf(payMethod) < 0) {
         // 使用e卡或者余额支付，不用在线支付补，要验证密码
-        let user = await userModel.model().findByPk(userId)
-        let userTradePassword = user.password_trade
+        // let user = await userModel.getInfoByUserId(userId)
+        let userTradePassword = userInfo.password_trade
+        this.logger.info(ctx.uuid, 'orderPayConfirm() userTradePassword', userTradePassword)
+        if (!password) {
+          throw new Error('请输入支付密码')
+        }
+        password = this.utils.crypto_utils.hmacMd5(password)
         if (!userTradePassword) {
-          throw new Error('请先设置支付密码')
+          // throw new Error('请先设置支付密码')
+          userInfo.password_trade = password
         }
 
-        password = this.utils.crypto_utils.hmacMd5(password)
-        if (password != userTradePassword) {
+        this.logger.info(ctx.uuid, 'orderPayConfirm() password', password)
+        this.logger.info(ctx.uuid, 'orderPayConfirm() userInfo.password_trade', userInfo.password_trade)
+        if (password != userInfo.password_trade) {
           throw new Error('请输入正确的支付密码')
         }
+
+        // 测试 默认验证通过 , 状态改为已支付
+        payment.status = 1
       }
 
-      if (payment.balance) {
-        // 更新用户信息
-        let userInfo = await userModel.getInfoByUserId(userId)
-        userInfo.balance = userInfo.balance - payment.balance
-        userInfo.score = userInfo.score - payment.score
-        let userInfoRet = await userInfo.save({
-          transaction: t
-        })
-        if (!userInfoRet) {
-          throw new Error('更新用户信息失败')
-        }
-
+      // 更新用户信息
+      userInfo.balance = userInfo.balance - payment.balance
+      userInfo.score = userInfo.score - payment.score
+      let userInfoRet = await userInfo.save({
+        transaction: t
+      })
+      this.logger.info(ctx.uuid, 'orderPayConfirm() userInfoRet', userInfoRet)
+      if (!userInfoRet) {
+        throw new Error('更新用户信息失败')
       }
+
+      // if (payment.balance) {
+
+      // }
 
       if (payment.ecard) {
         let ecardId = payment.ecard_id
@@ -704,29 +716,61 @@ class MallController extends Controller {
         let userEcardRet = await userEcard.save({
           transaction: t
         })
+        this.logger.info(ctx.uuid, 'orderPayConfirm() userEcardRet', userEcardRet)
         if (!userEcardRet) {
           throw new Error('更新用户e卡失败')
         }
       }
 
-
       let orderIds = payment.order_ids.substr(1, payment.order_ids.length - 2).split('-')
+      this.logger.info(ctx.uuid, 'orderPayConfirm() orderIds', orderIds)
 
       for (let index = 0; index < orderIds.length; index++) {
         const orderId = orderIds[index]
 
         let order = await orderModel.findByPk(orderId)
+        if (order.status != 0) {
+          throw new Error('请不要重复支付')
+        }
+        this.logger.info(ctx.uuid, 'orderPayConfirm() order', order.id)
         // let items = order.goods_items
         // 这里不计算返利，记录返利，7天后结算 TODO
         let rabateRet = await this._creareOrderItems(ctx, order, t)
         // let rabateRet = await this._rabate(ctx, items, t)
+        this.logger.info(ctx.uuid, 'orderPayConfirm() rabateRet', rabateRet)
         if (rabateRet.code != 0) {
           throw new Error(rabateRet.message)
+        }
+
+        order.payment = {
+          type: payType,
+          method: payMethod
+        }
+        order.status = 1
+
+        this.logger.info(ctx.uuid, 'orderPayConfirm() order.payment', order.payment)
+        let orderSaveRet = await order.save({
+          transaction: t
+        })
+
+        this.logger.info(ctx.uuid, 'orderPayConfirm() orderSaveRet', orderSaveRet)
+
+        if (!orderSaveRet) {
+          throw new Error('订单支付信息更新失败')
+        }
+
+        let paymentRet = await payment.save({
+          transaction: t
+        })
+        this.logger.info(ctx.uuid, 'orderPayConfirm() paymentRet', paymentRet)
+        if (!paymentRet) {
+          throw new Error('支付信息更新失败')
         }
       }
 
       t.commit()
     } catch (err) {
+      console.log(err)
       t.rollback()
       return this._fail(ctx, err.message)
     }
@@ -889,64 +933,42 @@ class MallController extends Controller {
 
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
-
-    let order = await orderModel.findByPk(orderId)
-    if (order.user_id != userId && order.status != 2) {
-      return this._fail(ctx, '订单错误')
-    }
-
-    order.status = 3
-    await order.save()
-
-    return ctx.ret
-  }
-
-  /**
-   * 评价
-   */
-  async orderRate(ctx) {
-    this.logger.info(ctx.uuid, 'orderRate()', 'body', ctx.body, 'query', ctx.query)
-
-    let userId = ctx.body.user_id
-    let orderId = ctx.body.order_id
-
-    let mallModel = new this.models.mall_model
-    let orderModel = mallModel.orderModel()
-
-    let order = await orderModel.findByPk(orderId)
-    if (order.user_id != userId && order.status != 3) {
-      return this._fail(ctx, '订单错误')
-    }
+    let orderReteModel = mallModel.orderReteModel()
 
     let t = await mallModel.getTrans()
-    try {
-      let orderReteModel = mallModel.orderRateModel()
 
-      let orderRate = await orderReteModel.create({
-        user_id: userId,
-        order_id: orderId,
-        goods_id: 0,
-        level: ctx.body.level,
-        info: ctx.body.info
-      })
-      if (!orderRate) {
-        throw new Error('保存订单评价失败')
+    try {
+      let order = await orderModel.findByPk(orderId)
+      if (order.user_id != userId && order.status != 2) {
+        throw new Error('订单数据错误')
       }
 
-      let items = ctx.body.items
+      // 添加 orderRate
+      let items = order.goods_items
       for (let index = 0; index < items.length; index++) {
         const item = items[index]
         let orderRate = await orderReteModel.create({
           user_id: userId,
           order_id: orderId,
           goods_id: item.goods_id,
-          level: item.level,
-          info: item.info
+          level: 0,
+          info: ''
+        }, {
+          transaction: t
         })
         if (!orderRate) {
-          throw new Error('保存商品评价失败')
+          throw new Error('添加待评价条目失败')
         }
       }
+
+      order.status = 9
+      let orderSaveRet = await order.save({
+        transaction: t
+      })
+      if (!orderSaveRet) {
+        throw new Error('更新订单信息错误')
+      }
+
       t.commit()
     } catch (err) {
       t.rollback()
@@ -954,7 +976,6 @@ class MallController extends Controller {
     }
 
     return ctx.ret
-
   }
 
   /**
@@ -1033,6 +1054,130 @@ class MallController extends Controller {
     this.logger.info(ctx.uuid, 'orderAfterList()', 'ret', ctx.ret)
 
     return ctx.ret
+  }
+
+  async orderItemList(ctx) {
+    this.logger.info(ctx.uuid, 'orderItemList()', 'body', ctx.body, 'query', ctx.query)
+
+    let userId = ctx.body.user_id
+
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+
+    let mallModel = new this.models.mall_model
+    let orderItemModel = mallModel.orderItemModel()
+
+    let queryRet = await orderItemModel.findAndCountAll({
+      where: {
+        user_id: userId
+      },
+      offset: (page - 1) * limit,
+      limit: limit,
+      order: [
+        ['update_time', 'desc']
+      ],
+    })
+
+    ctx.ret.data = {
+      rows: queryRet.rows || [],
+      count: queryRet.count || 0,
+      page: page,
+      limit: limit
+    }
+    this.logger.info(ctx.uuid, 'orderItemList()', 'ret', ctx.ret)
+
+    return ctx.ret
+  }
+
+  async orderItemInfo(ctx) {
+
+    this.logger.info(ctx.uuid, 'orderItemList()', 'body', ctx.body, 'query', ctx.query)
+    let userId = ctx.body.user_id
+    let id = ctx.body.id
+
+    let mallModel = new this.models.mall_model
+    let orderItemModel = mallModel.orderItemModel()
+
+    let info = await orderItemModel.findByPk(id)
+
+    if (info.user_id != userId) {
+      this._fail(ctx, '无效数据')
+    }
+
+    ctx.ret.data = {
+      info: info
+    }
+
+    return ctx.ret
+
+  }
+
+  /**
+   * 评价
+   */
+  async orderRate(ctx) {
+    this.logger.info(ctx.uuid, 'orderRate()', 'body', ctx.body, 'query', ctx.query)
+
+    let userId = ctx.body.user_id
+    let orderItemId = ctx.body.id
+    let rateData = ctx.body.rate
+
+    let mallModel = new this.models.mall_model
+    let orderItemModel = mallModel.orderItemModel()
+
+    let orderItem = await orderItemModel.findByPk(orderItemModel)
+    if (orderItem.user_id != userId) {
+      return this._fail(ctx, '订单错误')
+    }
+    if (orderItem.rate_level != 0) {
+      return this._fail(ctx, '请不要重复提交')
+    }
+
+    let t = await mallModel.getTrans()
+    try {
+
+      orderItem.rate_level = rateData.level
+      orderItem.rate_info = rateData.info
+      orderItem.rate_imgs = rateData.imgs
+      orderItem.rate_time = parseInt(Date.now() / 1000)
+      let saveRet = await orderItem.save({
+        transaction: t
+      })
+      if (!saveRet) {
+        throw new Error('保存评价失败')
+      }
+
+      // 评价获得积分
+      let taskModel = new this.models.task_model
+      let taskData = {
+        user_id: userId,
+        model_id: orderItem.id,
+        ip: ctx.ip
+      }
+      let score = 0
+      let balance = 0
+      let taskRet = await taskModel.logByName(ctx, 'order_item_rate', taskData, t)
+      if (taskRet.code != 0) {
+        throw new Error(taskRet.message)
+      } else {
+        score = taskRet.data.score || 0
+        balance = taskRet.data.balance || 0
+      }
+
+      ctx.ret.data = {
+        id: orderItem.id,
+        score: score,
+        balance: balance
+      }
+
+      t.commit()
+    } catch (err) {
+      t.rollback()
+      return this._fail(ctx, err.message)
+    }
+
+    return ctx.ret
+
   }
 }
 

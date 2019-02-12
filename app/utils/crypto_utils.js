@@ -2,7 +2,7 @@ const crypto = require('crypto')
 
 class CryptUtils {
 
-  hmacMd5(str, key) {
+  hmacMd5(str, key = '') {
     let hash = crypto.createHmac('md5', key)
     hash.update(str)
     let signStr = hash.digest('hex')
@@ -15,7 +15,7 @@ class CryptUtils {
    * @param {*} obj 
    * @param {*} key 
    */
-  hmacMd5Obj(obj = {}, key) {
+  hmacMd5Obj(obj = {}, key = '') {
     // console.log('hmacObj', obj)
     let sortStr = this.objSortToBase64(obj)
     // console.log('base64SortStr:', sortStr)
