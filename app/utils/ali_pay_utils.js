@@ -4,18 +4,18 @@ const AliPay = require('alipay-node-sdk');
 
 /* 参数配置 */
 const pay = {
-  rsaPrivate: path.resolve('./../../pem/sandbox_private_key.pem'),
-  rsaPublic: path.resolve('./../../pem/sandbox_public_key.pem'),
+  rsaPrivate: path.resolve(__dirname, './../../pem/sandbox_private_key.pem'),
+  rsaPublic: path.resolve(__dirname, './../../pem/sandbox_public_key.pem'),
   gateway: `https://openapi.alipaydev.com/gateway.do`,
   appId: 2016092300581254,
   notifyUrl: '',
   sandbox: true,
-  signType:'RSA2'
+  signType: 'RSA2'
 }
 
 
 class AliPayUtils {
-  constructor() { 
+  constructor() {
     this.aliPay = this._aliPay()
   }
   /**

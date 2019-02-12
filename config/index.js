@@ -57,8 +57,8 @@ module.exports = {
 
   oss: {
     region: 'oss-cn-shenzhen',
-    accessKeyId: 'LTAIuZAB2acD7SpJ',
-    accessKeySecret: 'FMpk7JlIIGbhSCS5q0A5VZOSk5uthV',
+    accessKeyId: 'img-juren',
+    accessKeySecret: 'kaLkYLuDm5zc6PCzGtxKILqJgqGf3s',
     bucket: 'kxm-img',
   },
 
