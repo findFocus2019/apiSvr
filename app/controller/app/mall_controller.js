@@ -270,8 +270,18 @@ class MallController extends Controller {
 
         // 
         let scoreCost = isVip ? scoreVip : score
-        if (scoreCost > userInfo.score) {
+        if (scoreCost > userInfo.score && useScore) {
           throw new Error('积分不足')
+        }
+        // 更新用户积分
+        if (useScore) {
+          userInfo.score = userInfo.score - scoreCost * 1000
+          let scoreSaveRet = await userInfo.save({
+            transaction: t
+          })
+          if (!scoreSaveRet) {
+            throw new Error('更新积分信息失败')
+          }
         }
 
         this.logger.info(ctx.uuid, 'orderCreate() goodsItems', goodsItems)
@@ -734,9 +744,11 @@ class MallController extends Controller {
     let userId = ctx.body.user_id
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
+    let status = ctx.body.status || 0
 
     let where = {}
     where.user_id = userId
+    where.status = status
     this.logger.info(ctx.uuid, 'orderList()', 'where', where)
 
     let mallModel = new this.models.mall_model
@@ -750,6 +762,9 @@ class MallController extends Controller {
       ],
     })
 
+    queryRet.rows.forEach(row => {
+      row.dataValues.create_date = this.utils.date_utils.dateFormat(row.create_time, 'YYYY-MM-DD HH:mm')
+    })
     ctx.ret.data = {
       rows: queryRet.rows || [],
       count: queryRet.count || 0,
@@ -779,6 +794,8 @@ class MallController extends Controller {
       return this._fail(ctx, '无效数据')
     }
 
+    order.dataValues.create_date = this.utils.date_utils.dateFormat(order.create_time, 'YYYY-MM-DD HH:mm')
+
     ctx.ret.data = {
       info: order
     }
@@ -797,7 +814,7 @@ class MallController extends Controller {
 
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
-    // let userModel = new this.models.user_model
+    let userModel = new this.models.user_model
     let t = await mallModel.getTrans()
 
     try {
@@ -816,7 +833,8 @@ class MallController extends Controller {
       let items = order.goods_items
       for (let index = 0; index < items.length; index++) {
         let item = items[index]
-        let goods = await mallModel.goodsModel().findByPk(item.good_id)
+        let goods = await mallModel.goodsModel().findByPk(item.id)
+        this.logger.info(ctx.uuid, 'orderInfo()', 'goods', goods, 'item', item)
         if (goods.stock != -1) {
           goods.stock = goods.stock + item.num
           let goodsRet = await goods.save({
@@ -825,6 +843,19 @@ class MallController extends Controller {
           if (!goodsRet) {
             throw new Error('更新商品库存失败')
           }
+        }
+      }
+
+      // 更新用户积分
+      if (order.score_use) {
+        let scoreCost = order.vip ? order.score_vip : order.score
+        let userInfo = await userModel.getInfoByUserId(userId)
+        userInfo.score = userInfo.score + scoreCost * 1000
+        let scoreSaveRet = await userInfo.save({
+          transaction: t
+        })
+        if (!scoreSaveRet) {
+          throw new Error('更新积分信息失败')
         }
       }
 

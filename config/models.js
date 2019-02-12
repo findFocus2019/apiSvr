@@ -84,7 +84,7 @@ const FIELDS = {
       defaultValue: '',
       get() {
         const val = this.getDataValue(filed)
-        return val ? JSON.parse(val) : {}
+        return val ? JSON.parse(val) : ''
       },
       set(val) {
         let str = val ? JSON.stringify(val) : ''
