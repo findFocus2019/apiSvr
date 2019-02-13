@@ -372,6 +372,9 @@ class MallController extends Controller {
    * @param {*} t 
    */
   async _creareOrderItem(ctx, order, item, t = null) {
+    item.price_cost = 90
+    this.logger.info(ctx.uuid, '_creareOrderItem order', order)
+    this.logger.info(ctx.uuid, '_creareOrderItem item', item)
 
     let userId = ctx.body.user_id
     let userModel = new this.models.user_model
@@ -382,6 +385,7 @@ class MallController extends Controller {
     let user = await userModel.model().findByPk(userId)
 
     let numRabate = order.vip ? (item.price_vip * 100 - item.price_cost * 100) / 100 : (item.price_sell * 100 - item.price_cost * 100) / 100
+    this.logger.info(ctx.uuid, '_creareOrderItem numRabate', numRabate)
 
     // 记录返利
     let inviteUserId = 0
@@ -400,6 +404,7 @@ class MallController extends Controller {
     } else {
       inviteUserId = this.config.defaultInivteUserId
     }
+    this.logger.info(ctx.uuid, '_creareOrderItem inviteUserId', inviteUserId)
 
     let shareId = item.share_id || 0
     if (shareId) {
@@ -411,18 +416,22 @@ class MallController extends Controller {
         postUserId = post ? post.user_id : 0
       }
     }
+    this.logger.info(ctx.uuid, '_creareOrderItem shareUserId', shareUserId)
+    this.logger.info(ctx.uuid, '_creareOrderItem postUserId', postUserId)
 
     let postId = item.post_id || 0
     if (postId) {
       let post = await postsModel.model().findByPk(postId)
       postUserId = post ? post.user_id : 0
     }
+    this.logger.info(ctx.uuid, '_creareOrderItem postUserId', postUserId)
 
     if (!shareUserId && !postUserId) {
       // 商城直接购买
       if (inviteUserId) {
         numRabateInvite = numRabate
       }
+      this.logger.info(ctx.uuid, '_creareOrderItem inviteUserId', inviteUserId)
 
     } else {
       if (shareUserId && !postUserId) {
@@ -431,12 +440,18 @@ class MallController extends Controller {
         if (inviteUserId) {
           numRabateInvite = numRabate * 30 / 100
         }
+
+        this.logger.info(ctx.uuid, '_creareOrderItem numRabatePost', numRabatePost)
+        this.logger.info(ctx.uuid, '_creareOrderItem numRabateInvite', numRabateInvite)
       } else if (!shareUserId && postUserId) {
         // 评测购买
-        numRabateShare = numRabate * 50 / 100
+        numRabatePost = numRabate * 50 / 100
         if (inviteUserId) {
           numRabateInvite = numRabate * 50 / 100
         }
+
+        this.logger.info(ctx.uuid, '_creareOrderItem numRabatePost', numRabatePost)
+        this.logger.info(ctx.uuid, '_creareOrderItem numRabateShare', numRabateShare)
       } else {
         // 评测分享
         numRabatePost = numRabate * 30 / 100
@@ -444,6 +459,10 @@ class MallController extends Controller {
         if (inviteUserId) {
           numRabateInvite = numRabate * 30 / 100
         }
+
+        this.logger.info(ctx.uuid, '_creareOrderItem numRabatePost', numRabatePost)
+        this.logger.info(ctx.uuid, '_creareOrderItem numRabateInvite', numRabateInvite)
+        this.logger.info(ctx.uuid, '_creareOrderItem numRabateShare', numRabateShare)
       }
 
     }
@@ -456,8 +475,9 @@ class MallController extends Controller {
     if (order.vip) {
       goodsAmount = order.score_use ? order.total_vip : (order.total_vip * 100 + order.score_vip * 100) / 100
     } else {
-      goodsAmount = order.score_use ? order.total : (order.total * 100 + order.score_sell * 100) / 100
+      goodsAmount = order.score_use ? order.total : (order.total * 100 + order.score * 100) / 100
     }
+    this.logger.info(ctx.uuid, '_creareOrderItem goodsAmount', goodsAmount)
     let data = {
       user_id: userId,
       order_id: order.id,

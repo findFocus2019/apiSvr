@@ -1,5 +1,6 @@
 const Model = require('./../../lib/model')
 const dateUtils = require('./../utils/date_utils')
+const Log = require('./../../lib/log')('task_model')
 
 const {
   task,
@@ -36,10 +37,10 @@ class TaskModel extends Model {
       code: 0,
       message: ''
     }
-    console.log(ctx.uuid, 'logByName()', name, data)
+    Log.info(ctx.uuid, 'logByName()', name, data)
 
     let task = await this.getTaskByName(ctx, name)
-    console.log(ctx.uuid, 'logByName() task', task)
+    Log.info(ctx.uuid, 'logByName() task', task)
     if (!task) {
       ret.code = 1
       ret.message = 'task name err'
@@ -52,7 +53,7 @@ class TaskModel extends Model {
         user_id: data.user_id
       }
     })
-    console.log(ctx.uuid, 'logByName() userInfo', userInfo)
+    Log.info(ctx.uuid, 'logByName() userInfo', userInfo)
     if (!userInfo) {
       ret.code = 1
       ret.message = '用户数据错误'
@@ -63,7 +64,7 @@ class TaskModel extends Model {
     let limitCount = task.limit_count // 限制用户次数
     let limitIpCount = task.limit_ip
     let limitIdCount = task.limit_id
-    console.log(ctx.uuid, 'logByName() type', type)
+    Log.info(ctx.uuid, 'logByName() type', type)
 
     let whereLog = {}
     whereLog.type = type
@@ -81,12 +82,12 @@ class TaskModel extends Model {
       // 限制ip了，限制数量就为limitIpCount
       limitCount = limitIpCount
     }
-    console.log(ctx.uuid, 'logByName() whereLog', whereLog)
+    Log.info(ctx.uuid, 'logByName() whereLog', whereLog)
     // 判断数量限制
     let count = await this.logsModel().count({
       where: whereLog
     })
-    console.log(ctx.uuid, 'logByName() count', count)
+    Log.info(ctx.uuid, 'logByName() count', count)
     if (count >= limitCount && limitCount > 0) {
       ret.code = 1
       ret.message = '超过收益数量限制'
@@ -121,7 +122,7 @@ class TaskModel extends Model {
       balance: task.balance
     }
 
-    console.log(ctx.uuid, 'logByName() ret', ret)
+    Log.info(ctx.uuid, 'logByName() ret', ret)
     return ret
 
 
@@ -134,7 +135,7 @@ class TaskModel extends Model {
       }
     })
 
-    console.log(ctx.uuid, 'getTaskByName', name, task.id)
+    Log.info(ctx.uuid, 'getTaskByName', name, task.id)
     return task
   }
 
@@ -168,7 +169,7 @@ class TaskModel extends Model {
       status: status
     }, opts)
 
-    console.log('log task log :', taskLog.id)
+    Log.info('log task log :', taskLog.id)
     return taskLog
   }
 

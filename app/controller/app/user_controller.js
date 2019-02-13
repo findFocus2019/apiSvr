@@ -357,11 +357,7 @@ class UserController extends Controller {
 
     if (postId) {
       let postsModel = new this.models.posts_model
-      let post = await postsModel.model().findOne({
-        where: {
-          uuid: postId
-        }
-      })
+      let post = await postsModel.model().findByPk(postId)
       if (!post) {
         return this._fail(ctx, '无效分享条目')
       }
@@ -375,11 +371,7 @@ class UserController extends Controller {
 
     if (goodsId) {
       let goodsModel = (new this.models.mall_model).goodsModel()
-      let goods = await goodsModel.findOne({
-        where: {
-          uuid: goodsId
-        }
-      })
+      let goods = await goodsModel.findByPk(goodsId)
       if (!goods) {
         return this._fail(ctx, '无效商品分享条目')
       }
@@ -397,7 +389,7 @@ class UserController extends Controller {
     })
 
     ctx.ret.data = {
-      share: share
+      info: share
     }
     return ctx.ret
 
