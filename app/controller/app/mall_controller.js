@@ -372,7 +372,7 @@ class MallController extends Controller {
    * @param {*} t 
    */
   async _creareOrderItem(ctx, order, item, t = null) {
-    item.price_cost = 90
+    // item.price_cost = 90
     this.logger.info(ctx.uuid, '_creareOrderItem order', order)
     this.logger.info(ctx.uuid, '_creareOrderItem item', item)
 

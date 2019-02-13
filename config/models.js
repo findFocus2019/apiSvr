@@ -542,7 +542,7 @@ module.exports = {
         num_rabate: FIELDS.money('num_rabate'),
         num_rabate_share: FIELDS.money('num_rabate_share'),
         num_rabate_post: FIELDS.money('num_rabate_post'),
-        num_rabate_invite: FIELDS.money('num_rabate_post'),
+        num_rabate_invite: FIELDS.money('num_rabate_invite'),
         share_user_id: FIELDS.bigInt(),
         post_user_id: FIELDS.bigInt(),
         invite_user_id: FIELDS.bigInt(),
