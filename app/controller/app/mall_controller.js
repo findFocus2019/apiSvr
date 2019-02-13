@@ -982,13 +982,13 @@ class MallController extends Controller {
    * 申请售后
    * @param {*} ctx 
    */
-  async orderAfter(ctx) {
+  async orderAfterApply(ctx) {
     this.logger.info(ctx.uuid, 'orderAfter()', 'body', ctx.body, 'query', ctx.query)
 
     let userId = ctx.body.user_id
     let orderId = ctx.body.order_id
-    let goodsId = ctx.body.goods_id
-
+    let goodsIds = ctx.body.goods_ids
+    goodsIds = '-' + goodsIds.join('-') + '-'
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
 
@@ -997,18 +997,34 @@ class MallController extends Controller {
       return this._fail(ctx, '订单错误')
     }
 
+    let afterNo = this._createOrderNo(ctx)
     let orderAfterModel = mallModel.orderAfterModel()
+
+    let find = await orderAfterModel.findOne({
+      where: {
+        user_id: userId,
+        order_id: orderId,
+        goods_ids: {
+          [Op.like]: '%' + goodsIds + '%'
+        },
+        status: {
+          [Op.in]: [0, 1]
+        }
+      }
+    })
+    if (find) {
+      return this._fail(ctx, '请不要重复提交')
+    }
+
 
     let orderAfter = await orderAfterModel.create({
       user_id: userId,
       order_id: orderId,
-      goods_id: goodsId,
+      goods_ids: goodsIds,
       imgs: ctx.body.imgs,
       info: ctx.body.info,
-      name: ctx.body.name,
-      mobile: ctx.body.mobile,
-      type: ctx.body.type || 1,
-      order_status: ctx.body.status || 3
+      type: ctx.body.type || '',
+      after_no: afterNo
     })
     if (!orderAfter) {
       return this._fail(ctx, '保存数据失败')
@@ -1031,7 +1047,7 @@ class MallController extends Controller {
     let limit = ctx.body.limit || 10
 
     let mallModel = new this.models.mall_model
-
+    let orderModel = mallModel.orderModel()
     let orderAfterModel = mallModel.orderAfterModel()
 
     let queryRet = await orderAfterModel.findAndCountAll({
@@ -1045,8 +1061,33 @@ class MallController extends Controller {
       ],
     })
 
+    let rows = []
+    for (let index = 0; index < queryRet.rows.length; index++) {
+      const row = queryRet.rows[index];
+      let createDate = this.utils.date_utils.dateFormat(row.crate_time, 'YYYY-MM-DD HH:mm')
+      row.dataValues.create_date = createDate
+
+      let order = await orderModel.findByPk(row.order_id)
+      row.dataValues.order = order
+
+      let goodsIds = row.goods_ids.substr(1, row.goods_ids.length - 2).split('-')
+      let goodsItems = order.goods_items
+      console.log('goodsIds =================', goodsIds)
+      let items = []
+      goodsItems.forEach(item => {
+        console.log(item)
+        if (goodsIds.indexOf(item.id.toString()) > -1) {
+          items.push(item)
+        }
+      })
+
+      row.dataValues.items = items
+
+      rows.push(row)
+    }
+
     ctx.ret.data = {
-      rows: queryRet.rows || [],
+      rows: rows || [],
       count: queryRet.count || 0,
       page: page,
       limit: limit
@@ -1077,7 +1118,9 @@ class MallController extends Controller {
         ['update_time', 'desc']
       ],
     })
-
+    queryRet.rows.forEach(row => {
+      row.dataValues.rate_date = this.utils.date_utils.dateFormat(row.rate_time, 'YYYY-MM-DD HH:mm')
+    })
     ctx.ret.data = {
       rows: queryRet.rows || [],
       count: queryRet.count || 0,
@@ -1125,7 +1168,7 @@ class MallController extends Controller {
     let mallModel = new this.models.mall_model
     let orderItemModel = mallModel.orderItemModel()
 
-    let orderItem = await orderItemModel.findByPk(orderItemModel)
+    let orderItem = await orderItemModel.findByPk(orderItemId)
     if (orderItem.user_id != userId) {
       return this._fail(ctx, '订单错误')
     }

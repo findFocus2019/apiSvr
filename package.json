@@ -8,7 +8,9 @@
     "dev": "cross-env NODE_ENV=dev nodemon index.js",
     "schedule_dev": "node schedule/index.js",
     "schedule_start": "forever start schedule/index.js",
-    "schedule_stop": "forever stop schedule/index.js"
+    "schedule_stop": "forever stop schedule/index.js",
+    "start": "cross-env NODE_ENV=production forever start index.js",
+    "stop": "forever stop index.js"
   },
   "repository": {
     "type": "git",

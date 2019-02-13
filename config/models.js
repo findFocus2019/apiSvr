@@ -566,13 +566,12 @@ module.exports = {
         status: getStatusFields(1),
         user_id: FIELDS.bigInt(),
         order_id: FIELDS.bigInt(),
-        goods_id: FIELDS.bigInt(),
+        goods_ids: FIELDS.stringLen(1000),
         imgs: FIELDS.jsonArr('imgs'),
         info: FIELDS.text(),
-        type: FIELDS.tinyInt(),
-        order_status: FIELDS.tinyInt(),
-        name: FIELDS.stringLen(64),
-        mobile: FIELDS.stringLen(16)
+        type: FIELDS.stringLen(64),
+        category: FIELDS.stringLen(64),
+        after_no: FIELDS.stringLen(64)
       },
       {
         ...commonOpts,
