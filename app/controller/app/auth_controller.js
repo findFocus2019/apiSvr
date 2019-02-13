@@ -133,9 +133,10 @@ class AuthController extends Controller {
       verify_code,
       type
     } = ctx.body
-    let inviteCode = ctx.body.invite_code
-    let pid = 0
-    let pUser
+
+    let pid = ctx.body.pid || 0
+    // let inviteCode = ctx.body.invite_code
+    // let pUser
 
     // type 0:注册 1:忘记密码 2:老用户绑定 3:3方登录绑定
 
@@ -147,16 +148,16 @@ class AuthController extends Controller {
     }
     let userModel = new this.models.user_model()
 
-    if (inviteCode) {
-      let pUser = await userModel.model().findOne({
-        uuid: inviteCode
-      })
-      if (!pUser) {
-        return this._fail(ctx, '邀请码错误')
-      } else {
-        pid = pUser.id
-      }
-    }
+    // if (inviteCode) {
+    //   let pUser = await userModel.model().findOne({
+    //     uuid: inviteCode
+    //   })
+    //   if (!pUser) {
+    //     return this._fail(ctx, '邀请码错误')
+    //   } else {
+    //     pid = pUser.id
+    //   }
+    // }
 
 
     let user = await userModel.model().findOne({
