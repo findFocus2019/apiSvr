@@ -16,7 +16,7 @@ class PostsController extends Controller {
       let userModel = new this.models.user_model
       let checkRet = await userModel.checkAuth(ctx)
       if (checkRet.code !== 0) {
-        return this._fail(ctx, checkRet.message)
+        return this._fail(ctx, checkRet.message, checkRet.code)
       }
     } else {
       console.log(ctx.uuid, 'ctx.body.user_id=============', ctx.body.user_id)
