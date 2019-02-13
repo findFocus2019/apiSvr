@@ -12,7 +12,7 @@ class PostsController extends Controller {
     }
 
     console.log('ctx.body.token=============', ctx.token)
-    if (needCheckToken) {
+    if (needCheckToken || ctx.token) {
       let userModel = new this.models.user_model
       let checkRet = await userModel.checkAuth(ctx)
       if (checkRet.code !== 0) {

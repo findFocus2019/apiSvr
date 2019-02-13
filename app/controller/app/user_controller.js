@@ -914,7 +914,7 @@ class UserController extends Controller {
     let type = ctx.body.type || 0
 
     let page = ctx.body.page || 1
-    let limit = ctx.body.limt || 10
+    let limit = ctx.body.limit || 10
 
     let where = {}
     where.status = 1
@@ -1029,8 +1029,12 @@ class UserController extends Controller {
 
       let ret = await find.save()
       if (!ret) {
-        ctx.code = 1
-        ctx.message = find.status == 1 ? '收藏失败' : '取消收藏失败'
+        ctx.ret.code = 1
+        ctx.ret.message = find.status == 1 ? '收藏失败' : '取消收藏失败'
+        return ctx.ret
+      } else {
+        ctx.ret.code = 0
+        ctx.ret.message = find.status == 1 ? '收藏成功' : '取消收藏成功'
         return ctx.ret
       }
 
@@ -1038,8 +1042,8 @@ class UserController extends Controller {
       // 
       let collection = await collectionModel.create(findData)
       if (!collection) {
-        ctx.code = 1
-        ctx.message = '收藏失败'
+        ctx.ret.code = 1
+        ctx.ret.message = '记录收藏数据失败'
         return ctx.ret
       }
 
