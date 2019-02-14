@@ -204,8 +204,25 @@ class UserModel extends Model {
     return ret
   }
 
+  /**
+   * 弃用
+   * @param {*} userId 
+   */
+  // async isVip(userId) {
+  //   let user = await this.model().findByPk(userId)
+  //   if (!user) {
+  //     return false
+  //   }
+  //   let now = parseInt(Date.now() / 1000)
+  //   if (user.vip && user.startline <= now && user.deadline >= now) {
+  //     return true
+  //   } else {
+  //     return false
+  //   }
+  // }
+
   async isVip(userId) {
-    let user = await this.model().findByPk(userId)
+    let user = await this.getInfoByUserId(userId)
     if (!user) {
       return false
     }

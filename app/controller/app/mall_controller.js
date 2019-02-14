@@ -229,7 +229,7 @@ class MallController extends Controller {
       for (let index = 0; index < orderDatas.length; index++) {
         let orderItem = orderDatas[index]
         let items = orderItem.items
-        let orderType = orderItem.order_type || 1 // 1:自营 2:京东
+        let orderType = orderItem.hasOwnProperty('order_type') ? orderItem.order_type : 1 // 1:自营 2:京东
 
         let goodsIds = []
         let goodsItems = []
@@ -250,18 +250,21 @@ class MallController extends Controller {
           }
 
           // 判断库存
-          if (num > goods.stock && goods.stock != -1) {
-            throw new Error(`${item.title}库存不足`)
-          } else {
-            // 更新库存
-            goods.stock = goods.stock - num
-            let stockRet = await goods.save({
-              transaction: t
-            })
-            if (!stockRet) {
-              throw new Error(`${item.title}库存更新失败`)
+          if (goods.stock != -1) {
+            if (num > goods.stock) {
+              throw new Error(`${item.title}库存不足`)
+            } else {
+              // 更新库存
+              goods.stock = goods.stock - num
+              let stockRet = await goods.save({
+                transaction: t
+              })
+              if (!stockRet) {
+                throw new Error(`${item.title}库存更新失败`)
+              }
             }
           }
+
 
           total += goods.price_sell * num
           totalVip += goods.price_vip * num
@@ -599,6 +602,8 @@ class MallController extends Controller {
           }
 
           ecard = userEcard.amount
+        } else {
+          ecard = total // ecard使用金额是订单金额
         }
       } else if (payType == 2) {
         // 余额支付
@@ -717,16 +722,7 @@ class MallController extends Controller {
         payment.status = 1
       }
 
-      // 更新用户信息
-      userInfo.balance = userInfo.balance - payment.balance
-      userInfo.score = userInfo.score - payment.score
-      let userInfoRet = await userInfo.save({
-        transaction: t
-      })
-      this.logger.info(ctx.uuid, 'orderPayConfirm() userInfoRet', userInfoRet)
-      if (!userInfoRet) {
-        throw new Error('更新用户信息失败')
-      }
+
 
       // if (payment.balance) {
 
@@ -750,6 +746,8 @@ class MallController extends Controller {
       let orderIds = payment.order_ids.substr(1, payment.order_ids.length - 2).split('-')
       this.logger.info(ctx.uuid, 'orderPayConfirm() orderIds', orderIds)
 
+      let userSetVip = 0
+
       for (let index = 0; index < orderIds.length; index++) {
         const orderId = orderIds[index]
 
@@ -759,12 +757,43 @@ class MallController extends Controller {
         }
         this.logger.info(ctx.uuid, 'orderPayConfirm() order', order.id)
         // let items = order.goods_items
-        // 这里不计算返利，记录返利，7天后结算 TODO
-        let rabateRet = await this._creareOrderItems(ctx, order, t)
-        // let rabateRet = await this._rabate(ctx, items, t)
-        this.logger.info(ctx.uuid, 'orderPayConfirm() rabateRet', rabateRet)
-        if (rabateRet.code != 0) {
-          throw new Error(rabateRet.message)
+        if (order.order_type != 0) {
+          // 这里不计算返利，记录返利，7天后结算 TODO
+          let rabateRet = await this._creareOrderItems(ctx, order, t)
+          // let rabateRet = await this._rabate(ctx, items, t)
+          this.logger.info(ctx.uuid, 'orderPayConfirm() rabateRet', rabateRet)
+          if (rabateRet.code != 0) {
+            throw new Error(rabateRet.message)
+          }
+        } else {
+          // vip充值订单，发放代金券，更新用户vip时间
+          let userVipRet = this._userVipDeal(ctx, order, t)
+          if (userVipRet.code != 0) {
+            throw new Error(userVipRet.message)
+          } else {
+            userSetVip = 1
+          }
+        }
+
+        // 更新用户信息
+        userInfo.balance = userInfo.balance - payment.balance
+        userInfo.score = userInfo.score - payment.score
+
+        // vip信息
+        if (userSetVip == 1) {
+          userInfo.vip = 1
+          let now = parseInt(Date.now() / 1000)
+          if (!userInfo.startline) {
+            userInfo.startline = now
+          }
+          userInfo.deadline = this.utils.date_utils.monthPlus(parseInt(Date.now() / 1000), 1)
+        }
+        let userInfoRet = await userInfo.save({
+          transaction: t
+        })
+        this.logger.info(ctx.uuid, 'orderPayConfirm() userInfoRet', userInfoRet)
+        if (!userInfoRet) {
+          throw new Error('更新用户信息失败')
         }
 
         order.payment = {
@@ -798,6 +827,32 @@ class MallController extends Controller {
       console.log(err)
       t.rollback()
       return this._fail(ctx, err.message)
+    }
+
+    return ctx.ret
+  }
+
+  async _userVipDeal(ctx, order, t) {
+    this.logger.info(ctx.uuid, 'orderList()', 'body', ctx.body, 'query', ctx.query)
+    let amount = order.tatol
+    let price = amount
+    let userId = ctx.body.user_id
+    let opts = {}
+    if (t) {
+      opts.transaction = t
+    }
+    let userModel = new this.models.user_model
+    let ecardRet = await userModel.ecardModel.create({
+      amount: amount,
+      price: price,
+      status: 1,
+      user_id: userId
+    }, opts)
+
+    if (!ecardRet) {
+      ctx.ret.code = 1
+      ctx.ret.message = '用户代金券数据记录失败'
+      return ctx.ret
     }
 
     return ctx.ret
