@@ -658,5 +658,19 @@ module.exports = {
         tableName: 't_album'
       }
     ]
+  },
+  verifycode: () => {
+    return [{
+      ...commonFieldGet(),
+      mobile: FIELDS.stringLen(16),
+      verify_code: FIELDS.defaultInt(),
+      status: FIELDS.tinyInt(),
+
+    },
+    {
+      ...commonOpts,
+      tableName:'t_verify_code_records'
+    }
+    ]
   }
 }

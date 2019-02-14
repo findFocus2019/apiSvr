@@ -7,5 +7,6 @@ module.exports = {
   mall_model: require('./mall_model'),
   notice_model: require('./notice_model'),
   config_model: require('./config_model'),
-  album_model: require('./album_model')
+  album_model: require('./album_model'),
+  verifycode_model: require('./verifycode_model')
 }
