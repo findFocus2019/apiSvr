@@ -502,7 +502,9 @@ class UserController extends Controller {
         attributes: ['id', 'uuid', 'title', 'cover']
       }],
     })
-
+    queryRet.rows.forEach(row => {
+      row.dataValues.create_date = this.utils.date_utils.dateFormat(row.create_time, 'YYYY-MM-DD HH:mm:ss')
+    })
     ctx.ret.data = {
       rows: queryRet.rows,
       count: queryRet.count,
