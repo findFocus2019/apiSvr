@@ -24,7 +24,6 @@ class CodeController extends Controller {
         // smsUtils.sendVerifyCodeSms(mobile, code)
         ctx.ret.code = 200
         ctx.ret.message = '发送验证码成功'
-        ctx.ret.data = code
       } else {
         ctx.ret.code = 400
         ctx.ret.message = '请检查参数'
