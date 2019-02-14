@@ -120,9 +120,9 @@ module.exports = {
         mobile: FIELDS.stringLen(16),
         password: FIELDS.stringLen(32),
         pid: FIELDS.bigInt(),
-        vip: FIELDS.tinyInt(),
-        vip_startline: FIELDS.defaultInt(),
-        vip_deadline: FIELDS.defaultInt(),
+        // vip: FIELDS.tinyInt(),
+        // vip_startline: FIELDS.defaultInt(),
+        // vip_deadline: FIELDS.defaultInt(),
         login_type: FIELDS.tinyInt(),
         last_signin_time: FIELDS.defaultInt(),
         last_signin_ip: FIELDS.stringLen(24),
@@ -155,7 +155,10 @@ module.exports = {
         share_level: FIELDS.tinyInt(),
         alipay: FIELDS.stringLen(32),
         openid: FIELDS.stringLen(32),
-        password_trade: FIELDS.stringLen(32)
+        password_trade: FIELDS.stringLen(32),
+        vip: FIELDS.tinyInt(),
+        vip_startline: FIELDS.defaultInt(),
+        vip_deadline: FIELDS.defaultInt(),
       },
       {
         ...commonOpts,
@@ -457,7 +460,8 @@ module.exports = {
           uuid: FIELDS.uuid(),
           sales: FIELDS.defaultInt(),
           img_1: FIELDS.stringLen(255),
-          img_2: FIELDS.stringLen(255)
+          img_2: FIELDS.stringLen(255),
+          is_share: FIELDS.tinyInt()
         },
         {
           ...commonOpts,

@@ -1,4 +1,5 @@
 const Controller = require('./../../../lib/controller')
+const Op = require('sequelize').Op
 const request = require('superagent')
 
 class PubController extends Controller {
@@ -66,6 +67,66 @@ class PubController extends Controller {
     // console.log(json.text)
     this.logger.info(ctx.uuid, 'codeToSession()', 'json', json)
     ctx.ret.data = JSON.parse(json.text)
+    return ctx.ret
+  }
+
+  async searchPosts(ctx) {
+
+    let type = ctx.body.type || 0
+    let keyword = ctx.body.keyword
+
+    let postsModel = new this.models.posts_model
+
+    let where = {}
+    where.status = 1
+    if (type) {
+      where.type = type
+    }
+    where.title = {
+      [Op.like]: '%' + keyword + '%'
+    }
+
+    let rows = await postsModel.model().findAll({
+      where: where,
+      offset: 0,
+      limit: 1,
+      order: [
+        ['create_time', 'desc']
+      ],
+      attributes: this.config.postListAttributes
+    })
+
+    ctx.ret.data = {
+      rows: rows
+    }
+
+    return ctx.ret
+  }
+
+  async searchGoods(ctx) {
+    let keyword = ctx.body.keyword
+    let mallModel = new this.models.mall_model
+
+    let where = {}
+    where.status = 1
+    where.title = {
+      [Op.like]: '%' + keyword + '%'
+    }
+
+    let rows = await mallModel.goodsModel().findAll({
+      where: where,
+      offset: 0,
+      limit: 1,
+      order: [
+        ['create_time', 'desc']
+      ],
+      attributes: this.config.goodsListAttributes
+    })
+
+    ctx.ret.data = {
+      rows: rows
+    }
+
     return ctx.ret
   }
 }

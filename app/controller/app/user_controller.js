@@ -73,9 +73,12 @@ class UserController extends Controller {
     let userId = ctx.body.user_id
     let userModel = new this.models.user_model
     let info = await userModel.getInfoByUserId(userId)
-    let isVip = await userModel.isVip(userId)
+    // let isVip = await userModel.isVip(userId)
 
-    // isVip = true
+    let isVip = false
+    if (info.vip && info.startline <= now && info.deadline >= now) {
+      isVip = true
+    }
 
     ctx.ret.data = {
       info: info,
@@ -499,7 +502,9 @@ class UserController extends Controller {
         attributes: ['id', 'uuid', 'title', 'cover']
       }],
     })
-
+    queryRet.rows.forEach(row => {
+      row.dataValues.create_date = this.utils.date_utils.dateFormat(row.create_time, 'YYYY-MM-DD HH:mm:ss')
+    })
     ctx.ret.data = {
       rows: queryRet.rows,
       count: queryRet.count,
