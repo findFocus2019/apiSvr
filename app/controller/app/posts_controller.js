@@ -182,6 +182,10 @@ class PostsController extends Controller {
 
     info.content = info.content.replace(/&amp;/g, '&')
 
+    const regex = new RegExp('<img', 'gi')
+
+    info.content = info.content.replace(regex, `<img style="max-width: 100%;"`)
+
     let publishTime = this.utils.date_utils.dateFormat(info.pub_date, 'YYYY-MM-DD HH:mm')
     this.logger.info(ctx.uuid, 'info()', 'publishTime', publishTime)
     info.dataValues.publish_time = publishTime

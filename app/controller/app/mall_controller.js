@@ -72,8 +72,10 @@ class MallController extends Controller {
     if (category === 'all') {
       category = ''
     }
+    let isShare = ctx.body.is_share
 
     let where = {}
+
     where.status = 1
     where.update_time = {
       [Op.lte]: timestamp
@@ -86,6 +88,9 @@ class MallController extends Controller {
       where.title = {
         [Op.like]: '%' + search + '%'
       }
+    }
+    if (isShare) {
+      where.is_share = isShare
     }
     this.logger.info(ctx.uuid, 'goodsList()', 'where', where)
 

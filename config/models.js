@@ -457,7 +457,8 @@ module.exports = {
           uuid: FIELDS.uuid(),
           sales: FIELDS.defaultInt(),
           img_1: FIELDS.stringLen(255),
-          img_2: FIELDS.stringLen(255)
+          img_2: FIELDS.stringLen(255),
+          is_share: FIELDS.tinyInt()
         },
         {
           ...commonOpts,
