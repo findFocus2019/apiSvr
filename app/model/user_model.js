@@ -9,7 +9,8 @@ const {
   userDailySign,
   userEcard,
   userInvoice,
-  userCollection
+  userCollection,
+  userTransaction
 } = require('./../../config/models')
 const uuid = require('uuid')
 
@@ -53,6 +54,11 @@ class UserModel extends Model {
 
   collectionModel() {
     return this.db().define('user_collection', userCollection()[0], userCollection()[1])
+  }
+
+  transactionModel() {
+
+    return this.db().define('user_transaction', userTransaction()[0], userTransaction()[1])
   }
 
   async checkAuth(ctx) {
@@ -318,6 +324,28 @@ class UserModel extends Model {
     })
 
     return find
+  }
+
+  async transactionAdd(userId, type = 1, data, t = null) {
+    let transactionData = {}
+    transactionData.type = type || 1
+    if (type == 2 || type == 3) {
+      data.balance = -1 * data.balance
+    }
+    transactionData.balance = data.balance || 0
+    transactionData.amount = data.amount || 0
+    transactionData.score = data.score || 0
+    transactionData.status = data.hasOwnProperty('status') ? data.status : 1
+    transactionData.user_id = userId
+    transactionData.method = data.method || 'alipay'
+    transactionData.remark = data.remark || ''
+
+    let opts = {}
+    if (t) {
+      opts.transaction = t
+    }
+    let transaction = await this.transactionModel().create(transactionData, opts)
+    return transaction
   }
 
 

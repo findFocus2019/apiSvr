@@ -1,3 +1,5 @@
+const alipay = require('./alipay')
+
 module.exports = {
   port: 5001,
   signKey: '123456',
@@ -80,6 +82,8 @@ module.exports = {
     appId: 'wx2e40960c5cfb7723',
     appSecret: '0908b751cef2388e00847eb29e8303ad'
   },
+
+  alipay: alipay,
 
   defaultInivteUserId: 1
 }

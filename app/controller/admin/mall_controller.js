@@ -235,6 +235,55 @@ class MallController extends Controller {
     this.logger.info(ctx.uuid, 'paymentList()', 'ret', ctx.ret)
     return ctx.ret
   }
+
+  async transOutDeal(ctx) {
+    this.logger.info(ctx.uuid, 'transOutDeal()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    let transactionId = ctx.body.id
+
+    let userModel = new this.models.user_model
+    let t = await userModel.getTrans()
+
+    try {
+      let transaction = await userModel.transactionModel().findByPk(transactionId)
+      this.logger.info(ctx.uuid, 'transOutDeal()', 'aliRtransactionet', transaction)
+      if (!transaction || transaction.status == 1) {
+        throw new Error('无效数据')
+      }
+      let userId = transaction.user_id
+      let method = transaction.method
+      let balance = -1 * transaction.balance
+
+      let userInfo = userModel.getInfoByUserId(userId)
+      if (method == 'wxpay') {
+        throw new Error('未启用微信支付')
+      } else if (method == 'alipay') {
+        // 支付宝
+        let alipayAccount = userInfo.alipay
+        let alipayUtils = this.utils.alipay_utils
+        let tradeNo = this.utils.uuid_utils.v4()
+        let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, balance)
+        this.logger.info(ctx.uuid, 'transOutDeal()', 'aliRet', aliRet)
+        if (aliRet.code != 0) {
+          throw new Error(aliRet.message)
+        }
+
+      }
+
+      transaction.status = 1
+      let saveRet = await transaction.save({
+        transaction: t
+      })
+      if (!saveRet) {
+        throw new Error('数据更新失败')
+      }
+
+    } catch (err) {
+      t.rollback()
+      return this._fail(ctx, err.message)
+    }
+
+    return ctx.ret
+  }
 }
 
 module.exports = MallController

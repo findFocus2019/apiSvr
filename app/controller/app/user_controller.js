@@ -1304,9 +1304,84 @@ class UserController extends Controller {
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
 
-    let taskModel = this.models.task_model
+    let taskModel = new this.models.task_model
 
-    let queryRet = await taskModel.findAndCountAll({
+    let queryRet = await taskModel.model().findAndCountAll({
+      where: {
+        user_id: userId
+      },
+      offset: (page - 1) * limit,
+      limit: limit,
+      order: [
+        ['create_time', 'desc']
+      ]
+    })
+
+    ctx.ret.data = {
+      rows: queryRet.rows,
+      count: queryRet.count,
+      page: page
+    }
+
+    return ctx.ret
+  }
+
+  async transOutApply(ctx) {
+    this.logger.info(ctx.uuid, 'transactionApply()', 'body', ctx.body, 'query', ctx.query)
+    let userId = ctx.body.user_id
+    let balance = ctx.body.balance
+    let method = ctx.body.method
+    let type = ctx.body.type || 2
+    let status = ctx.body.status || 0
+
+    let userModel = new this.models.user_model
+    let t = await userModel.getTrans()
+
+    try {
+      let data = {
+        balance: balance,
+        method: method,
+        status: status
+      }
+
+      let userInfo = await userModel.getInfoByUserId(userId)
+      if (userInfo.balance - balance < 0) {
+        throw new Error('提现金额有误')
+      }
+      userInfo.balance = userInfo.balance - balance
+      let userRet = await userInfo.save({
+        transaction: t
+      })
+      if (!userRet) {
+        throw new Error('更新用户账户余额失败')
+      }
+
+      let transaction = await userModel.transactionAdd(userId, type, data, t)
+      console.log(transaction)
+
+      if (!transaction) {
+        throw new Error('保存数据出错')
+      }
+
+      t.commit()
+    } catch (err) {
+      console.log(err)
+      t.rollback()
+      return this._fail(ctx, err.message)
+    }
+
+    return ctx.ret
+  }
+
+  async transactionList(ctx) {
+    this.logger.info(ctx.uuid, 'transactionList()', 'body', ctx.body, 'query', ctx.query)
+    let userId = ctx.body.user_id
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+
+    let userModel = new this.models.user_model
+    let transactionModel = userModel.transactionModel()
+    let queryRet = await transactionModel.findAndCountAll({
       where: {
         user_id: userId
       },

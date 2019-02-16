@@ -273,6 +273,23 @@ module.exports = {
       }
     ]
   },
+  userTransaction: () => {
+    return [{
+      ...commonFieldGet(),
+      status: getStatusFields(0),
+      user_id: FIELDS.bigInt(),
+      type: FIELDS.tinyInt(),
+      balance: FIELDS.money('balance'),
+      amount: FIELDS.money('amount'),
+      score: FIELDS.defaultInt(),
+      method: FIELDS.stringLen(12),
+      remark: FIELDS.stringLen(255)
+    }, {
+      ...commonOpts,
+      tableName: 't_user_transaction'
+    }]
+
+  },
   oAuth: () => {
     return [{
         ...commonFieldGet(),
@@ -665,16 +682,16 @@ module.exports = {
   },
   verifycode: () => {
     return [{
-      ...commonFieldGet(),
-      mobile: FIELDS.stringLen(16),
-      verify_code: FIELDS.defaultInt(),
-      status: FIELDS.tinyInt(),
+        ...commonFieldGet(),
+        mobile: FIELDS.stringLen(16),
+        verify_code: FIELDS.defaultInt(),
+        status: FIELDS.tinyInt(),
 
-    },
-    {
-      ...commonOpts,
-      tableName:'t_verify_code_records'
-    }
+      },
+      {
+        ...commonOpts,
+        tableName: 't_verify_code_records'
+      }
     ]
   }
 }

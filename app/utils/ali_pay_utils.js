@@ -84,6 +84,10 @@ class AliPayUtils {
   wapPay(opts) {
     return this.aliPay.wapPay(opts);
   }
+
+  toAccountTransfer(opts) {
+    return this.aliPay
+  }
 }
 
 // let ali = new AliPayUtils()

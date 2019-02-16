@@ -25,6 +25,7 @@
   "dependencies": {
     "ali-oss": "^6.1.0",
     "alipay-node-sdk": "^1.1.8",
+    "alipay-sdk": "^3.0.4",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "log4js": "^3.0.6",
