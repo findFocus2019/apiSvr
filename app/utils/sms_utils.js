@@ -23,7 +23,7 @@ class SmsUtils {
       .set('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8;')
       .send(content)
     console.log(result)
-    return result
+    return result.response
   }
 }
 

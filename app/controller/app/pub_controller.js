@@ -129,6 +129,20 @@ class PubController extends Controller {
 
     return ctx.ret
   }
+
+  async sendSmsCode(ctx) {
+    let  mobile  = ctx.body.mobile
+    let verifyModel = new this.models.verifycode_model
+    ctx.ret = await verifyModel.send(mobile)
+    return ctx.ret
+  }
+
+  // async verifyCode(ctx) {
+  //   let { mobile, code } = ctx.body
+  //   let verifyModel = new this.models.verifycode_model
+  //   ctx.ret = await verifyModel.verify(mobile, code)
+  //   return ctx.ret
+  // }
 }
 
 module.exports = PubController
