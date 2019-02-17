@@ -141,11 +141,19 @@ class AuthController extends Controller {
     // type 0:注册 1:忘记密码 2:老用户绑定 3:3方登录绑定
 
     // TODO 短信验证
-    if (verify_code != '0512') {
-      ctx.ret.code = 1
-      ctx.ret.message = '验证码错误'
-      return ctx.ret
+    // if (verify_code != '0512') {
+    //   ctx.ret.code = 1
+    //   ctx.ret.message = '验证码错误'
+    //   return ctx.ret
+    // }
+
+    let verifyCodeModel = new this.models.verifycode_model
+    let verifyRet = await verifyCodeModel.verify(mobile , verify_code)
+    this.logger.info(ctx.uuid, 'passwordTradeSet()', 'verifyRet', verifyRet)
+    if(verifyRet.code != 0){
+      return this._fail(ctx, '短信验证失败，' + verifyRet.message)
     }
+
     let userModel = new this.models.user_model()
 
     // if (inviteCode) {
@@ -290,7 +298,7 @@ class AuthController extends Controller {
       let t = await userModel.getTrans()
       let taskModel = new this.models.task_model
       let taskData = {
-        user_id: pid,
+        user_id: user.id,
         model_id: 0,
         ip: ctx.ip
       }

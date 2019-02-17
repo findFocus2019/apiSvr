@@ -50,12 +50,13 @@ class VerifyCodeModel extends Model {
           ['id', 'DESC']
         ]
       })
+      console.log('verify =================', rows.status)
       //TODO 时间过期
       if (rows.status != 1) {
         ret.code = 403
         ret.message = '验证码已失效'
       } else {
-        rows.status = 0
+        rows.status = 1
         await rows.save()
         ret.code = 0
         ret.message = '验证成功'

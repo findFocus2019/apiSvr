@@ -1,6 +1,7 @@
 const moment = require('moment')
 const crypto = require('crypto')
 const request = require('request')
+const superagent = require('superagent')
 const getWayUrl = 'https://openapi.alipay.com/gateway.do' // 正式环境
 const getWayUrlTest = 'https://openapi.alipaydev.com/gateway.do' //
 // const getWayUrl = 'https://openapi.alipaydev.com/gateway.do' // 测试环境
@@ -76,27 +77,30 @@ class AlipayUtils {
   /**
    * app支付
    */
-  async appPay() {
+  async appPay(out_trade_no, total_amount, body, subject) {
     let method = METHOD.APP_PAY
     let requestObj = this._getRequestObj(method)
 
     let bizContent = {}
-    bizContent.out_biz_no = out_biz_no
-    bizContent.payee_type = payee_type
-    bizContent.payee_account = payee_account
-    bizContent.amount = amount
+    bizContent.out_trade_no = out_trade_no
+    bizContent.total_amount = total_amount
+    bizContent.body = body
+    bizContent.subject = subject
 
     requestObj.biz_content = JSON.stringify(bizContent)
     let sign = this._sign(requestObj, this.rsaPrivateKey)
     requestObj.sign = sign
 
-    let action = this._buildRquestUrl(requestObj)
-
-    let resultRequest = await this._requestGet(action)
-    // console.log('=================' , typeof resultRequest)
-
-
-    let response = resultRequest.alipay_trade_app_pay_response
+    // let action = this._buildRquestUrl(requestObj)
+    let action = this._buildRquestParams(requestObj)
+    console.log(action)
+    return action
+    // console.log('appPay action =================' , action)
+    // let resultRequest = await this._requestGet(action)
+    // let params= this._buildRquestParams(requestObj)
+    // let resultRequest = await this._requestPost(this.getWayUrl, params)
+    // console.log('appPay resultRequest =================' , resultRequest)
+    // let response = resultRequest.alipay_trade_app_pay_response
     return this._getResult(response)
   }
 
@@ -271,39 +275,53 @@ class AlipayUtils {
     return url
   }
 
-  _requestPost(action, data) {
+  _buildRquestParams(params){
+    let paramsArr = []
+    for (let key in params) {
+      let paramsValue = encodeURIComponent(params[key])
+      paramsArr.push(key + '=' + paramsValue)
+    }
+    let paramsStr = paramsArr.join('&')
+    return paramsStr
+  }
 
-    let contentType = 'application/json'
-    let body = data
+  async _requestPost(action, data) {
+    console.log(data)
+    let ret = await superagent.post(action).send(data).type('json')
+    // let contentType = 'application/json'
+    // let body = data
 
-    return new Promise((resolve, reject) => {
-      request({
-        url: action,
-        method: 'POST',
-        json: true,
-        headers: {
-          'content-type': contentType,
-        },
-        body: body
-      }, function (error, response, body) {
-        if (error) {
-          reject(response)
-        }
-        if (!error && response.statusCode == 200) {
-          if (typeof body == 'string') {
-            body = JSON.parse(body)
-          }
+    // return new Promise((resolve, reject) => {
+    //   request({
+    //     url: action,
+    //     method: 'POST',
+    //     json: true,
+    //     headers: {
+    //       'content-type': contentType,
+    //     },
+    //     body: body
+    //   }, function (error, response, body) {
+    //     // console.log(response)
+    //     if (error) {
+    //       reject(response)
+    //     }
+    //     if (!error && response.statusCode == 200) {
+    //       if (typeof body == 'string') {
+    //         body = JSON.parse(body)
+    //       }
 
-          resolve(body)
-        }
-      })
-    })
+    //       resolve(body)
+    //     }
+    //   })
+    // })
   }
 
   _requestGet(action) {
     return new Promise((resolve, reject) => {
       request(action, (error, response, body) => {
+        // console.log(response.statusCode)
         if (error) {
+          // console.error(error)
           reject(error)
         }
 

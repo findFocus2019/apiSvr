@@ -253,12 +253,13 @@ class MallController extends Controller {
       let method = transaction.method
       let balance = -1 * transaction.balance
 
-      let userInfo = userModel.getInfoByUserId(userId)
+      let userInfo = await userModel.getInfoByUserId(userId)
       if (method == 'wxpay') {
         throw new Error('未启用微信支付')
       } else if (method == 'alipay') {
         // 支付宝
         let alipayAccount = userInfo.alipay
+        this.logger.info(ctx.uuid, 'transOutDeal()', 'alipayAccount', alipayAccount)
         let alipayUtils = this.utils.alipay_utils
         let tradeNo = this.utils.uuid_utils.v4()
         let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, balance)
@@ -277,6 +278,7 @@ class MallController extends Controller {
         throw new Error('数据更新失败')
       }
 
+      t.commit()
     } catch (err) {
       t.rollback()
       return this._fail(ctx, err.message)

@@ -526,7 +526,7 @@ module.exports = {
         balance: FIELDS.money('balance'),
         ecard: FIELDS.money('ecard'),
         ecard_id: FIELDS.bigInt(),
-        info: FIELDS.jsonObj('info'),
+        info: FIELDS.text(),
         uuid: FIELDS.stringLen(64),
         score: FIELDS.money('score')
       },

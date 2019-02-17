@@ -517,13 +517,27 @@ class MallController extends Controller {
 
   }
 
-  async _payThirdUnifiedorder(ctx) {
+  async _payThirdUnifiedorder(ctx, method, paymentData) {
 
     // TODO
-    ctx.ret.data = {
-      info: {}
+    if(method == 'alipay'){
+      this.logger.info(ctx.uuid, '_payThirdUnifiedorder alipay')
+      let outTradeNo = paymentData.out_trade_no
+      let amount = paymentData.amount
+      let body = paymentData.body
+      let subject = paymentData.subject
+      this.logger.info(ctx.uuid, '_payThirdUnifiedorder alipay' , outTradeNo, amount, body, subject)
+      let info = await this.utils.alipay_utils.appPay(outTradeNo, amount, body, subject)
+      this.logger.info(ctx.uuid, '_payThirdUnifiedorder info' , info)
+      ctx.ret.data = {
+        info: info
+      }
+      return ctx.ret
+    }else  if(method == 'wx'){
+
     }
-    return ctx.ret
+
+    // return ctx.ret
   }
   /**
    * 支付下单
@@ -617,7 +631,15 @@ class MallController extends Controller {
 
       if (amount > 0) {
         // 去3方支付下单
-        let payThirdRet = await this._payThirdUnifiedorder(ctx, payMethod, paymentUuid)
+        let paymentData = {
+          out_trade_no: paymentUuid,
+          amount: amount,
+          body: '发现焦点-订单支付',
+          subject: '' 
+        }
+        this.logger.info(ctx.uuid ,'orderPayPre()', payMethod , paymentData)
+        let payThirdRet = await this._payThirdUnifiedorder(ctx, payMethod, paymentData)
+        this.logger.info(ctx.uuid ,'orderPayPre() payThirdRet', payThirdRet)
         if (payThirdRet.code != 0) {
           throw new Error(payThirdRet.message)
         }

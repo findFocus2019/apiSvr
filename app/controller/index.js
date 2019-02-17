@@ -8,6 +8,9 @@ const {
   signKey
 } = require('./../../config/index')
 
+// 消息推送
+router.use('/notify' , require('./notify'))
+
 let groups = ['admin', 'app']
 
 let getGroupControllers = (group) => {

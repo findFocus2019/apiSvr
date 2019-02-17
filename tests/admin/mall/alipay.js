@@ -2,10 +2,10 @@ const request = require('./../../request')
 
 describe('test admin api', () => {
 
-  it('user register', async () => {
+  it('user transOutDeal', async () => {
     let ret = await request.post('admin/mall/transOutDeal', {
       body: {
-        id: 3
+        id: 5
       }
     })
 

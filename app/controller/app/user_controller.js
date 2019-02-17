@@ -151,6 +151,38 @@ class UserController extends Controller {
     return ctx.ret
   }
 
+  async passwordTradeSet(ctx){
+    this.logger.info(ctx.uuid, 'passwordTradeSet()', 'body', ctx.body, 'query', ctx.query)
+    let userId = ctx.body.user_id
+    let password = ctx.body.password
+    let verifyCode = ctx.body.verify_code
+
+    // TODO 短信验证
+    // if (verifyCode != '0512') {
+    //   return this._fail(ctx, '短信验证失败')
+    // }
+
+    let userModel = new this.models.user_model
+    let user = await userModel.getInfoByUserId(userId)
+
+    let verifyCodeModel = new this.models.verifycode_model
+    let verifyRet = await verifyCodeModel.verify(user.mobile , verifyCode)
+    this.logger.info(ctx.uuid, 'passwordTradeSet()', 'verifyRet', verifyRet)
+    if(verifyRet.code != 0){
+      return this._fail(ctx, '短信验证失败，' + verifyRet.message)
+    }
+
+    password = this.utils.crypto_utils.hmacMd5(password)
+    user.password_trade = password
+
+    let updateRet = await user.save()
+    if (!updateRet) {
+      return this._fail(ctx, '')
+    }
+
+    return ctx.ret
+  }
+
   /**
    * 重置密码
    * @param {*} ctx 
@@ -158,24 +190,26 @@ class UserController extends Controller {
   async resetPwd(ctx) {
     this.logger.info(ctx.uuid, 'resetPwd()', 'body', ctx.body, 'query', ctx.query)
     let userId = ctx.body.user_id
-    let type = ctx.body.type || 0
+    // let mobile = ctx.body.mobile || ''
     let password = ctx.body.password
     let verifyCode = ctx.body.verify_code
 
     // TODO 短信验证
-    if (verifyCode != '0512') {
-      return this._fail(ctx, '短信验证失败')
-    }
+    // if (verifyCode != '0512') {
+    //   return this._fail(ctx, '短信验证失败')
+    // }
 
     password = this.utils.crypto_utils.hmacMd5(password)
     let userModel = new this.models.user_model
     let user = await userModel.model().findByPk(userId)
 
-    if (type == 0) {
-      user.password = password
-    } else {
-      user.password_trade = password
+    let verifyCodeModel = new this.models.verifycode_model
+    let verifyRet = await verifyCodeModel.verify(user.mobile , verifyCode)
+    if(verifyRet.code != 0){
+      return this._fail(ctx, '短信验证失败，' + verifyRet.message)
     }
+
+    user.password = password
 
     let updateRet = await user.save()
     if (!updateRet) {
