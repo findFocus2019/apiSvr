@@ -90,7 +90,7 @@ class AlipayUtils {
     requestObj.biz_content = JSON.stringify(bizContent)
     let sign = this._sign(requestObj, this.rsaPrivateKey)
     requestObj.sign = sign
-
+    console.log('obj =========' , requestObj )
     // let action = this._buildRquestUrl(requestObj)
     let action = this._buildRquestParams(requestObj)
     console.log(action)
@@ -123,7 +123,7 @@ class AlipayUtils {
     let requestObj = {}
     requestObj.app_id = this.appId
     requestObj.method = method
-    requestObj.format = 'json'
+    // requestObj.format = 'json'
     // 
     requestObj.charset = 'utf-8'
     requestObj.sign_type = 'RSA2'
@@ -207,7 +207,7 @@ class AlipayUtils {
     let sign = this._sign(requestObj, this.rsaPrivateKey)
     requestObj.sign = sign
 
-    // console.log(sign)
+    console.log('requestObj' , requestObj)
     let action = this._buildRquestUrl(requestObj)
     // console.log('===================',action)
     let resultRequest = await this._requestGet(action)
@@ -234,8 +234,10 @@ class AlipayUtils {
     // console.log('sort str ==================' , sortStr)
     let sign = crypto.createSign('RSA-SHA256')
     sign.update(sortStr)
-
-    return sign.sign(key, 'base64')
+    
+    let str = sign.sign(key, 'base64')
+    console.log('sign str' , str)
+    return str
 
   }
 

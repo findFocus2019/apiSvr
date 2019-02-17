@@ -633,8 +633,8 @@ class MallController extends Controller {
         // 去3方支付下单
         let paymentData = {
           out_trade_no: paymentUuid,
-          amount: amount,
-          body: '发现焦点-订单支付',
+          amount: '0.01',
+          body: '发现焦点-商品支付',
           subject: '' 
         }
         this.logger.info(ctx.uuid ,'orderPayPre()', payMethod , paymentData)
