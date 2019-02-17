@@ -6,6 +6,8 @@ const Utils = require('./../utils/index')
 const Logger = require('./../../lib/log')('NOTIFY')
 
 class PaymentLogic extends Controller {
+
+
   /**
    * 确认支付
    */
@@ -39,11 +41,13 @@ class PaymentLogic extends Controller {
           uuid: paymentUuid
         }
       })
+      Logger.info(ctx.uuid, 'orderPayConfirm() payment', payment)
       let userId = payment.user_id
+      ctx.body.user_id = userId
 
       let userInfo = await userModel.getInfoByUserId(userId)
 
-      Logger.info(ctx.uuid, 'orderPayConfirm() payment', payment)
+      
       Logger.info(ctx.uuid, 'orderPayConfirm() userInfo', userInfo)
 
       let payType = payment.pay_type
@@ -173,6 +177,7 @@ class PaymentLogic extends Controller {
           throw new Error('订单支付信息更新失败')
         }
 
+        payment.status = 1
         let paymentRet = await payment.save({
           transaction: t
         })
@@ -206,18 +211,18 @@ router.post('/alipay', async(req, res) => {
   let outTradeNo = obj.out_trade_no
   let tradeStatus = obj.trade_status
 
-  let verify = Utils.alipay_utils._verify(obj)
-  Logger.info('verfiy:', verify)
-  if(!verify){
-    return res.send('fail:sign fail')
-  }
+  // let verify = Utils.alipay_utils._verify(obj)
+  // Logger.info('verfiy:', verify)
+  // if(!verify){
+  //   return res.send('fail:sign fail')
+  // }
 
   if(tradeStatus == 'TRADE_SUCCESS'){
     
     let ret = await paymentLogic.orderPayConfirm({
       uuid: obj.outTradeNo,
       body: {
-        paymentUuid: outTradeNo
+        payment_uuid: outTradeNo
       }
     })
     Logger.info(outTradeNo , '/alipay ret' , ret)
