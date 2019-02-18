@@ -3,6 +3,7 @@ const uuidv4 = require('uuid/v4')
 const crypto = require('crypto')
 const xml2js = require('xml2js')
 const config = require('./../../config').wxpay
+const {domain} = require('./../../config')
 
 const API_URL = 'https://api.mch.weixin.qq.com'
 
@@ -57,7 +58,7 @@ class WxPay {
     this.mch_id = config.mch_id
     this.key = config.key
       
-    this.notify_url = config.notify_url
+    this.notify_url = domain + config.notify_url
     // this.h5_url = config.h5_url
 
     // this.trade_type = opt.trade_type || 'JSAPI' // JSAPI，NATIVE，APP
@@ -96,7 +97,16 @@ class WxPay {
     let response = await HttpUtil.post(unifiedOrderUrl , unifiedOrderObj , 'xml')
 
     let result = await this._xmlToObj(response)
-    return result
+
+    let ret = {code: 0 , message: ''}
+    if(result.return_code == 'SUCCESS' && result.return_code == 'SUCCESS'){
+      ret.code = 1
+      ret.message = result.return_msg
+    }else {
+      ret.data = result
+    }
+
+    return ret
   }
 
   appPayInfo(prepayId){
@@ -162,4 +172,4 @@ class WxPay {
 
 }
 
-module.exports = WxPay
+module.exports = new WxPay()

@@ -57,12 +57,12 @@ class PaymentLogic extends Controller {
         throw new Error('支付方式错误')
       }
 
-      if(['wx', 'alipay'].indexOf(payMethod) < 0){
+      if(['wxpay', 'alipay'].indexOf(payMethod) < 0){
         throw new Error('支付方式错误')
       }
 
       // 验证密码
-      // if ([1, 2].indexOf(payType) > -1 && ['wx', 'alipay'].indexOf(payMethod) < 0) {
+      // if ([1, 2].indexOf(payType) > -1 && ['wxpay', 'alipay'].indexOf(payMethod) < 0) {
       //   // 使用e卡或者余额支付，不用在线支付补，要验证密码
       //   // let user = await userModel.getInfoByUserId(userId)
       //   let userTradePassword = userInfo.password_trade
@@ -178,6 +178,7 @@ class PaymentLogic extends Controller {
         }
 
         payment.status = 1
+        payment.notify_info = ctx.notify_info
         let paymentRet = await payment.save({
           transaction: t
         })
@@ -202,12 +203,34 @@ class PaymentLogic extends Controller {
 const paymentLogic = new PaymentLogic()
 
 router.post('/wxpay' , async(req, res) => {
+  let obj = req.body
   
+  Logger.info('/wxpay obj' , obj)
+  let resultCode = obj.return_code
+  let outTradeNo = obj.out_trade_no
+  if(resultCode == 'SUCCESS'){
+    let ret = await paymentLogic.orderPayConfirm({
+      uuid: obj.outTradeNo,
+      body: {
+        payment_uuid: outTradeNo
+      },
+      notify_info: req.body
+    })
+    Logger.info(outTradeNo , '/wxpay ret' , ret)
+
+    if(ret.code == 0){
+      res.send('succuess')
+    }else {
+      return res.send('fail')
+    }
+  }else {
+    Logger.info('/wxpay resultCode' , resultCode)
+  }
 })
 
 router.post('/alipay', async(req, res) => {
   let obj = req.body
-
+  Logger.info('/alipay obj' , obj)
   let outTradeNo = obj.out_trade_no
   let tradeStatus = obj.trade_status
 
@@ -223,7 +246,8 @@ router.post('/alipay', async(req, res) => {
       uuid: obj.outTradeNo,
       body: {
         payment_uuid: outTradeNo
-      }
+      },
+      notify_info: req.body
     })
     Logger.info(outTradeNo , '/alipay ret' , ret)
 
@@ -233,6 +257,7 @@ router.post('/alipay', async(req, res) => {
       return res.send('fail')
     }
   }else{
+    Logger.info('/alipay tradeStatus' , tradeStatus)
     return res.send('success')
   }
 })

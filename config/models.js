@@ -528,7 +528,8 @@ module.exports = {
         ecard_id: FIELDS.bigInt(),
         info: FIELDS.text(),
         uuid: FIELDS.stringLen(64),
-        score: FIELDS.money('score')
+        score: FIELDS.money('score'),
+        notify_info: FIELDS.text()
       },
       {
         ...commonOpts,

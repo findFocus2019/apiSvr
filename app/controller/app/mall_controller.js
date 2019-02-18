@@ -533,8 +533,27 @@ class MallController extends Controller {
         info: info
       }
       return ctx.ret
-    }else  if(method == 'wx'){
+    }else  if(method == 'wxpay'){
+      let body = paymentData.body
+      let outTradeNo = paymentData.out_trade_no
+      let totalFee = paymentData.amount * 100
+      let unifiedOrderRet = await this.utils.wxpay_utils.unifiedOrder(body , outTradeNo, totalFee , ctx.ip)
 
+      if(unifiedOrderRet.code != 0){
+        ctx.ret.code = unifiedOrderRet.code
+        ctx.ret.message = unifiedOrderRet.message
+      }
+
+      let paypreId = unifiedOrderRet.data.prepay_id
+      let info = this.utils.wxpay_utils.appPayInfo(paypreId)
+      ctx.ret.data = {
+        info: info
+      }
+      return ctx.ret
+    }else {
+      ctx.ret.code = 1
+      ctx.ret.message = '不支持的支付方式'
+      return ctx.ret
     }
 
     // return ctx.ret
@@ -631,7 +650,7 @@ class MallController extends Controller {
             if (balance > userBalance) {
               throw new Error('账户余额不足')
             }
-          } else if (payMethod == 'wx' || payMethod == 'alipay') {
+          } else if (payMethod == 'wxpay' || payMethod == 'alipay') {
             amount = total - userEcard.amount
           }
 
@@ -747,7 +766,7 @@ class MallController extends Controller {
       let payMethod = payment.pay_method
 
       // 验证密码
-      if ([1, 2].indexOf(payType) > -1 && ['wx', 'alipay'].indexOf(payMethod) < 0) {
+      if ([1, 2].indexOf(payType) > -1 && ['wxpay', 'alipay'].indexOf(payMethod) < 0) {
         // 使用e卡或者余额支付，不用在线支付补，要验证密码
         // let user = await userModel.getInfoByUserId(userId)
         let userTradePassword = userInfo.password_trade
