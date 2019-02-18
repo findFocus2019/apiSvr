@@ -38,7 +38,8 @@
     "sequelize": "^4.42.0",
     "showapi-sdk": "^1.0.4",
     "superagent": "^4.1.0",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "xml2js": "^0.4.19"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",

@@ -1,6 +1,9 @@
 const alipay = require('./alipay')
 
 module.exports = {
+  version: '0.9.0',
+  apkUrl: '',
+
   port: 5001,
   signKey: '123456',
   db: {
@@ -86,9 +89,10 @@ module.exports = {
   alipay: alipay,
 
   wxpay: {
-    appId: 'wx41b753c9ce99ea27',
+    app_id: 'wx41b753c9ce99ea27',
     key:'e10adc3949ba59abbe56e057f20f883e',
-    mch_id:'',
+    mch_id:'1522398771',
+    notify_url:''
   },
 
   defaultInivteUserId: 1
