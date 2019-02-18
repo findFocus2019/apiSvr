@@ -53,9 +53,9 @@ class PaymentLogic extends Controller {
       let payType = payment.pay_type
       let payMethod = payment.pay_method
 
-      if(payType != 3){
-        throw new Error('支付方式错误')
-      }
+      // if(payType != 3){
+      //   throw new Error('支付方式错误')
+      // }
 
       if(['wxpay', 'alipay'].indexOf(payMethod) < 0){
         throw new Error('支付方式错误')
