@@ -2,6 +2,7 @@ module.exports = {
   dev: false,
   // appId: '2016092300581254',
   appId:'2019021763272048',
+  notifyUrl:'/notify/alipay',
   rsaPrivateKey: `MIIEpAIBAAKCAQEAnCT0jHbvqPRQe7UBevt1nZqQ6pZN63LAmlBdVANXgjKBj1j3
   ZYeGg24XDJuR6hmYROa0X9Xyrsa2drUP7r8qwEei8axQll/Yy5mWjsRokQgkrkm1
   W0b2PAefgdPAxz8e6ERtFzCza0x0/WHpZI79cs/n0tcSLdllbUPJfFPxe84a62Y2

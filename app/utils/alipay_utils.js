@@ -6,6 +6,7 @@ const getWayUrl = 'https://openapi.alipay.com/gateway.do' // 正式环境
 const getWayUrlTest = 'https://openapi.alipaydev.com/gateway.do' //
 // const getWayUrl = 'https://openapi.alipaydev.com/gateway.do' // 测试环境
 const config = require('./../../config').alipay
+const {domain} = require('./../../config')
 // const serviceUserOpt = config.service_user
 
 const PRODUCT_CODE = {
@@ -28,6 +29,7 @@ class AlipayUtils {
     this.getWayUrl = config.dev ? getWayUrlTest : getWayUrl
     this.rsaPrivateKey = '-----BEGIN RSA PRIVATE KEY-----\n' + config.rsaPrivateKey + '\n-----END RSA PRIVATE KEY-----'
     this.alipayPubKey = '-----BEGIN PUBLIC KEY-----\n' + config.alipayPubKey + '\n-----END PUBLIC KEY-----'
+    this.notify_url = domain + config.notifyUrl
 
     console.log('================', config.dev, this.getWayUrl, )
   }
@@ -123,7 +125,7 @@ class AlipayUtils {
     let requestObj = {}
     requestObj.app_id = this.appId
     requestObj.method = method
-    // requestObj.format = 'json'
+    requestObj.format = 'JSON'
     // 
     requestObj.charset = 'utf-8'
     requestObj.sign_type = 'RSA2'
@@ -132,7 +134,11 @@ class AlipayUtils {
     requestObj.version = '1.0'
 
     if (return_url) requestObj.return_url = return_url
-    if (notify_url) requestObj.notify_url = notify_url
+    if (notify_url) {
+      requestObj.notify_url = notify_url
+    }else {
+      requestObj.notify_url = this.notify_url
+    }
     return requestObj
   }
 

@@ -550,6 +550,9 @@ class MallController extends Controller {
     let payMethod = ctx.body.pay_method
     let payType = ctx.body.pay_type || 1 // 1：Eka 2：账户余额 3：在线支付
 
+    let orderIdsStr = '-' + orderIds.join('-') + '-'
+    let paymentUuid = this.utils.uuid_utils.v4()
+
     if (!orderIds.length) {
       return this._fail(ctx, '订单错误')
     }
@@ -567,6 +570,24 @@ class MallController extends Controller {
     let t = await mallModel.getTrans()
     try {
 
+      // 查找是否存在相同订单
+      let payment = await paymentModel.findOne({
+        where:{
+          order_ids: orderIdsStr
+        }
+      })
+
+      if(payment){
+        if(payment.status == 1){
+          throw new Error('账单错误:存在相同已支付订单')
+        }
+        if(payment.user_id != userId){
+          throw new Error('账单错误')
+        }
+
+        paymentUuid = payment.uuid
+      }
+      
       let isVip = await userModel.isVip(userId)
       let userInfo = await userModel.getInfoByUserId(userId)
       let userBalance = userInfo.balance
@@ -595,7 +616,6 @@ class MallController extends Controller {
       let balance = 0
       let ecard = 0
       let info = {}
-      let paymentUuid = this.utils.uuid_utils.v4()
 
       if (payType == 1) {
         // ecard
@@ -631,11 +651,12 @@ class MallController extends Controller {
 
       if (amount > 0) {
         // 去3方支付下单
+        amount = 0.01
         let paymentData = {
           out_trade_no: paymentUuid,
-          amount: '0.01',
+          amount: amount,
           body: '发现焦点-商品支付',
-          subject: '' 
+          subject: '订单金额:￥' + amount 
         }
         this.logger.info(ctx.uuid ,'orderPayPre()', payMethod , paymentData)
         let payThirdRet = await this._payThirdUnifiedorder(ctx, payMethod, paymentData)
@@ -648,9 +669,9 @@ class MallController extends Controller {
       }
 
       // 生成payment
-      let payment = await paymentModel.create({
+      let paymentData = {
         user_id: userId,
-        order_ids: '-' + orderIds.join('-') + '-',
+        order_ids: orderIdsStr,
         pay_type: payType,
         pay_method: payMethod,
         amount: amount,
@@ -660,7 +681,13 @@ class MallController extends Controller {
         score: scoreNum,
         info: info,
         uuid: paymentUuid
-      })
+      }
+      if(!payment){
+        payment = await paymentModel.create(paymentData)
+      }else {
+        payment = await payment.update(paymentData)
+      }
+      
 
       if (!payment) {
         throw new Error('生成支付记录失败')
@@ -679,7 +706,7 @@ class MallController extends Controller {
       t.commit()
 
     } catch (err) {
-
+      console.log(err)
       t.rollback()
       return this._fail(ctx, err.message)
     }
