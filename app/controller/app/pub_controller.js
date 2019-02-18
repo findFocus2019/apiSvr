@@ -131,7 +131,7 @@ class PubController extends Controller {
   }
 
   async sendSmsCode(ctx) {
-    let  mobile  = ctx.body.mobile
+    let mobile = ctx.body.mobile
     let verifyModel = new this.models.verifycode_model
     ctx.ret = await verifyModel.send(mobile)
     return ctx.ret
@@ -143,6 +143,36 @@ class PubController extends Controller {
   //   ctx.ret = await verifyModel.verify(mobile, code)
   //   return ctx.ret
   // }
+
+  async albums(ctx) {
+    let type = ctx.body.type || 'banner'
+    let typeId = ctx.body.type_id || 0
+
+    let where = {}
+    where.type = type
+    where.status = 1
+    if (typeId) {
+      where.type_id = typeId
+    }
+
+    let albumModel = new this.models.album_model
+    let rows = await albumModel.model().findAll({
+      where: where,
+      order: [
+        ['sort', 'asc'],
+        ['id', 'DESC']
+      ],
+      offset: 0,
+      limit: 5
+    })
+
+    ctx.ret.data = {
+      rows: rows
+    }
+
+    return ctx.ret
+
+  }
 }
 
 module.exports = PubController
