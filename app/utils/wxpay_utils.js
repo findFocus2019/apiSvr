@@ -97,13 +97,14 @@ class WxPay {
     let response = await HttpUtil.post(unifiedOrderUrl , unifiedOrderObj , 'xml')
 
     let result = await this._xmlToObj(response)
+    console.log('unifiedorder result' , result)
 
     let ret = {code: 0 , message: ''}
-    if(result.return_code == 'SUCCESS' && result.return_code == 'SUCCESS'){
-      ret.code = 1
-      ret.message = result.return_msg
-    }else {
+    if(result.return_code == 'SUCCESS' && result.result_code == 'SUCCESS'){
       ret.data = result
+    }else {
+      ret.code = 1
+      ret.message = result.err_code_des || result.return_msg
     }
 
     return ret

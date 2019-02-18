@@ -205,6 +205,10 @@ const paymentLogic = new PaymentLogic()
 router.post('/wxpay' , async(req, res) => {
   let obj = req.body
   
+  if(typeof obj == 'string'){
+    obj = await Utils.wxpay_utils._xmlToObj(obj)
+  }
+
   Logger.info('/wxpay obj' , obj)
   let resultCode = obj.return_code
   let outTradeNo = obj.out_trade_no
@@ -219,9 +223,15 @@ router.post('/wxpay' , async(req, res) => {
     Logger.info(outTradeNo , '/wxpay ret' , ret)
 
     if(ret.code == 0){
-      res.send('succuess')
+      // res.send('succuess')
+      res.send(`<xml>
+<return_code><![CDATA[SUCCESS]]></return_code>
+  <return_msg><![CDATA[OK]]></return_msg>
+</xml>`)
     }else {
-      return res.send('fail')
+      return res.send(`<return_code><![CDATA[FAIL]]></return_code>
+  <return_msg><![CDATA[fail]]></return_msg>
+</xml>`)
     }
   }else {
     Logger.info('/wxpay resultCode' , resultCode)

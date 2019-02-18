@@ -542,10 +542,12 @@ class MallController extends Controller {
       if(unifiedOrderRet.code != 0){
         ctx.ret.code = unifiedOrderRet.code
         ctx.ret.message = unifiedOrderRet.message
+
+        return ctx.ret
       }
 
-      let paypreId = unifiedOrderRet.data.prepay_id
-      let info = this.utils.wxpay_utils.appPayInfo(paypreId)
+      let prepayId = unifiedOrderRet.data.prepay_id
+      let info = this.utils.wxpay_utils.appPayInfo(prepayId)
       ctx.ret.data = {
         info: info
       }
@@ -684,7 +686,7 @@ class MallController extends Controller {
           throw new Error(payThirdRet.message)
         }
 
-        info = payThirdRet.data.info
+        info = payMethod == 'alipay' ? payThirdRet.data.info : JSON.stringify(payThirdRet.data.info)
       }
 
       // 生成payment
