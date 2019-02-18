@@ -529,7 +529,7 @@ module.exports = {
         info: FIELDS.text(),
         uuid: FIELDS.stringLen(64),
         score: FIELDS.money('score'),
-        notify_info: FIELDS.text()
+        notify_info: FIELDS.jsonObj('notify_info')
       },
       {
         ...commonOpts,
