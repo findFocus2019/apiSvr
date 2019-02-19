@@ -672,10 +672,11 @@ class MallController extends Controller {
 
       if (amount > 0) {
         // 去3方支付下单
-        amount = 0.01
+        const DEBUG = this.config.DEBUG
+        // amount = 0.01
         let paymentData = {
           out_trade_no: paymentUuid,
-          amount: amount,
+          amount: DEBUG ? 0.01 : amount,
           body: '发现焦点-商品支付',
           subject: '订单金额:￥' + amount 
         }
