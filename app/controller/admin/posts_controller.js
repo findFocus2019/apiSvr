@@ -141,7 +141,7 @@ class PostsController extends Controller {
   }
 
   /**
-   * 收藏记录
+   * 点赞记录
    * @param {*} ctx 
    */
   async likeList(ctx) {
