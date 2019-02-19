@@ -489,7 +489,7 @@ class MallController extends Controller {
     let data = {
       user_id: userId,
       order_id: order.id,
-      goods_id: item.goods_id,
+      goods_id: item.id,
       num_rabate: numRabate,
       num_rabate_share: numRabateShare,
       num_rabate_post: numRabatePost,
@@ -1084,7 +1084,7 @@ class MallController extends Controller {
 
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
-    let orderReteModel = mallModel.orderReteModel()
+    let orderItemModel = mallModel.orderItemModel()
 
     let t = await mallModel.getTrans()
 
@@ -1097,19 +1097,26 @@ class MallController extends Controller {
       // 添加 orderRate
       let items = order.goods_items
       for (let index = 0; index < items.length; index++) {
-        const item = items[index]
-        let orderRate = await orderReteModel.create({
-          user_id: userId,
-          order_id: orderId,
-          goods_id: item.goods_id,
-          level: 0,
-          info: ''
-        }, {
-          transaction: t
+        let item = items[index]
+        this.logger.info(ctx.uuid, 'orderComplete()', 'goods_items',item )
+        let orderItem = await orderItemModel.findOne({
+          where:{
+            order_id: orderId,
+            goods_id: item.id
+          }
         })
-        if (!orderRate) {
-          throw new Error('添加待评价条目失败')
+        this.logger.info(ctx.uuid, 'orderComplete()', 'orderItem',orderItem )
+        if(orderItem){
+          orderItem.order_status = 9
+          let orderItemRet = await orderItem.save({
+            transaction: t
+          })
+      
+          if (!orderItemRet) {
+            throw new Error('更新订单条目失败')
+          }
         }
+        
       }
 
       order.status = 9
@@ -1255,22 +1262,30 @@ class MallController extends Controller {
 
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
+    let isRate = ctx.body.rate || 0
 
     let mallModel = new this.models.mall_model
     let orderItemModel = mallModel.orderItemModel()
 
+    let where = {
+      user_id: userId
+    }
+
+    if(isRate){
+      where.order_status = 9
+    }
+
     let queryRet = await orderItemModel.findAndCountAll({
-      where: {
-        user_id: userId
-      },
+      where: where,
       offset: (page - 1) * limit,
       limit: limit,
       order: [
-        ['update_time', 'desc']
+        ['create_time', 'desc']
       ],
     })
     queryRet.rows.forEach(row => {
       row.dataValues.rate_date = this.utils.date_utils.dateFormat(row.rate_time, 'YYYY-MM-DD HH:mm')
+      row.dataValues.create_date = this.utils.date_utils.dateFormat(row.create_time, 'YYYY-MM-DD HH:mm')
     })
     ctx.ret.data = {
       rows: queryRet.rows || [],

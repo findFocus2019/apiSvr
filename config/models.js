@@ -556,7 +556,7 @@ module.exports = {
   orderItem: () => {
     return [{
         ...commonFieldGet(),
-        status: getStatusFields(1),
+        status: getStatusFields(0),
         user_id: FIELDS.bigInt(),
         order_id: FIELDS.bigInt(),
         goods_id: FIELDS.bigInt(),
@@ -574,7 +574,8 @@ module.exports = {
         rate_level: FIELDS.tinyInt(),
         rate_info: FIELDS.stringLen(1000),
         rate_imgs: FIELDS.jsonArr('rate_imgs'),
-        rate_time: FIELDS.defaultInt()
+        rate_time: FIELDS.defaultInt(),
+        order_status: FIELDS.tinyInt()
       },
       {
         ...commonOpts,
