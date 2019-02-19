@@ -104,7 +104,7 @@ class jdUtils{
   
   //商品相关 END
 
-  //商品价格
+  //批量查询商品售卖价
   async getSellPrice(accessToken,sku) {
     let params = {
       token: accessToken,
@@ -114,6 +114,121 @@ class jdUtils{
     return await this._ruquestUtil(params,url)
   }
 
+  //库存相关 START
+  //批量获取库存接口（建议订单详情页、下单使用）
+  async getNewStockById(accessToken, skuNums, area) {
+    let params = {
+      token: accessToken,
+      skuNums: skuNums,
+      area: area
+    }
+    let url = 'https://bizapi.jd.com/api/stock/getNewStockById'
+    return await this._ruquestUtil(params,url)
+  }
+
+  /**
+   * 批量获取库存接口(建议商品列表页使用)
+   *  
+    授权时获取的 access token  
+    商品编号 批量以逗号分隔  (最高支持 100 个商品)  
+    格式：1_0_0 (分别代表 1、2、3 级地址) 
+   */
+  async getStockById(accessToken,sku,area) {
+    let params = {
+      token: accessToken,
+      sku: sku,
+      area: area
+    }
+    let url = 'https://bizapi.jd.com/api/stock/getStockById'
+    return await this._ruquestUtil(params,url)
+  }
+  //库存相关 END
+
+
+  //订单相关 START
+  async submitOrder(accessToken,params){
+    
+  }
+
+
+  //订单相关 END
+
+  //地址相关 start
+
+  //获取一级地址 
+  async getProvince(token) {
+    let params = {
+      token: token
+    }
+    let url = 'https://bizapi.jd.com/api/area/getProvince'
+    return await this._ruquestUtil(params,url)
+  }
+
+  //二级地址
+  async getCity(token, id) {
+    let params = {
+      token: token,
+      id: id
+    }
+    let url = 'https://bizapi.jd.com/api/area/getCity'
+    return await this._ruquestUtil(params,url)
+  }
+
+  //三级地址
+  async getCounty(token, id) {
+    let params = {
+      token: token,
+      id: id
+    }
+    let url = 'https://bizapi.jd.com/api/area/getCounty'
+    return await this._ruquestUtil(params,url)
+  }
+  
+  //四级地址
+  async getTown(token, id) {
+    let params = {
+      token: token,
+      id: id
+    }
+    let url = 'https://bizapi.jd.com/api/area/getTown'
+    return await this._ruquestUtil(params,url)
+  }
+
+  //验证四级地址是否正确 
+  async checkArea(token, provinceId,cityId,countyId=0,townId=0) {
+    let params = {
+      token: token,
+      provinceId: provinceId,
+      cityId: cityId,
+      countyId: countyId,
+      townId:townId
+    }
+    let url = 'https://bizapi.jd.com/api/area/checkArea'
+    return await this._ruquestUtil(params,url)
+ 
+  }
+
+  //根据地址查询京东地址编码
+  async getJDAddressFromAddress(token,address) {
+    let params = {
+      token: token,
+      address: address
+    }
+    let url = 'https://bizapi.jd.com/api/area/getJDAddressFromAddress'
+    return await this._ruquestUtil(params,url)
+  }
+
+  //根据经纬度查询京东地址编码
+  async getJDAddressFromLatLng(token, lng, lat) {
+    let params = {
+      token: token,
+      lng: lng,
+      lat: lat
+    }
+    let url = 'https://bizapi.jd.com/api/area/getJDAddressFromLatLng'
+    return await this._ruquestUtil(params,url)
+  }
+   //地址相关 END
   async _ruquestUtil(params, url) {
     try {
       let action = await util.promisify(request)({
