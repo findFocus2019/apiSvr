@@ -2,9 +2,9 @@ const alipay = require('./alipay')
 
 module.exports = {
   DEBUG: true,
-  version: '0.9.1',
+  version: '0.9.0',
   apkUrl: 'http://img-juren.oss-cn-shenzhen.aliyuncs.com/app/android_debug.apk',
-  domain:'http://47.91.250.144:5001',
+  domain:'https://api.faxianjiaodian.com',
 
   port: 5001,
   signKey: '123456',
