@@ -278,9 +278,12 @@ class MallController extends Controller {
 
         // 
         let scoreCost = isVip ? scoreVip : score
-        if (scoreCost > userInfo.score && useScore) {
-          throw new Error('积分不足')
+        if(useScore){
+          if (scoreCost > userInfo.score || userInfo.score <= 0) {
+            throw new Error('积分不足')
+          }
         }
+        
         // 更新用户积分
         if (useScore) {
           userInfo.score = userInfo.score - scoreCost * 1000
@@ -687,9 +690,12 @@ class MallController extends Controller {
           throw new Error(payThirdRet.message)
         }
 
-        info = payMethod == 'alipay' ? payThirdRet.data.info : JSON.stringify(payThirdRet.data.info)
+        info = payThirdRet.data.info
       }
 
+      if (typeof info !== 'string'){
+        info = JSON.stringify(info)
+      }
       // 生成payment
       let paymentData = {
         user_id: userId,
@@ -714,7 +720,8 @@ class MallController extends Controller {
       if (!payment) {
         throw new Error('生成支付记录失败')
       }
-
+ 
+      
       ctx.ret.data = {
         id: payment.id,
         uuid: payment.uuid,
@@ -848,7 +855,7 @@ class MallController extends Controller {
 
         // 更新用户信息
         userInfo.balance = userInfo.balance - payment.balance
-        userInfo.score = userInfo.score - payment.score
+        // userInfo.score = userInfo.score - payment.score
 
         // vip信息
         if (userSetVip == 1) {

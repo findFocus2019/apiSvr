@@ -22,15 +22,20 @@ class AlbumController extends Controller {
 
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
+    let type = ctx.body.type || ''
+    let typeId = ctx.body.type_id || 0
     let where = {}
   
-    let fields = ['status', 'type', 'sort', 'type_id']
-    fields.map(field => {
-      if (ctx.body[fields] && ctx.body[fields] != "") {
-        where[field] = ctx.body[fields]
-      }
-    })
+    if(type){
+      where.type = type
+    }
+    if(typeId){
+      where.type_id = typeId
+    }
 
+    where.status = {
+      [Op.gte]:0
+    }
 
     this.logger.info(ctx.uuid, 'AlbumController list()', 'where', where)
 
@@ -55,6 +60,41 @@ class AlbumController extends Controller {
 
     return ctx.ret
   }
+
+  async info(ctx) {
+    this.logger.info(ctx.uuid, 'info()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    let albumModel = new this.models.album_model
+    let id = ctx.body.id
+    let info = await albumModel.model().findByPk(id)
+
+    ctx.ret.data = {
+      info: info
+    }
+    this.logger.info(ctx.uuid, 'info()', 'ret', ctx.ret)
+    return ctx.ret
+  }
+
+  async update(ctx) {
+    this.logger.info(ctx.uuid, 'update()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    let albumModel = new this.models.album_model
+
+    let data = ctx.body
+    let notice
+    if (data.id) {
+      notice = await albumModel.model().findByPk(data.id)
+      await notice.update(data)
+    } else {
+      notice = await albumModel.model().create(data)
+    }
+
+    ctx.ret.data = {
+      info: notice
+    }
+    this.logger.info(ctx.uuid, 'update()', 'ret', ctx.ret)
+    return ctx.ret
+
+  }
+
 }
 
 module.exports = AlbumController

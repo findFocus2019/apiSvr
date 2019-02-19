@@ -193,9 +193,10 @@ class MallController extends Controller {
     let offset = (page - 1) * limit
     let search = ctx.body.search
     let userId = ctx.body.user_id || 0
-    let status = ctx.body.status || ''
+    // let status = ctx.body.status || ''
 
     let where = {}
+    where.status = 1
     if (search) {
       // where.title = {
       //   [Op.like]: '%' + search + '%'
