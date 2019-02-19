@@ -1434,6 +1434,8 @@ class UserController extends Controller {
 
     return ctx.ret
   }
+
+    
 }
 
 module.exports = UserController

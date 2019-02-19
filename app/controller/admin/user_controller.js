@@ -249,6 +249,69 @@ class UserController extends Controller {
     return ctx.ret
   }
 
+  /**
+   * 审核列表
+   */
+  async auditList (ctx) {
+    this.logger.info(ctx.uuid, 'auditList: ', 'body: ', ctx.body, ' ;query: ', ctx.query)
+
+    const EmptyRet = {count: 0, rows: []}
+
+    let page = ctx.body.page
+    let limit = ctx.body.limit
+    let mobile = ctx.body.search || ''
+    let userId = ''
+
+    let dbOptions = {
+      where: {
+        user_id: userId
+      },
+      offset: limit * (page - 1),
+      limit: limit,
+      order: [
+        ['update_time', 'desc']
+      ]
+    }
+
+    let userModel = new this.models.user_model()
+
+    // 通过 mobile 去查找 user_id
+    if (mobile !== '') {
+      try {
+        let user = await userModel.model().findOne({
+          where: {
+            mobile: {
+              [Op.like]: '%' + mobile + '%'
+            }
+          }
+        })
+        userId = user.id
+      } catch (e) {
+        this.logger.error('auditList: ', e)
+        ctx.ret.data = EmptyRet
+        return ctx.ret
+      }
+      
+      this.logger.info('userId: ', userId)
+      
+      if (!userId) { // 没找打userId
+        ctx.ret.data = EmptyRet
+        return ctx.ret
+      }
+      dbOptions.where.user_id = userId
+
+    } else {
+      delete dbOptions.where
+    }
+
+    let auditListModel = userModel.applyModel()
+    let auditList = await auditListModel.findAndCountAll(dbOptions)
+
+    ctx.ret.data = auditList
+
+    return ctx.ret
+  }
+
 
 }
 

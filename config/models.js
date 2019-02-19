@@ -695,5 +695,6 @@ module.exports = {
         tableName: 't_verify_code_records'
       }
     ]
-  }
+  },
+  
 }
