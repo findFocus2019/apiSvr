@@ -84,8 +84,10 @@ module.exports = {
   ],
 
   miniApp: {
-    appId: 'wx2e40960c5cfb7723',
-    appSecret: '0908b751cef2388e00847eb29e8303ad'
+    // appId: 'wx2e40960c5cfb7723',
+    // appSecret: '0908b751cef2388e00847eb29e8303ad'
+    appId:'wxbdffe470695eab18',
+    appSecret:'331af3040b5b3709a87db7a4813aba40'
   },
 
   alipay: alipay,
