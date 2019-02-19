@@ -278,9 +278,12 @@ class MallController extends Controller {
 
         // 
         let scoreCost = isVip ? scoreVip : score
-        if (scoreCost > userInfo.score && useScore) {
-          throw new Error('积分不足')
+        if(useScore){
+          if (scoreCost > userInfo.score || userInfo.score <= 0) {
+            throw new Error('积分不足')
+          }
         }
+        
         // 更新用户积分
         if (useScore) {
           userInfo.score = userInfo.score - scoreCost * 1000
@@ -848,7 +851,7 @@ class MallController extends Controller {
 
         // 更新用户信息
         userInfo.balance = userInfo.balance - payment.balance
-        userInfo.score = userInfo.score - payment.score
+        // userInfo.score = userInfo.score - payment.score
 
         // vip信息
         if (userSetVip == 1) {
