@@ -690,9 +690,12 @@ class MallController extends Controller {
           throw new Error(payThirdRet.message)
         }
 
-        info = payMethod == 'alipay' ? payThirdRet.data.info : JSON.stringify(payThirdRet.data.info)
+        info = payThirdRet.data.info
       }
 
+      if (typeof info !== 'string'){
+        info = JSON.stringify(info)
+      }
       // 生成payment
       let paymentData = {
         user_id: userId,
@@ -717,7 +720,8 @@ class MallController extends Controller {
       if (!payment) {
         throw new Error('生成支付记录失败')
       }
-
+ 
+      
       ctx.ret.data = {
         id: payment.id,
         uuid: payment.uuid,
