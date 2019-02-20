@@ -1,11 +1,13 @@
-const util = require('util');
-const request = require('request');
+const util = require('util')
+const request = require('request')
+const fs = require('fs')
 const md5 = require('md5')
 const config = {
   username: "深圳聚仁2018",
   password: "jd360buy",
   client_id: "5VQFKPYtsCZM2i3I4DD4",
-  client_secret: "jDaqQBtlcYbvzzs50S9N"
+  client_secret: "jDaqQBtlcYbvzzs50S9N",
+  tokenFile:'jd_token'
 }
 class jdUtils{
   constructor() {
@@ -13,22 +15,56 @@ class jdUtils{
   }
   
   async getAccessToken() {
-    let params = {
-      grant_type: 'access_token',
-      client_id: config.client_id,
-      client_secret: config.client_secret,
-      timestamp: this._getCurrentTime(),
-      username: config.username,
-      password: md5(config.password),
-      scope: '',
-      sign: ''
+    let tokenFile = fs.readFileSync(config.tokenFile)
+    let tokenObj = JSON.parse(tokenFile)
+    let millisecond = Date.now()
+    // let second = Math.floor(millisecond / 1000)
+    let rspData
+    if (tokenObj) {
+      switch (true) {
+        //有效期内
+        case millisecond - tokenObj.time < tokenObj.expires_in * 1000:
+          return tokenObj.access_token
+        //过期时,可刷新token时间内
+        case tokenObj.refresh_token_expires > millisecond:
+          rspData = await this.refreshToken(tokenObj.refresh_token)
+          break;
+      }
+    } else {
+        let params = {
+          grant_type: 'access_token',
+          client_id: config.client_id,
+          client_secret: config.client_secret,
+          timestamp: this._getCurrentTime(),
+          username: config.username,
+          password: md5(config.password),
+          scope: '',
+          sign: ''
+        }
+        let sign_str = params.client_secret + params.timestamp + params.client_id + params.username + params.password 
+            + params.grant_type + params.scope + params.client_secret
+        params.sign = md5(sign_str).toUpperCase() 
+        let url = 'https://bizapi.jd.com/oauth2/accessToken'
+        rspData = await this._ruquestUtil(params, url)
     }
-    let sign_str = params.client_secret+params.timestamp+params.client_id+params.username+params.password 
-      + params.grant_type + params.scope + params.client_secret
-    params.sign = md5(sign_str).toUpperCase()
-    console.log('params',params)
-    let url = 'https://bizapi.jd.com/oauth2/accessToken '
+   
+    let rspObj = JSON.parse(rspData)
+    if (rspObj.success) {
+      fs.writeFileSync('jd_token', JSON.stringify(rspObj.result))
+      return rspObj.result.access_token
+    } else {
+      return 'request token err'
+    }
+    
+  }
 
+  async refreshToken(refresh_token) {
+    let params = {
+      refresh_token: refresh_token,
+      client_id: config.client_id,
+      client_secret:config.client_secret
+    }
+    let url = 'https://bizapi.jd.com/oauth2/refreshToken'
     return await this._ruquestUtil(params,url)
   }
 
@@ -146,10 +182,44 @@ class jdUtils{
 
 
   //订单相关 START
-  async submitOrder(accessToken,params){
-    
+  /**
+   * 统一下单接口
+   * @param {*} accessToken 
+   * @param {*} params
+   *  
+   */
+  async submitOrder(accessToken,orderParams){
+    let params = {
+      token: accessToken
+    }
+    Object.keys(orderParams).forEach(item => {
+      params[item] = orderParams[item]
+    })
+    let url = 'https://bizapi.jd.com/api/order/submitOrder'
+    return await this._ruquestUtil(params,url)
   }
 
+
+  //确认预占库存订单接口
+  async confirmOrder(accessToken, jdOrderId, companyPayMoney) {
+    let params = {
+      token: accessToken,
+      jdOrderId: jdOrderId,
+      companyPayMoney: companyPayMoney
+    }
+    let url = 'https://bizapi.jd.com/api/order/confirmOrder'
+    return await this._ruquestUtil(params,url)
+  }
+
+  //取消未确认订单接口
+  async orderCancel(accessToken, jdOrderId) {
+    let params = {
+      token: accessToken,
+      jdOrderId: jdOrderId
+    }
+    let url = 'https://bizapi.jd.com/api/order/cancel'
+    return await this._ruquestUtil(params,url)
+  }
 
   //订单相关 END
 
@@ -271,11 +341,11 @@ class jdUtils{
     }
   }
 }
-// (async () => {
-//   let demo = new jdUtils
-//   let data = await demo.getSellPrice('SbTNlbSsXtVTSYVFQeAFOHUcq',405684)
-//   console.log(data)
+(async () => {
+  let demo = new jdUtils
+  let data = await demo.getAccessToken()
+  console.log(data)
  
-// })()
+})()
 
 module.exports = new jdUtils
