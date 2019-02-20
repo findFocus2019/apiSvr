@@ -815,13 +815,15 @@ class UserController extends Controller {
       today_sign: 0
     }
     let today = parseInt(this.utils.date_utils.dateFormat(null, 'DD'))
+    let yesterday = today - 1
+  
     rows.forEach((row, i) => {
       let day = parseInt(this.utils.date_utils.dateFormat(row.create_time, 'DD'))
+    
       if (i == 0 && day == today) {
         data.continues_num = row.continues_num
         data.today_sign = 1
-      }
-      if (i == 1 && day == today - 1 && day.today_sign == 0) {
+      }else if (i == 0 && day == yesterday) {
         data.continues_num = row.continues_num
       }
 
@@ -1412,13 +1414,16 @@ class UserController extends Controller {
     let userId = ctx.body.user_id
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
+    let type = ctx.body.type || 0
 
+    let where = {user_id: userId}
+    if(type){
+      where.type = type
+    }
     let userModel = new this.models.user_model
     let transactionModel = userModel.transactionModel()
     let queryRet = await transactionModel.findAndCountAll({
-      where: {
-        user_id: userId
-      },
+      where: where,
       offset: (page - 1) * limit,
       limit: limit,
       order: [
@@ -1426,6 +1431,9 @@ class UserController extends Controller {
       ]
     })
 
+    queryRet.rows.forEach(row => {
+      row.dataValues.create_date = this.utils.date_utils.dateFormat(row.create_time, 'YYYY-MM-DD HH:mm')
+    })
     ctx.ret.data = {
       rows: queryRet.rows,
       count: queryRet.count,

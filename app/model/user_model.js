@@ -109,6 +109,7 @@ class UserModel extends Model {
     let oauth = await this.oAuthModel().findOne({
       where: {
         platform: oauthData.platform,
+        type:oauthData.type,
         openid: oauthData.openid
       }
     })
@@ -116,6 +117,7 @@ class UserModel extends Model {
     if (!oauth) {
       oauth = await this.oAuthModel().create({
         platform: oauthData.platform,
+        type:oauthData.type,
         openid: oauthData.openid,
         avatar: oauthData.avatar || '',
         nickname: oauthData.nickname || ''
@@ -135,7 +137,8 @@ class UserModel extends Model {
     let userAuth = await this.authModel().findOne({
       where: {
         user_id: auth.user_id,
-        platform: auth.platform
+        platform: auth.platform,
+        type: auth.type
       }
     })
 
@@ -178,6 +181,23 @@ class UserModel extends Model {
     }
 
     return info
+  }
+
+  async getMiniOpenIdByUserId(userId){
+    let where = {
+      user_id : userId,
+      type: 'mpwx',
+    }
+
+    let oauth = await this.oAuthModel().findOne({
+      where:where,
+      order:[
+        ['id' , 'desc']
+      ]
+    })
+
+    return oauth ? (oauth.openid || '') : ''
+    
   }
 
   /**

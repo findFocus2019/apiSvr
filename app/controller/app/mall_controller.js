@@ -192,6 +192,10 @@ class MallController extends Controller {
     }
 
     this.logger.info(ctx.uuid, 'goodsInfo()', 'info', info)
+
+    // info.content = info.content.replace(/&amp;/g, '&')
+    const regex = new RegExp('<img', 'gi')
+    info.content = info.content.replace(regex, `<img style="max-width: 100%;"`)
     ctx.ret.data = {
       info: info
     }
@@ -520,7 +524,7 @@ class MallController extends Controller {
 
   }
 
-  async _payThirdUnifiedorder(ctx, method, paymentData) {
+  async _payThirdUnifiedorder(ctx, method, paymentData, isMpWx = 0, openid = '') {
 
     // TODO
     if(method == 'alipay'){
@@ -540,7 +544,17 @@ class MallController extends Controller {
       let body = paymentData.body
       let outTradeNo = paymentData.out_trade_no
       let totalFee = paymentData.amount * 100
-      let unifiedOrderRet = await this.utils.wxpay_utils.unifiedOrder(body , outTradeNo, totalFee , ctx.ip)
+      let paymentType = 'APP'
+      if(isMpWx){
+        paymentType = 'JSAPI'
+        if(!openid){
+          ctx.ret.code = 1
+          ctx.ret.message = '无效的openid'
+          return ctx.ret
+        }
+      }
+
+      let unifiedOrderRet = await this.utils.wxpay_utils.unifiedOrder(body , outTradeNo, totalFee , ctx.ip, paymentType, openid)
 
       if(unifiedOrderRet.code != 0){
         ctx.ret.code = unifiedOrderRet.code
@@ -550,7 +564,7 @@ class MallController extends Controller {
       }
 
       let prepayId = unifiedOrderRet.data.prepay_id
-      let info = this.utils.wxpay_utils.appPayInfo(prepayId)
+      let info = this.utils.wxpay_utils.getPayInfo(prepayId,isMpWx)
       ctx.ret.data = {
         info: info
       }
@@ -573,6 +587,7 @@ class MallController extends Controller {
     let orderIds = ctx.body.order_ids
     let payMethod = ctx.body.pay_method
     let payType = ctx.body.pay_type || 1 // 1：Eka 2：账户余额 3：在线支付
+    let isMpWx= ctx.body.is_mp_wx || 0
 
     let orderIdsStr = '-' + orderIds.join('-') + '-'
     let paymentUuid = this.utils.uuid_utils.v4()
@@ -615,6 +630,7 @@ class MallController extends Controller {
       let isVip = await userModel.isVip(userId)
       let userInfo = await userModel.getInfoByUserId(userId)
       let userBalance = userInfo.balance
+      let openid = await userModel.getMiniOpenIdByUserId(userId)
 
       let total = 0 // 总金额
       let scoreNum = 0
@@ -684,7 +700,7 @@ class MallController extends Controller {
           subject: '订单金额:￥' + amount 
         }
         this.logger.info(ctx.uuid ,'orderPayPre()', payMethod , paymentData)
-        let payThirdRet = await this._payThirdUnifiedorder(ctx, payMethod, paymentData)
+        let payThirdRet = await this._payThirdUnifiedorder(ctx, payMethod, paymentData, isMpWx , openid)
         this.logger.info(ctx.uuid ,'orderPayPre() payThirdRet', payThirdRet)
         if (payThirdRet.code != 0) {
           throw new Error(payThirdRet.message)

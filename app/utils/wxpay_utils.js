@@ -3,7 +3,7 @@ const uuidv4 = require('uuid/v4')
 const crypto = require('crypto')
 const xml2js = require('xml2js')
 const config = require('./../../config').wxpay
-const {domain} = require('./../../config')
+const {domain , miniApp} = require('./../../config')
 
 const API_URL = 'https://api.mch.weixin.qq.com'
 
@@ -65,10 +65,17 @@ class WxPay {
   }
 
   async unifiedOrder(body , out_trade_no , total_fee , ip ,  payment_type = 'APP' , openid = '', attach = ''){
-    
+    let mchId = this.mch_id
+    let appId = this.app_id
+    if(openid){
+      mchId = miniApp.mch_id
+      appId = miniApp.appId
+      this.key = miniApp.key
+    }
+
     let unifiedOrderObj = {
-      appid : this.app_id,
-      mch_id : this.mch_id,
+      appid : appId,
+      mch_id : mchId,
       device_info : 'WEB',
       nonce_str : this._getNonceStr(),
       sign_type : 'MD5',
@@ -92,7 +99,7 @@ class WxPay {
     unifiedOrderObj.sign = signStr
 
     // return unifiedOrderObj
-
+    console.log('unifiedorder unifiedOrderObj' , unifiedOrderObj)
     let unifiedOrderUrl = API_URL + '/pay/unifiedorder'
     let response = await HttpUtil.post(unifiedOrderUrl , unifiedOrderObj , 'xml')
 
@@ -110,6 +117,14 @@ class WxPay {
     return ret
   }
 
+  getPayInfo(prepayId, isMpWx = 0){
+    if(isMpWx){
+      return this.miniPayInfo(prepayId)
+    }else {
+      return this.appPayInfo(prepayId)
+    }
+  }
+
   appPayInfo(prepayId){
 
     let appPayObj = {
@@ -125,6 +140,20 @@ class WxPay {
     appPayObj.sign = signStr
 
     return appPayObj
+  }
+
+  miniPayInfo(prepayId){
+    let miniPayObj = {
+      appId: miniApp.appId,
+      timeStamp: parseInt(Date.now() / 1000),
+      nonceStr: this._getNonceStr(),
+      package: 'prepay_id=' + prepayId,
+      signType: 'MD5'
+    }
+
+    let signStr = this._sign(miniPayObj)
+    miniPayObj.sign = signStr
+    return miniPayObj
   }
 
   _sign(signObj){

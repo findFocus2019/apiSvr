@@ -87,7 +87,9 @@ module.exports = {
     // appId: 'wx2e40960c5cfb7723',
     // appSecret: '0908b751cef2388e00847eb29e8303ad'
     appId:'wxbdffe470695eab18',
-    appSecret:'331af3040b5b3709a87db7a4813aba40'
+    appSecret:'331af3040b5b3709a87db7a4813aba40',
+    mch_id:'1526321551',
+    key:'e10adc3949ba59abbe56e057f20f883e',
   },
 
   alipay: alipay,
