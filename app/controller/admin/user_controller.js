@@ -285,6 +285,7 @@ class UserController extends Controller {
             }
           }
         })
+        this.logger.info('user: ', user)
         userId = user.id
       } catch (e) {
         this.logger.error('auditList: ', e)
@@ -313,6 +314,54 @@ class UserController extends Controller {
   }
 
 
+
+  /**
+   * 获取收藏列表
+   */
+  async collectionList (ctx) {
+    this.logger.info('collectionList: ', ctx.body, ' ;query: ', ctx.query)
+
+    const EmptyRet = {count: 0, rows: []}
+
+    let {page, limit, search} = ctx.body
+
+    let userModel = new this.models.user_model()
+    let userId = ''
+
+    let dbOptions = {
+      where: {status: 1,},
+      offset: limit * (page - 1),
+      limit: limit,
+      order: [
+        ['update_time', 'desc']
+      ]
+    }
+    
+    if (search) {
+      let mobile = search
+      let user = await userModel.model().findOne({
+        where: {
+          mobile: {[Op.like]: '%' + mobile + '%'}
+        }
+      })
+      this.logger.info('user: ', user)
+      if (user === null) { // didn't find one user
+        ctx.ret.data = EmptyRet
+        return ctx.ret
+      }
+      
+      userId = user.id
+      dbOptions.where.user_id = userId
+    }
+    
+    // 查找列表
+    let collectionModel = userModel.collectionModel()
+    let collectionList = await collectionModel.findAndCountAll(dbOptions)
+    this.logger.info('collectionList: ', collectionList.dataValues)
+    ctx.ret.data = collectionList
+
+    return ctx.ret
+  }
 }
 
 module.exports = UserController
