@@ -2,55 +2,41 @@ const util = require('util')
 const request = require('request')
 const fs = require('fs')
 const md5 = require('md5')
+const path = require('path')
 const config = {
   username: "深圳聚仁2018",
   password: "jd360buy",
   client_id: "5VQFKPYtsCZM2i3I4DD4",
   client_secret: "jDaqQBtlcYbvzzs50S9N",
-  tokenFile:'jd_token'
+  tokenFilePath: path.resolve(__dirname+'/token'),
+  tokenFile:'/jd_token'
 }
 class jdUtils{
-  constructor() {
-    // this.token = this.getAccessToken
-  }
   
   async getAccessToken() {
-    let tokenFile = fs.readFileSync(config.tokenFile)
-    let tokenObj = JSON.parse(tokenFile)
+    let token = config.tokenFilePath + config.tokenFile
+    let tokenFile = fs.readFileSync(token)
+    let tokenObj = {}
+    if (tokenFile.length>0) tokenObj = JSON.parse(tokenFile) 
     let millisecond = Date.now()
-    // let second = Math.floor(millisecond / 1000)
     let rspData
-    if (tokenObj) {
+
+    if (Object.keys(tokenObj).length > 0) {
       switch (true) {
         //有效期内
         case millisecond - tokenObj.time < tokenObj.expires_in * 1000:
           return tokenObj.access_token
         //过期时,可刷新token时间内
         case tokenObj.refresh_token_expires > millisecond:
-          rspData = await this.refreshToken(tokenObj.refresh_token)
+          rspData = await this._refreshToken(tokenObj.refresh_token)
           break;
-      }
+      } 
     } else {
-        let params = {
-          grant_type: 'access_token',
-          client_id: config.client_id,
-          client_secret: config.client_secret,
-          timestamp: this._getCurrentTime(),
-          username: config.username,
-          password: md5(config.password),
-          scope: '',
-          sign: ''
-        }
-        let sign_str = params.client_secret + params.timestamp + params.client_id + params.username + params.password 
-            + params.grant_type + params.scope + params.client_secret
-        params.sign = md5(sign_str).toUpperCase() 
-        let url = 'https://bizapi.jd.com/oauth2/accessToken'
-        rspData = await this._ruquestUtil(params, url)
+      rspData = await this._getToken()
     }
-   
     let rspObj = JSON.parse(rspData)
     if (rspObj.success) {
-      fs.writeFileSync('jd_token', JSON.stringify(rspObj.result))
+      fs.writeFileSync(token, JSON.stringify(rspObj.result))
       return rspObj.result.access_token
     } else {
       return 'request token err'
@@ -58,7 +44,25 @@ class jdUtils{
     
   }
 
-  async refreshToken(refresh_token) {
+  async _getToken() {
+    let params = {
+      grant_type: 'access_token',
+      client_id: config.client_id,
+      client_secret: config.client_secret,
+      timestamp: this._getCurrentTime(),
+      username: config.username,
+      password: md5(config.password),
+      scope: '',
+      sign: ''
+    }
+    let sign_str = params.client_secret + params.timestamp + params.client_id + params.username + params.password 
+        + params.grant_type + params.scope + params.client_secret
+    params.sign = md5(sign_str).toUpperCase() 
+    let url = 'https://bizapi.jd.com/oauth2/accessToken'
+    return await this._ruquestUtil(params, url)
+  }
+
+  async _refreshToken(refresh_token) {
     let params = {
       refresh_token: refresh_token,
       client_id: config.client_id,
@@ -70,9 +74,9 @@ class jdUtils{
 
   //商品相关 START
   //获取商品池编号接口
-  async getPageNum(accessToken) {
+  async getPageNum() {
     let params = {
-      token:accessToken
+      token: await this.getAccessToken()
     }
     let url = 'https://bizapi.jd.com/api/product/getPageNum'
     return await this._ruquestUtil(params,url)
@@ -80,14 +84,13 @@ class jdUtils{
 
   /**
    * 获取池内商品编号接口-品类商品池
-   * @param {*} accessToken 
    * @param {*} pageNum 商品池编号 
    * @param {*} pageNo  页码，默认取第一页；每页最多 10000 条数据，
    *                    品类商品池可能存在多页数据
    */
-  async getSkuByPage(accessToken, pageNum, pageNo) {
+  async getSkuByPage( pageNum, pageNo=1) {
     let params = {
-      token: accessToken,
+      token: await this.getAccessToken(),
       pageNum: pageNum,
       pageNo: pageNo
     }
@@ -343,7 +346,7 @@ class jdUtils{
 }
 (async () => {
   let demo = new jdUtils
-  let data = await demo.getAccessToken()
+  let data = await demo.getAccessToken(11)
   console.log(data)
  
 })()
