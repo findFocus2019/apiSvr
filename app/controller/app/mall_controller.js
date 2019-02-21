@@ -69,9 +69,7 @@ class MallController extends Controller {
     let search = ctx.body.search || ''
     let type = ctx.body.type || 1 // 分类
     let category = ctx.body.category || ''
-    let order = ctx.body.order
-
-
+    let order = ctx.body.order || null
 
     if (category === 'all') {
       category = ''
@@ -99,14 +97,19 @@ class MallController extends Controller {
     this.logger.info(ctx.uuid, 'goodsList()', 'where', where)
 
     let orderBy = []
-    if (order.name == 'default') {
-      orderBy = ['update_time', order.type]
-    } else if (order.name == 'price') {
-      orderBy = ['price_sell', order.type]
-    } else if (order.name == 'sales') {
-      orderBy = ['sales', order.type]
+    if(order){
+      if (order.name == 'default') {
+        orderBy = ['update_time', order.type]
+      } else if (order.name == 'price') {
+        orderBy = ['price_sell', order.type]
+      } else if (order.name == 'sales') {
+        orderBy = ['sales', order.type]
+      }
     }
-
+    
+    if(orderBy.length == 0){
+      orderBy = ['create_time' , 'desc']
+    }
     let mallModel = new this.models.mall_model
     let goodsModel = mallModel.goodsModel()
     let queryRet = await goodsModel.findAndCountAll({

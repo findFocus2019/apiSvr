@@ -720,7 +720,8 @@ class UserController extends Controller {
       let taskData = {
         user_id: userId,
         model_id: 0,
-        ip: ctx.ip
+        ip: ctx.ip,
+        ext_num: 50 * continuesNum
       }
 
       let taskLogRet = await taskModel.logByName(ctx, this.config.tasks.DAILY_SIGN, taskData, t)

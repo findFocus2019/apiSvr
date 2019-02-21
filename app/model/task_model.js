@@ -66,10 +66,10 @@ class TaskModel extends Model {
       return ret
     }
     let now = parseInt(Date.now() / 1000)
-    let isVip = false
+    // let isVip = false
     let vipNum = 1
     if (userInfo.vip && userInfo.startline <= now && userInfo.deadline >= now) {
-      isVip = true
+      // isVip = true
       let vipNumConfig = await this.configModel().findOne({
         where: {
           name: 'vip_score_num'
@@ -86,6 +86,7 @@ class TaskModel extends Model {
 
     let whereLog = {}
     whereLog.type = type
+    whereLog.task_id = task.id
     whereLog.user_id = data.user_id
     if (type == 'day') {
       whereLog.log_date = dateUtils.dateFormat(null, 'YYYYMMDD')
