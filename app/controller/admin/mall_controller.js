@@ -185,6 +185,28 @@ class MallController extends Controller {
     return ctx.ret
   }
 
+  /**
+   * 获取订单详情
+   * @param {Object} ctx 
+   */
+  async orderInfo (ctx) {
+    this.logger.info(ctx.uuid, 'orderInfo()', 'body', ctx.body)
+
+    let orderId = ctx.body.id
+    let dbOptions = {
+      where: {id: orderId}
+    }
+
+    let mallModel = new this.models.mall_model()
+
+    let orderInfo = await mallModel.orderModel().findOne(dbOptions)
+    if (orderInfo === null) { // 没有找到
+      ctx.ret.data = {}
+    }
+    ctx.ret.data = orderInfo
+    return ctx.ret
+  }
+
   async paymentList(ctx) {
     this.logger.info(ctx.uuid, 'paymentList()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
 
