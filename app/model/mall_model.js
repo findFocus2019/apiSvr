@@ -3,7 +3,7 @@ const {
   goods,
   order,
   payment,
-  orderRate,
+  // orderRate,
   orderItem,
   orderAfter,
   category
@@ -27,9 +27,9 @@ class MallModel extends Model {
     return this.db().define('payment', payment()[0], payment()[1])
   }
 
-  orderRateModel() {
-    return this.db().define('order_rate', orderRate()[0], orderRate()[1])
-  }
+  // orderRateModel() {
+  //   return this.db().define('order_rate', orderRate()[0], orderRate()[1])
+  // }
 
   orderItemModel() {
     return this.db().define('order_item', orderItem()[0], orderItem()[1])

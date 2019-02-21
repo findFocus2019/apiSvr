@@ -146,41 +146,41 @@ class MallController extends Controller {
   }
 
   /**
-   * 商品评价列表
+   * 商品评价列表 TODO 换表
    * @param {*} ctx 
    */
   async goodsRateList(ctx) {
-    this.logger.info(ctx.uuid, 'goodsRateList()', 'body', ctx.body, 'query', ctx.query)
+    // this.logger.info(ctx.uuid, 'goodsRateList()', 'body', ctx.body, 'query', ctx.query)
 
-    let page = ctx.body.page || 1
-    let limit = ctx.body.limit || 10
+    // let page = ctx.body.page || 1
+    // let limit = ctx.body.limit || 10
 
-    let goodsId = ctx.body.goods_id
+    // let goodsId = ctx.body.goods_id
 
-    let where = {}
-    where.goods_id = goodsId
-    this.logger.info(ctx.uuid, 'goodsRateList()', 'where', where)
+    // let where = {}
+    // where.goods_id = goodsId
+    // this.logger.info(ctx.uuid, 'goodsRateList()', 'where', where)
 
-    let mallModel = new this.models.mall_model
-    let orderRateModel = mallModel.orderRateModel()
-    let queryRet = await orderRateModel.findAndCountAll({
-      where: where,
-      offset: (page - 1) * limit,
-      limit: limit,
-      order: [
-        ['update_time', 'desc']
-      ]
-    })
+    // let mallModel = new this.models.mall_model
+    // let orderRateModel = mallModel.orderRateModel()
+    // let queryRet = await orderRateModel.findAndCountAll({
+    //   where: where,
+    //   offset: (page - 1) * limit,
+    //   limit: limit,
+    //   order: [
+    //     ['update_time', 'desc']
+    //   ]
+    // })
 
-    ctx.ret.data = {
-      rows: queryRet.rows || [],
-      count: queryRet.count || 0,
-      page: page,
-      limit: limit
-    }
-    this.logger.info(ctx.uuid, 'goodsRateList()', 'ret', ctx.ret)
+    // ctx.ret.data = {
+    //   rows: queryRet.rows || [],
+    //   count: queryRet.count || 0,
+    //   page: page,
+    //   limit: limit
+    // }
+    // this.logger.info(ctx.uuid, 'goodsRateList()', 'ret', ctx.ret)
 
-    return ctx.ret
+    // return ctx.ret
   }
 
   /**
@@ -1175,7 +1175,9 @@ class MallController extends Controller {
         })
         this.logger.info(ctx.uuid, 'orderComplete()', 'orderItem', orderItem)
         if (orderItem) {
+          let dayAfter7Time = parseInt(Date.now() / 1000) + 7 * 24 * 3600
           orderItem.order_status = 9
+          orderItem.rabate_date = this.utils.date_utils(dayAfter7Time, 'YYYYMMDD')
           let orderItemRet = await orderItem.save({
             transaction: t
           })

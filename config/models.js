@@ -539,22 +539,22 @@ module.exports = {
       }
     ]
   },
-  orderRate: () => {
-    return [{
-        ...commonFieldGet(),
-        status: getStatusFields(1),
-        user_id: FIELDS.bigInt(),
-        order_id: FIELDS.bigInt(),
-        goods_id: FIELDS.bigInt(),
-        level: FIELDS.tinyInt(),
-        info: FIELDS.text()
-      },
-      {
-        ...commonOpts,
-        tableName: 't_order_rate'
-      }
-    ]
-  },
+  // orderRate: () => {
+  //   return [{
+  //       ...commonFieldGet(),
+  //       status: getStatusFields(1),
+  //       user_id: FIELDS.bigInt(),
+  //       order_id: FIELDS.bigInt(),
+  //       goods_id: FIELDS.bigInt(),
+  //       level: FIELDS.tinyInt(),
+  //       info: FIELDS.text()
+  //     },
+  //     {
+  //       ...commonOpts,
+  //       tableName: 't_order_rate'
+  //     }
+  //   ]
+  // },
   orderItem: () => {
     return [{
         ...commonFieldGet(),
@@ -577,7 +577,8 @@ module.exports = {
         rate_info: FIELDS.stringLen(1000),
         rate_imgs: FIELDS.jsonArr('rate_imgs'),
         rate_time: FIELDS.defaultInt(),
-        order_status: FIELDS.tinyInt()
+        order_status: FIELDS.tinyInt(),
+        rabate_date: FIELDS.stringLen(8)
       },
       {
         ...commonOpts,
@@ -698,5 +699,5 @@ module.exports = {
       }
     ]
   },
-  
+
 }
