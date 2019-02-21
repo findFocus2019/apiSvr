@@ -133,7 +133,10 @@ class PubController extends Controller {
   async sendSmsCode(ctx) {
     let mobile = ctx.body.mobile
     let verifyModel = new this.models.verifycode_model
-    ctx.ret = await verifyModel.send(mobile)
+    let retMsg = await verifyModel.send(mobile)
+    if(retMsg.code != 0){
+      this._fail(ctx, retMsg.message)
+    }
     return ctx.ret
   }
 
@@ -155,6 +158,7 @@ class PubController extends Controller {
       where.type_id = typeId
     }
 
+    this.logger.info(ctx.uuid , 'albums' , where)
     let albumModel = new this.models.album_model
     let rows = await albumModel.model().findAll({
       where: where,

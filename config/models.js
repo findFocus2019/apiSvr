@@ -173,7 +173,8 @@ module.exports = {
         user_id: FIELDS.bigInt(),
         platform: FIELDS.stringLen(16),
         device: FIELDS.stringLen(64),
-        token: FIELDS.stringLen(64)
+        token: FIELDS.stringLen(64),
+        type: FIELDS.stringLen(12)
       },
       {
         ...commonOpts,
@@ -298,7 +299,8 @@ module.exports = {
         platform: FIELDS.stringLen(16),
         openid: FIELDS.stringLen(64),
         avatar: FIELDS.stringLen(255),
-        nickname: FIELDS.stringLen(64)
+        nickname: FIELDS.stringLen(64),
+        type: FIELDS.stringLen(12)
       },
       {
         ...commonOpts,

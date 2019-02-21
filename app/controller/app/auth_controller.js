@@ -71,7 +71,8 @@ class AuthController extends Controller {
       device,
       avatar,
       nickname,
-      openid
+      openid,
+      type
     } = ctx.body
 
     if (['weixin', 'qq', 'sinaweibo'].indexOf(platform) < 0) {
@@ -83,7 +84,8 @@ class AuthController extends Controller {
       platform: platform,
       avatar: avatar,
       nickname: nickname,
-      openid: openid
+      openid: openid,
+      type: type
     })
     this.logger.info(ctx.uuid, 'loginOauth()', 'oauth', oauth)
     if (!oauth.user_id) {
@@ -99,6 +101,7 @@ class AuthController extends Controller {
     let authData = {
       platform: platform,
       device: device,
+      type: type,
       user_id: oauth.user_id,
       // token: token
     }
@@ -114,8 +117,13 @@ class AuthController extends Controller {
       }
 
       userModel.getInfoByUserId(authRet.user_id).then(userInfo => {
-        userInfo.avatar = avatar
-        userInfo.nickname = nickname
+        if(!userInfo.avatar){
+          userInfo.avatar = avatar
+        }
+        if(!userInfo.nickname){
+          userInfo.nickname = nickname
+        }
+        
         userInfo.save()
       })
     }
@@ -293,7 +301,7 @@ class AuthController extends Controller {
       this.logger.info(ctx.uuid, 'register()', 'user.userInfo', userInfo)
     }
 
-    if (type == 0) {
+    if (type == 0 && user.pid == pid) {
       // 发送现金
       let t = await userModel.getTrans()
       let taskModel = new this.models.task_model

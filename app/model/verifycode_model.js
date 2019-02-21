@@ -29,7 +29,7 @@ class VerifyCodeModel extends Model {
       }
     } catch (err) {
       ret.code = 500
-      ret.message = '服务器错误'
+      ret.message = '短信服务发送错误,请稍后再试'
     }
     return ret
   }

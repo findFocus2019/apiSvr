@@ -69,6 +69,8 @@ class MallController extends Controller {
     let search = ctx.body.search || ''
     let type = ctx.body.type || 1 // 分类
     let category = ctx.body.category || ''
+    let order = ctx.body.order || null
+
     if (category === 'all') {
       category = ''
     }
@@ -94,6 +96,20 @@ class MallController extends Controller {
     }
     this.logger.info(ctx.uuid, 'goodsList()', 'where', where)
 
+    let orderBy = []
+    if(order){
+      if (order.name == 'default') {
+        orderBy = ['update_time', order.type]
+      } else if (order.name == 'price') {
+        orderBy = ['price_sell', order.type]
+      } else if (order.name == 'sales') {
+        orderBy = ['sales', order.type]
+      }
+    }
+    
+    if(orderBy.length == 0){
+      orderBy = ['create_time' , 'desc']
+    }
     let mallModel = new this.models.mall_model
     let goodsModel = mallModel.goodsModel()
     let queryRet = await goodsModel.findAndCountAll({
@@ -101,7 +117,8 @@ class MallController extends Controller {
       offset: (page - 1) * limit,
       limit: limit,
       order: [
-        ['update_time', 'desc']
+        orderBy,
+        ['id', 'desc']
       ],
       attributes: this.config.goodsListAttributes
     })
@@ -192,6 +209,10 @@ class MallController extends Controller {
     }
 
     this.logger.info(ctx.uuid, 'goodsInfo()', 'info', info)
+
+    // info.content = info.content.replace(/&amp;/g, '&')
+    const regex = new RegExp('<img', 'gi')
+    info.content = info.content.replace(regex, `<img style="max-width: 100%;"`)
     ctx.ret.data = {
       info: info
     }
@@ -278,12 +299,12 @@ class MallController extends Controller {
 
         // 
         let scoreCost = isVip ? scoreVip : score
-        if(useScore){
+        if (useScore) {
           if (scoreCost > userInfo.score || userInfo.score <= 0) {
             throw new Error('积分不足')
           }
         }
-        
+
         // 更新用户积分
         if (useScore) {
           userInfo.score = userInfo.score - scoreCost * 1000
@@ -520,29 +541,39 @@ class MallController extends Controller {
 
   }
 
-  async _payThirdUnifiedorder(ctx, method, paymentData) {
+  async _payThirdUnifiedorder(ctx, method, paymentData, isMpWx = 0, openid = '') {
 
     // TODO
-    if(method == 'alipay'){
+    if (method == 'alipay') {
       this.logger.info(ctx.uuid, '_payThirdUnifiedorder alipay')
       let outTradeNo = paymentData.out_trade_no
       let amount = paymentData.amount
       let body = paymentData.body
       let subject = paymentData.subject
-      this.logger.info(ctx.uuid, '_payThirdUnifiedorder alipay' , outTradeNo, amount, body, subject)
+      this.logger.info(ctx.uuid, '_payThirdUnifiedorder alipay', outTradeNo, amount, body, subject)
       let info = await this.utils.alipay_utils.appPay(outTradeNo, amount, body, subject)
-      this.logger.info(ctx.uuid, '_payThirdUnifiedorder info' , info)
+      this.logger.info(ctx.uuid, '_payThirdUnifiedorder info', info)
       ctx.ret.data = {
         info: info
       }
       return ctx.ret
-    }else  if(method == 'wxpay'){
+    } else if (method == 'wxpay') {
       let body = paymentData.body
       let outTradeNo = paymentData.out_trade_no
       let totalFee = paymentData.amount * 100
-      let unifiedOrderRet = await this.utils.wxpay_utils.unifiedOrder(body , outTradeNo, totalFee , ctx.ip)
+      let paymentType = 'APP'
+      if (isMpWx) {
+        paymentType = 'JSAPI'
+        if (!openid) {
+          ctx.ret.code = 1
+          ctx.ret.message = '无效的openid'
+          return ctx.ret
+        }
+      }
 
-      if(unifiedOrderRet.code != 0){
+      let unifiedOrderRet = await this.utils.wxpay_utils.unifiedOrder(body, outTradeNo, totalFee, ctx.ip, paymentType, openid)
+
+      if (unifiedOrderRet.code != 0) {
         ctx.ret.code = unifiedOrderRet.code
         ctx.ret.message = unifiedOrderRet.message
 
@@ -550,12 +581,12 @@ class MallController extends Controller {
       }
 
       let prepayId = unifiedOrderRet.data.prepay_id
-      let info = this.utils.wxpay_utils.appPayInfo(prepayId)
+      let info = this.utils.wxpay_utils.getPayInfo(prepayId, isMpWx)
       ctx.ret.data = {
         info: info
       }
       return ctx.ret
-    }else {
+    } else {
       ctx.ret.code = 1
       ctx.ret.message = '不支持的支付方式'
       return ctx.ret
@@ -573,6 +604,7 @@ class MallController extends Controller {
     let orderIds = ctx.body.order_ids
     let payMethod = ctx.body.pay_method
     let payType = ctx.body.pay_type || 1 // 1：Eka 2：账户余额 3：在线支付
+    let isMpWx = ctx.body.is_mp_wx || 0
 
     let orderIdsStr = '-' + orderIds.join('-') + '-'
     let paymentUuid = this.utils.uuid_utils.v4()
@@ -596,25 +628,26 @@ class MallController extends Controller {
 
       // 查找是否存在相同订单
       let payment = await paymentModel.findOne({
-        where:{
+        where: {
           order_ids: orderIdsStr
         }
       })
 
-      if(payment){
-        if(payment.status == 1){
+      if (payment) {
+        if (payment.status == 1) {
           throw new Error('账单错误:存在相同已支付订单')
         }
-        if(payment.user_id != userId){
+        if (payment.user_id != userId) {
           throw new Error('账单错误')
         }
 
         paymentUuid = payment.uuid
       }
-      
+
       let isVip = await userModel.isVip(userId)
       let userInfo = await userModel.getInfoByUserId(userId)
       let userBalance = userInfo.balance
+      let openid = await userModel.getMiniOpenIdByUserId(userId)
 
       let total = 0 // 总金额
       let scoreNum = 0
@@ -681,11 +714,11 @@ class MallController extends Controller {
           out_trade_no: paymentUuid,
           amount: DEBUG ? 0.01 : amount,
           body: '发现焦点-商品支付',
-          subject: '订单金额:￥' + amount 
+          subject: '订单金额:￥' + amount
         }
-        this.logger.info(ctx.uuid ,'orderPayPre()', payMethod , paymentData)
-        let payThirdRet = await this._payThirdUnifiedorder(ctx, payMethod, paymentData)
-        this.logger.info(ctx.uuid ,'orderPayPre() payThirdRet', payThirdRet)
+        this.logger.info(ctx.uuid, 'orderPayPre()', payMethod, paymentData)
+        let payThirdRet = await this._payThirdUnifiedorder(ctx, payMethod, paymentData, isMpWx, openid)
+        this.logger.info(ctx.uuid, 'orderPayPre() payThirdRet', payThirdRet)
         if (payThirdRet.code != 0) {
           throw new Error(payThirdRet.message)
         }
@@ -693,7 +726,7 @@ class MallController extends Controller {
         info = payThirdRet.data.info
       }
 
-      if (typeof info !== 'string'){
+      if (typeof info !== 'string') {
         info = JSON.stringify(info)
       }
       // 生成payment
@@ -710,18 +743,18 @@ class MallController extends Controller {
         info: info,
         uuid: paymentUuid
       }
-      if(!payment){
+      if (!payment) {
         payment = await paymentModel.create(paymentData)
-      }else {
+      } else {
         payment = await payment.update(paymentData)
       }
-      
+
 
       if (!payment) {
         throw new Error('生成支付记录失败')
       }
- 
-      
+
+
       ctx.ret.data = {
         id: payment.id,
         uuid: payment.uuid,
@@ -1105,25 +1138,25 @@ class MallController extends Controller {
       let items = order.goods_items
       for (let index = 0; index < items.length; index++) {
         let item = items[index]
-        this.logger.info(ctx.uuid, 'orderComplete()', 'goods_items',item )
+        this.logger.info(ctx.uuid, 'orderComplete()', 'goods_items', item)
         let orderItem = await orderItemModel.findOne({
-          where:{
+          where: {
             order_id: orderId,
             goods_id: item.id
           }
         })
-        this.logger.info(ctx.uuid, 'orderComplete()', 'orderItem',orderItem )
-        if(orderItem){
+        this.logger.info(ctx.uuid, 'orderComplete()', 'orderItem', orderItem)
+        if (orderItem) {
           orderItem.order_status = 9
           let orderItemRet = await orderItem.save({
             transaction: t
           })
-      
+
           if (!orderItemRet) {
             throw new Error('更新订单条目失败')
           }
         }
-        
+
       }
 
       order.status = 9
@@ -1278,7 +1311,7 @@ class MallController extends Controller {
       user_id: userId
     }
 
-    if(isRate){
+    if (isRate) {
       where.order_status = 9
     }
 

@@ -5,7 +5,8 @@ const Log = require('./../../lib/log')('task_model')
 const {
   task,
   taskLogs,
-  userInfo
+  userInfo,
+  config
 } = require('./../../config/models')
 
 class TaskModel extends Model {
@@ -21,6 +22,10 @@ class TaskModel extends Model {
     return this.db().define('user_info', userInfo()[0], userInfo()[1])
   }
 
+  configModel() {
+    return this.db().define('notice', config()[0], config()[1])
+  }
+
   /**
    * 
    * @param {*} ctx 
@@ -28,7 +33,8 @@ class TaskModel extends Model {
    * @param {
    *  user_id
    *  model_id
-   *  ip
+   *  ip,
+   *  ext_num: 0 // 额外数量，比如签到,商品购买
    * } data 
    * @param {*} t 
    */
@@ -59,6 +65,18 @@ class TaskModel extends Model {
       ret.message = '用户数据错误'
       return ret
     }
+    let now = parseInt(Date.now() / 1000)
+    // let isVip = false
+    let vipNum = 1
+    if (userInfo.vip && userInfo.startline <= now && userInfo.deadline >= now) {
+      // isVip = true
+      let vipNumConfig = await this.configModel().findOne({
+        where: {
+          name: 'vip_score_num'
+        }
+      })
+      vipNum = parseInt(vipNumConfig.content) || 1
+    } 
 
     let type = task.dataValues.type
     let limitCount = task.limit_count // 限制用户次数
@@ -68,6 +86,7 @@ class TaskModel extends Model {
 
     let whereLog = {}
     whereLog.type = type
+    whereLog.task_id = task.id
     whereLog.user_id = data.user_id
     if (type == 'day') {
       whereLog.log_date = dateUtils.dateFormat(null, 'YYYYMMDD')
@@ -95,7 +114,9 @@ class TaskModel extends Model {
     }
 
     // 记录
-    let taskLog = this.log(ctx, data.user_id, task.id, type, task.score, task.balance, data.model_id, data.ip, t)
+    let extNum = data.ext_num || 0
+    let score = task.score * vipNum + extNum
+    let taskLog = this.log(ctx, data.user_id, task.id, type, score, task.balance, data.model_id, data.ip, t)
     if (!taskLog) {
       ret.code = 1
       ret.message = '保存记录失败'
@@ -104,7 +125,7 @@ class TaskModel extends Model {
 
     // 保存用户数据
     // userInfo.balance = userInfo.balance + task.balance // 用户收益不直接到用户账户，vip带可以提取
-    userInfo.score = userInfo.score + task.score
+    userInfo.score = userInfo.score + score
 
     let userInfoSaveOpts = {}
     if (t) {
@@ -118,7 +139,7 @@ class TaskModel extends Model {
     }
 
     ret.data = {
-      score: task.score,
+      score: score,
       balance: task.balance
     }
 
