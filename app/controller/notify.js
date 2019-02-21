@@ -15,7 +15,7 @@ class PaymentLogic extends Controller {
 
     ctx.uuid = ctx.uuid || uuid()
     ctx.ret = {
-      code : 0,
+      code: 0,
       message: 'success'
     }
 
@@ -47,7 +47,7 @@ class PaymentLogic extends Controller {
 
       let userInfo = await userModel.getInfoByUserId(userId)
 
-      
+
       Logger.info(ctx.uuid, 'orderPayConfirm() userInfo', userInfo)
 
       let payType = payment.pay_type
@@ -57,7 +57,7 @@ class PaymentLogic extends Controller {
       //   throw new Error('支付方式错误')
       // }
 
-      if(['wxpay', 'alipay'].indexOf(payMethod) < 0){
+      if (['wxpay', 'alipay'].indexOf(payMethod) < 0) {
         throw new Error('支付方式错误')
       }
 
@@ -188,6 +188,19 @@ class PaymentLogic extends Controller {
         }
       }
 
+      // 记录交易信息type 3:商品购买
+      let transactionData = {
+        balance: payment.balance,
+        amount: payment.amount,
+        score: payment.score * 1000,
+        status: 1,
+        method: payMethod
+      }
+      let transactionRet = await userModel.transactionAdd(userId, 3, transactionData, t)
+      if (!transactionRet) {
+        throw new Error('记录交易数据失败')
+      }
+
       t.commit()
     } catch (err) {
       console.log(err)
@@ -202,17 +215,17 @@ class PaymentLogic extends Controller {
 
 const paymentLogic = new PaymentLogic()
 
-router.post('/wxpay' , async(req, res) => {
+router.post('/wxpay', async (req, res) => {
   let obj = req.body
-  
-  if(typeof obj == 'string'){
+
+  if (typeof obj == 'string') {
     obj = await Utils.wxpay_utils._xmlToObj(obj)
   }
 
-  Logger.info('/wxpay obj' , obj)
+  Logger.info('/wxpay obj', obj)
   let resultCode = obj.return_code
   let outTradeNo = obj.out_trade_no
-  if(resultCode == 'SUCCESS'){
+  if (resultCode == 'SUCCESS') {
     let ret = await paymentLogic.orderPayConfirm({
       uuid: obj.outTradeNo,
       body: {
@@ -220,27 +233,27 @@ router.post('/wxpay' , async(req, res) => {
       },
       notify_info: req.body
     })
-    Logger.info(outTradeNo , '/wxpay ret' , ret)
+    Logger.info(outTradeNo, '/wxpay ret', ret)
 
-    if(ret.code == 0){
+    if (ret.code == 0) {
       // res.send('succuess')
       res.send(`<xml>
 <return_code><![CDATA[SUCCESS]]></return_code>
   <return_msg><![CDATA[OK]]></return_msg>
 </xml>`)
-    }else {
+    } else {
       return res.send(`<return_code><![CDATA[FAIL]]></return_code>
   <return_msg><![CDATA[fail]]></return_msg>
 </xml>`)
     }
-  }else {
-    Logger.info('/wxpay resultCode' , resultCode)
+  } else {
+    Logger.info('/wxpay resultCode', resultCode)
   }
 })
 
-router.post('/alipay', async(req, res) => {
+router.post('/alipay', async (req, res) => {
   let obj = req.body
-  Logger.info('/alipay obj' , obj)
+  Logger.info('/alipay obj', obj)
   let outTradeNo = obj.out_trade_no
   let tradeStatus = obj.trade_status
 
@@ -250,8 +263,8 @@ router.post('/alipay', async(req, res) => {
   //   return res.send('fail:sign fail')
   // }
 
-  if(tradeStatus == 'TRADE_SUCCESS'){
-    
+  if (tradeStatus == 'TRADE_SUCCESS') {
+
     let ret = await paymentLogic.orderPayConfirm({
       uuid: obj.outTradeNo,
       body: {
@@ -259,15 +272,15 @@ router.post('/alipay', async(req, res) => {
       },
       notify_info: req.body
     })
-    Logger.info(outTradeNo , '/alipay ret' , ret)
+    Logger.info(outTradeNo, '/alipay ret', ret)
 
-    if(ret.code == 0){
+    if (ret.code == 0) {
       res.send('succuess')
-    }else {
+    } else {
       return res.send('fail')
     }
-  }else{
-    Logger.info('/alipay tradeStatus' , tradeStatus)
+  } else {
+    Logger.info('/alipay tradeStatus', tradeStatus)
     return res.send('success')
   }
 })

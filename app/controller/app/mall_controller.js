@@ -458,8 +458,10 @@ class MallController extends Controller {
     if (user.pid) {
       // 邀请人
       let inviteUser = await userModel.getInviteUser(user.pid)
-      if (inviteUser) {
+      if (!inviteUser) {
         inviteUserId = this.config.defaultInivteUserId
+      } else {
+        inviteUserId = user.pid
       }
     } else {
       inviteUserId = this.config.defaultInivteUserId
@@ -546,6 +548,9 @@ class MallController extends Controller {
       num_rabate_share: numRabateShare,
       num_rabate_post: numRabatePost,
       num_rabate_invite: numRabateInvite,
+      share_user_id: shareUserId,
+      post_user_id: postUserId,
+      invite_user_id: inviteUserId,
       goods_title: item.title,
       goods_cover: item.cover,
       goods_amount: goodsAmount
@@ -961,6 +966,20 @@ class MallController extends Controller {
         }
       }
 
+
+      // 记录交易信息type 3:商品购买
+      let transactionData = {
+        balance: payment.balance,
+        amount: payment.amount,
+        score: payment.score * 1000,
+        status: 1,
+        method: payMethod
+      }
+      let transactionRet = await userModel.transactionAdd(userId, 3, transactionData, t)
+      if (!transactionRet) {
+        throw new Error('记录交易数据失败')
+      }
+
       t.commit()
     } catch (err) {
       console.log(err)
@@ -1177,7 +1196,7 @@ class MallController extends Controller {
         if (orderItem) {
           let dayAfter7Time = parseInt(Date.now() / 1000) + 7 * 24 * 3600
           orderItem.order_status = 9
-          orderItem.rabate_date = this.utils.date_utils(dayAfter7Time, 'YYYYMMDD')
+          orderItem.rabate_date = this.utils.date_utils.dateFormat(dayAfter7Time, 'YYYYMMDD')
           let orderItemRet = await orderItem.save({
             transaction: t
           })

@@ -126,7 +126,7 @@ class UserController extends Controller {
     return ctx.ret
   }
 
-  async passwordTradeSet(ctx){
+  async passwordTradeSet(ctx) {
     this.logger.info(ctx.uuid, 'passwordTradeSet()', 'body', ctx.body, 'query', ctx.query)
     let userId = ctx.body.user_id
     let password = ctx.body.password
@@ -141,9 +141,9 @@ class UserController extends Controller {
     let user = await userModel.getInfoByUserId(userId)
 
     let verifyCodeModel = new this.models.verifycode_model
-    let verifyRet = await verifyCodeModel.verify(user.mobile , verifyCode)
+    let verifyRet = await verifyCodeModel.verify(user.mobile, verifyCode)
     this.logger.info(ctx.uuid, 'passwordTradeSet()', 'verifyRet', verifyRet)
-    if(verifyRet.code != 0){
+    if (verifyRet.code != 0) {
       return this._fail(ctx, '短信验证失败，' + verifyRet.message)
     }
 
@@ -179,8 +179,8 @@ class UserController extends Controller {
     let user = await userModel.model().findByPk(userId)
 
     let verifyCodeModel = new this.models.verifycode_model
-    let verifyRet = await verifyCodeModel.verify(user.mobile , verifyCode)
-    if(verifyRet.code != 0){
+    let verifyRet = await verifyCodeModel.verify(user.mobile, verifyCode)
+    if (verifyRet.code != 0) {
       return this._fail(ctx, '短信验证失败，' + verifyRet.message)
     }
 
@@ -792,14 +792,14 @@ class UserController extends Controller {
     }
     let today = parseInt(this.utils.date_utils.dateFormat(null, 'DD'))
     let yesterday = today - 1
-  
+
     rows.forEach((row, i) => {
       let day = parseInt(this.utils.date_utils.dateFormat(row.create_time, 'DD'))
-    
+
       if (i == 0 && day == today) {
         data.continues_num = row.continues_num
         data.today_sign = 1
-      }else if (i == 0 && day == yesterday) {
+      } else if (i == 0 && day == yesterday) {
         data.continues_num = row.continues_num
       }
 
@@ -1342,7 +1342,7 @@ class UserController extends Controller {
     this.logger.info(ctx.uuid, 'transactionApply()', 'body', ctx.body, 'query', ctx.query)
     let userId = ctx.body.user_id
     let balance = ctx.body.balance
-    let method = ctx.body.method
+    let method = ctx.body.method || 'alipay'
     let type = ctx.body.type || 2
     let status = ctx.body.status || 0
 
@@ -1392,8 +1392,10 @@ class UserController extends Controller {
     let limit = ctx.body.limit || 10
     let type = ctx.body.type || 0
 
-    let where = {user_id: userId}
-    if(type){
+    let where = {
+      user_id: userId
+    }
+    if (type) {
       where.type = type
     }
     let userModel = new this.models.user_model
@@ -1419,7 +1421,7 @@ class UserController extends Controller {
     return ctx.ret
   }
 
-    
+
 }
 
 module.exports = UserController
