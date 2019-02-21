@@ -3,6 +3,7 @@ const request = require('request')
 const fs = require('fs')
 const md5 = require('md5')
 const path = require('path')
+const eventEmitter = require('events').EventEmitter
 const config = {
   username: "深圳聚仁2018",
   password: "jd360buy",
@@ -11,7 +12,40 @@ const config = {
   tokenFilePath: path.resolve(__dirname+'/token'),
   tokenFile:'/jd_token'
 }
+
+
 class jdUtils{
+
+  constructor() {
+    this.myEmitter = new eventEmitter()
+    // this.myEmitter.on('insertGood',this.handleInsertGoodEvent)
+  }
+  //同步商品入库
+  async syncGoods() {
+    try {
+      let allPageNum = await this.getPageNum()
+      let pageNumsObj = JSON.parse(allPageNum)
+      if (pageNumsObj.resultCode == '0000') {
+        let numsResult = pageNumsObj.result
+        for (let index in numsResult) {
+      //     console.log(numsResult[index].page_num)
+          let skus = await this.getSkuByPage(numsResult[index].page_num);
+          let skusObj = JSON.parse(skus)
+          if (skusObj.resultCode == "0000") {
+            // let pageCount = skusObj.result.pageCount
+            //现在暂时每个分类都是一页，不考虑分页，后续可以改进
+            let skusResult = skusObj.result.skuIds
+            //拿到结果，异步执行
+            // this.handleInsertGoodEvent(skusResult)
+          }
+        }
+      }
+      return true
+    } catch (err) {
+      
+    }
+    
+  }
   
   async getAccessToken() {
     let token = config.tokenFilePath + config.tokenFile
@@ -102,12 +136,12 @@ class jdUtils{
   /**
    * 获取商品详细信息接口 
    * @param {*} accessToken 
-   * @param {*} sku 
+   * @param {*} skuId 
    */
-  async getDetail(accessToken,sku) {
+  async getDetail(skuId) {
     let params = {
-      token: accessToken,
-      sku: sku
+      token: await this.getAccessToken(),
+      sku: skuId
     }
     let url = 'https://bizapi.jd.com/api/product/getDetail'
     return await this._ruquestUtil(params,url)
@@ -118,9 +152,9 @@ class jdUtils{
    * @param {*} accessToken 
    * @param {*} sku 
    */
-  async skuState(accessToken,sku) {
+  async skuState(sku) {
     let params = {
-      token: accessToken,
+      token: await this.getAccessToken(),
       sku: sku
     }
     let url = 'https://bizapi.jd.com/api/product/skuState'
@@ -132,9 +166,9 @@ class jdUtils{
    * @param {*} accessToken 
    * @param {*} sku 
    */
-  async skuImage(accessToken, sku) {
+  async skuImage(sku) {
     let params = {
-      token: accessToken,
+      token: await this.getAccessToken(),
       sku: sku
     }
     let url = 'https://bizapi.jd.com/api/product/skuImage'
@@ -144,9 +178,9 @@ class jdUtils{
   //商品相关 END
 
   //批量查询商品售卖价
-  async getSellPrice(accessToken,sku) {
+  async getSellPrice(sku) {
     let params = {
-      token: accessToken,
+      token: await this.getAccessToken(),
       sku: sku
     }
     let url = 'https://bizapi.jd.com/api/price/getSellPrice'
@@ -155,9 +189,9 @@ class jdUtils{
 
   //库存相关 START
   //批量获取库存接口（建议订单详情页、下单使用）
-  async getNewStockById(accessToken, skuNums, area) {
+  async getNewStockById(skuNums, area) {
     let params = {
-      token: accessToken,
+      token: await this.getAccessToken(),
       skuNums: skuNums,
       area: area
     }
@@ -172,9 +206,9 @@ class jdUtils{
     商品编号 批量以逗号分隔  (最高支持 100 个商品)  
     格式：1_0_0 (分别代表 1、2、3 级地址) 
    */
-  async getStockById(accessToken,sku,area) {
+  async getStockById(sku,area) {
     let params = {
-      token: accessToken,
+      token: await this.getAccessToken(),
       sku: sku,
       area: area
     }
@@ -191,9 +225,9 @@ class jdUtils{
    * @param {*} params
    *  
    */
-  async submitOrder(accessToken,orderParams){
+  async submitOrder(orderParams){
     let params = {
-      token: accessToken
+      token: await this.getAccessToken()
     }
     Object.keys(orderParams).forEach(item => {
       params[item] = orderParams[item]
@@ -204,9 +238,9 @@ class jdUtils{
 
 
   //确认预占库存订单接口
-  async confirmOrder(accessToken, jdOrderId, companyPayMoney) {
+  async confirmOrder( jdOrderId, companyPayMoney) {
     let params = {
-      token: accessToken,
+      token: await this.getAccessToken(),
       jdOrderId: jdOrderId,
       companyPayMoney: companyPayMoney
     }
@@ -215,15 +249,48 @@ class jdUtils{
   }
 
   //取消未确认订单接口
-  async orderCancel(accessToken, jdOrderId) {
+  async orderCancel(jdOrderId) {
     let params = {
-      token: accessToken,
+      token: await this.getAccessToken(),
       jdOrderId: jdOrderId
     }
     let url = 'https://bizapi.jd.com/api/order/cancel'
     return await this._ruquestUtil(params,url)
   }
 
+  /**
+   * 发起支付接口 
+   * @param {*} orderId 
+   */
+  async doPay(orderId) {
+    
+    let params = {
+      token: await this.getAccessToken(),
+      jdOrderId: orderId
+    }
+    let url = 'https://bizapi.jd.com/api/order/doPay'
+    return await this._ruquestUtil(params,url)
+  }
+
+  /**
+   * 获取京东预约日历 
+   * @param {*} calendarParams 
+   */
+  async promiseCalendar(calendarParams) {
+    let params = {
+      token: await this.getAccessToken()
+    }
+    Object.keys(calendarParams).forEach(item => {
+      params[item] = calendarParams[item]
+    })
+    let url = 'https://bizapi.jd.com/api/order/promiseCalendar'
+    return await this._ruquestUtil(params,url)
+  }
+
+  //订单反查
+  async selectJdOrderIdByThirdOrder() {
+    let url = 'https://bizapi.jd.com/api/order/selectJdOrderIdByThirdOrder'
+  }
   //订单相关 END
 
   //地址相关 start
@@ -307,15 +374,31 @@ class jdUtils{
       let action = await util.promisify(request)({
         method: 'POST',
         url: url,
-        formData: params
+        form: params
       })
       // console.log(action)
       return action.body
     } catch (err) {
-      return err
+      console.log(err)
+      return 'err'
     }
   }
 
+  
+
+  //插入或更新数据库事件处理
+  async handleInsertGoodEvent(skusResult) {
+    process.nextTick(async () => {
+    try {
+      skusResult.forEach(async (sku) => {
+          let skuDetail = await this.getDetail(sku) //TODO 入库
+      })
+        console.log(skusResult.length)
+      } catch (err) {
+        console.log(err)
+      }
+    })
+  }
   /**
    * 获取当前时间 格式：yyyy-MM-dd HH:MM:SS
    */
@@ -344,11 +427,15 @@ class jdUtils{
     }
   }
 }
-(async () => {
+//
+
+// (async () => {
   let demo = new jdUtils
-  let data = await demo.getAccessToken(11)
-  console.log(data)
+  // let data = await demo.syncGoods()
+  // let data = await demo.getDetail(100001409446)
+  
+//   console.log(data)
  
-})()
+// })()
 
 module.exports = new jdUtils
