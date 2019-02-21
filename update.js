@@ -3,14 +3,14 @@
 
 const updateData = {
   ios:{
-    version:'0.9.0',
+    version:'0.9.1',
     notes: ['修复bug'],
-    url: ''
+    url: 'https://www.pgyer.com/DFcd'
   },
   andriod: {
-    version:'0.9.0',
+    version:'0.9.1',
     notes: ['修复bug'],
-    url: ''
+    url: 'https://www.pgyer.com/iHri'
   }
 }
 
