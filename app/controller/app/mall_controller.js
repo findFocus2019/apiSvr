@@ -97,7 +97,7 @@ class MallController extends Controller {
     this.logger.info(ctx.uuid, 'goodsList()', 'where', where)
 
     let orderBy = []
-    if(order){
+    if (order) {
       if (order.name == 'default') {
         orderBy = ['update_time', order.type]
       } else if (order.name == 'price') {
@@ -106,9 +106,9 @@ class MallController extends Controller {
         orderBy = ['sales', order.type]
       }
     }
-    
-    if(orderBy.length == 0){
-      orderBy = ['create_time' , 'desc']
+
+    if (orderBy.length == 0) {
+      orderBy = ['create_time', 'desc']
     }
     let mallModel = new this.models.mall_model
     let goodsModel = mallModel.goodsModel()
@@ -215,6 +215,34 @@ class MallController extends Controller {
     info.content = info.content.replace(regex, `<img style="max-width: 100%;"`)
     ctx.ret.data = {
       info: info
+    }
+
+    // 分享积分
+    let shareId = ctx.body.share_id || 0
+    this.logger.info(ctx.uuid, 'info()', 'shareId', shareId)
+    if (shareId) {
+      // 
+      let shareModel = new this.models.share_model
+      let shareInfo = await shareModel.model().findByPk(shareId)
+      this.logger.info(ctx.uuid, 'info()', 'shareInfo', shareInfo)
+      let shareUserId = shareInfo.user_id
+      this.logger.info(ctx.uuid, 'info()', 'shareUserId', shareUserId)
+      let taskModel = new this.models.task_model
+      let t = await mallModel.getTrans()
+      let taskData = {
+        user_id: shareUserId,
+        model_id: shareId,
+        ip: ctx.ip
+      }
+      taskModel.logByName(ctx, 'user_share', taskData, t).then(ret => {
+        this.logger.info(ctx.uuid, 'info() taskModel.logByName', 'ret', ret)
+        if (ret.code === 0) {
+          t.commit()
+        } else {
+          t.rollback()
+        }
+      })
+
     }
 
     return ctx.ret

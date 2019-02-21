@@ -4,7 +4,7 @@ module.exports = {
   DEBUG: true,
   version: '0.9.0',
   apkUrl: 'http://img-juren.oss-cn-shenzhen.aliyuncs.com/app/android_debug.apk',
-  domain:'https://api.faxianjiaodian.com',
+  domain: 'https://api.faxianjiaodian.com',
 
   port: 5001,
   signKey: '123456',
@@ -22,7 +22,7 @@ module.exports = {
     DAILY_SIGN: 'daily_sign',
     DAILY_SIGN_7: 'daily_sign_7', // 连续7天签到
     POSTS_VIEW: 'posts_view', //文章阅读
-
+    USER_INVITE: 'user_invite', // 邀请任务获得积分
   },
   taskType: {
     day: '每日任务',
@@ -86,18 +86,18 @@ module.exports = {
   miniApp: {
     // appId: 'wx2e40960c5cfb7723',
     // appSecret: '0908b751cef2388e00847eb29e8303ad'
-    appId:'wxbdffe470695eab18',
-    appSecret:'331af3040b5b3709a87db7a4813aba40',
-    mch_id:'1526321551',
-    key:'e10adc3949ba59abbe56e057f20f883e',
+    appId: 'wxbdffe470695eab18',
+    appSecret: '331af3040b5b3709a87db7a4813aba40',
+    mch_id: '1526321551',
+    key: 'e10adc3949ba59abbe56e057f20f883e',
   },
 
   alipay: alipay,
 
   wxpay: {
     app_id: 'wx41b753c9ce99ea27',
-    key:'e10adc3949ba59abbe56e057f20f883e',
-    mch_id:'1522398771',
+    key: 'e10adc3949ba59abbe56e057f20f883e',
+    mch_id: '1522398771',
     notify_url: '/notify/wxpay'
   },
 

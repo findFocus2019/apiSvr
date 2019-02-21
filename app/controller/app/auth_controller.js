@@ -117,13 +117,13 @@ class AuthController extends Controller {
       }
 
       userModel.getInfoByUserId(authRet.user_id).then(userInfo => {
-        if(!userInfo.avatar){
+        if (!userInfo.avatar) {
           userInfo.avatar = avatar
         }
-        if(!userInfo.nickname){
+        if (!userInfo.nickname) {
           userInfo.nickname = nickname
         }
-        
+
         userInfo.save()
       })
     }
@@ -143,6 +143,7 @@ class AuthController extends Controller {
     } = ctx.body
 
     let pid = ctx.body.pid || 0
+    let isInvite = false // 是否是邀请
     // let inviteCode = ctx.body.invite_code
     // let pUser
 
@@ -156,10 +157,10 @@ class AuthController extends Controller {
     // }
 
     let verifyCodeModel = new this.models.verifycode_model
-    let verifyRet = await verifyCodeModel.verify(mobile , verify_code)
+    let verifyRet = await verifyCodeModel.verify(mobile, verify_code)
     this.logger.info(ctx.uuid, 'passwordTradeSet()', 'verifyRet', verifyRet)
-    if(verifyRet.code != 0){
-      return this._fail(ctx, '短信验证失败，' + verifyRet.message)
+    if (verifyRet.code != 0) {
+      // return this._fail(ctx, '短信验证失败，' + verifyRet.message)
     }
 
     let userModel = new this.models.user_model()
@@ -181,6 +182,15 @@ class AuthController extends Controller {
         mobile: mobile
       }
     })
+    if (!user) {
+      isInvite = true
+    } else {
+      if (pid > 0 && user.pid == pid) {
+        ctx.ret.code = 1
+        ctx.ret.message = '不能邀请自己'
+        return ctx.ret
+      }
+    }
     this.logger.info(ctx.uuid, 'register()', 'user.find', user)
 
     if (type == 0) {
@@ -301,13 +311,13 @@ class AuthController extends Controller {
       this.logger.info(ctx.uuid, 'register()', 'user.userInfo', userInfo)
     }
 
-    if (type == 0 && user.pid == pid) {
-      // 发送现金
-      let t = await userModel.getTrans()
+    if (isInvite) {
+      // 邀请发送现金
       let taskModel = new this.models.task_model
+      let t = await userModel.getTrans()
       let taskData = {
         user_id: user.id,
-        model_id: 0,
+        model_id: user.id,
         ip: ctx.ip
       }
       taskModel.logByName(ctx, config.tasks.REGISTER, taskData, t).then(ret => {
@@ -315,6 +325,21 @@ class AuthController extends Controller {
           t.commit()
         } else {
           t.rollback()
+        }
+      })
+
+      // 邀请获取积分
+      let t1 = await userModel.getTrans()
+      let taskData1 = {
+        user_id: user.pid,
+        model_id: user.pid,
+        ip: ctx.ip
+      }
+      taskModel.logByName(ctx, config.tasks.USER_INVITE, taskData1, t1).then(ret => {
+        if (ret.code === 0) {
+          t1.commit()
+        } else {
+          t1.rollback()
         }
       })
 
