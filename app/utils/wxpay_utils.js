@@ -67,7 +67,7 @@ class WxPay {
   async unifiedOrder(body , out_trade_no , total_fee , ip ,  payment_type = 'APP' , openid = '', attach = ''){
     let mchId = this.mch_id
     let appId = this.app_id
-    if(openid){
+    if(payment_type == 'JSAPI'){
       mchId = miniApp.mch_id
       appId = miniApp.appId
       this.key = miniApp.key
@@ -91,7 +91,7 @@ class WxPay {
       // openid : openid
     }
 
-    if(openid){
+    if(payment_type == 'JSAPI'){
       unifiedOrderObj.openid = openid
     }
 

@@ -1422,6 +1422,33 @@ class UserController extends Controller {
   }
 
 
+  
+  async push(ctx){
+    let body = ctx.body
+
+    let clientId = body.client_id
+    let info = {
+      platform: body.platform,
+      status: body.status || 1,
+      user_id: body.user_id || 0,
+      token: body.token
+    }
+
+    let pushModel = new this.models.push_model
+    let pushRet = await pushModel.infoByClient(clientId, info)
+
+    if(!pushRet){
+      ctx.ret.code = 1
+      ctx.ret.message = '推送设备登记失败'
+    }else{
+      ctx.ret.data = {
+        id: pushRet.id
+      }
+    }
+
+    return ctx.ret
+
+  }
 }
 
 module.exports = UserController

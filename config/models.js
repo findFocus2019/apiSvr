@@ -308,6 +308,21 @@ module.exports = {
       }
     ]
   },
+  push: () => {
+    return [{
+        ...commonFieldGet(),
+        status: getStatusFields(0),
+        user_id: FIELDS.bigInt(),
+        platform: FIELDS.stringLen(16),
+        client_id: FIELDS.stringLen(64),
+        token: FIELDS.stringLen(64)
+      },
+      {
+        ...commonOpts,
+        tableName: 't_push'
+      }
+    ]
+  },
   admin: () => {
     return [{
         ...commonFieldGet(),

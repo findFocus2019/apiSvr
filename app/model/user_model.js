@@ -249,11 +249,22 @@ class UserModel extends Model {
 
   async isVip(userId) {
     let user = await this.getInfoByUserId(userId)
+
+    return this.isVipByInfo(user)
     if (!user) {
       return false
     }
+    // let now = parseInt(Date.now() / 1000)
+    // if (user.vip && user.startline <= now && user.deadline >= now) {
+    //   return true
+    // } else {
+    //   return false
+    // }
+  }
+
+  async isVipByInfo(user){
     let now = parseInt(Date.now() / 1000)
-    if (user.vip && user.startline <= now && user.deadline >= now) {
+    if (user && user.vip && user.startline <= now && user.deadline >= now) {
       return true
     } else {
       return false
@@ -368,7 +379,9 @@ class UserModel extends Model {
     return transaction
   }
 
-
+  setUserPushInfo(userId , data){
+    
+  }
 
 }
 

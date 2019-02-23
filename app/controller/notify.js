@@ -1,12 +1,12 @@
 const express = require('express')
 const router = express.Router()
 const Controller = require('./../../lib/controller')
+const CommonController = require('./../common/common_controller')
 const uuid = require('uuid/v4')
 const Utils = require('./../utils/index')
 const Logger = require('./../../lib/log')('NOTIFY')
 
-class PaymentLogic extends Controller {
-
+class PaymentLogic extends CommonController {
 
   /**
    * 确认支付
@@ -185,6 +185,12 @@ class PaymentLogic extends Controller {
         Logger.info(ctx.uuid, 'orderPayConfirm() paymentRet', paymentRet)
         if (!paymentRet) {
           throw new Error('支付信息更新失败')
+        }
+
+        // 更新商品sales
+        let goodsUpdateRet = await this._paymentGoodsUpdate(ctx, order , t)
+        if(goodsUpdateRet.code !== 0){
+          throw new Error(goodsUpdateRet.message)
         }
       }
 

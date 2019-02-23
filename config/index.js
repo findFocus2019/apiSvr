@@ -101,5 +101,14 @@ module.exports = {
     notify_url: '/notify/wxpay'
   },
 
-  defaultInivteUserId: 1
+  // 默认邀请人id
+  defaultInivteUserId: 1,
+
+  getui:{
+    host: 'ttps://api.getui.com/apiex.htm',
+    appId:'j3F91JomB6AbpkCuDefJAA',
+    appKey:'WeOHgklYJcALNyRa0W6dS5',
+    appSecret:'akpv6EDmor8pOpBBNIMmC1',
+    masterSecret:'hW3SrajAkuAhg5kGrnEfQ6'
+  }
 }

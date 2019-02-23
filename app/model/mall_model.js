@@ -1,4 +1,5 @@
 const Model = require('./../../lib/model')
+const Op = require('sequelize').Op
 const {
   goods,
   order,
@@ -43,20 +44,30 @@ class MallModel extends Model {
    * 获取商品分类
    * @param {*} type 
    */
-  async getGoodsCategoryJd(type = 2) {
-    let sql = 'select category as name from t_goods where type = :type group by category '
-    let rows = await this.query(sql, {
-      type: type
+  async getGoodsCategoryJd() {
+    let list = await this.categoryModel().findAll({
+      where: {
+        status: 1,
+        pid: 0,
+        type: 'goods',
+        jd_num: {
+          [Op.ne]:0
+        }
+      },
+      order: [
+        ['sort', 'asc'],
+        ['create_time', 'desc']
+      ]
     })
 
     let datas = [{
       id: 'all',
       name: '全部'
     }]
-    rows.forEach(item => {
+    list.forEach(item => {
       datas.push({
-        id: item.category,
-        name: item.category
+        id: item.id,
+        name: item.title
       })
     })
     return datas
@@ -68,6 +79,7 @@ class MallModel extends Model {
       where: {
         status: 1,
         pid: 0,
+        jd_num: 0,
         type: 'goods'
       },
       order: [

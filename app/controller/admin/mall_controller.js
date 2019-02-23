@@ -23,6 +23,7 @@ class MallController extends Controller {
       }
     })
 
+    this.logger.info(ctx.uuid, 'categoryList()', 'rows', rows)
     ctx.ret.data = {
       rows: rows
     }
@@ -189,12 +190,14 @@ class MallController extends Controller {
    * 获取订单详情
    * @param {Object} ctx 
    */
-  async orderInfo (ctx) {
+  async orderInfo(ctx) {
     this.logger.info(ctx.uuid, 'orderInfo()', 'body', ctx.body)
 
     let orderId = ctx.body.id
     let dbOptions = {
-      where: {id: orderId}
+      where: {
+        id: orderId
+      }
     }
 
     let mallModel = new this.models.mall_model()
@@ -309,6 +312,71 @@ class MallController extends Controller {
 
     return ctx.ret
   }
+
+  /**
+   * 
+   * type : 1:退货 2:换货
+   */
+  async orderAfterDeal(ctx) {
+    this.logger.info(ctx.uuid, 'orderAfterDeal()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+
+    let orderAfterId = ctx.body.id
+    let type = ctx.body.type || 0
+
+    let mallModel = new this.models.mall_model
+    let orderModel = mallModel.orderModel()
+    let orderItemModel = mallModel.orderItemModel()
+    let orderAfterModel = mallModel.orderAfterModel()
+
+    let t = await mallModel.getTrans()
+
+    try {
+      let orderAfter = await orderAfterModel.findByPk(orderAfterId)
+
+      let orderId = orderAfter.order_id
+      let goodsIds = orderAfter.goods_ids
+
+      if (type == 1) {
+        // 退货
+        let goodsIdsArr = goodsIds.substr(1, goodsIds.length - 2).split('-')
+
+        for (let index = 0; index < goodsIdsArr.length; index++) {
+          let goodsId = goodsIdsArr[index];
+          let orderItem = await orderItemModel.findOne({
+            where: {
+              order_id: orderId,
+              goods_id: goodsId
+            }
+          })
+
+          orderItem.status = -1
+          let orderItemRet = await orderItem.save({
+            transaction: t
+          })
+
+          if(!orderItemRet){
+            throw new Error('更新订单商品条目信息失败')
+          }
+        }
+
+        let order = await orderModel.findByPk(orderId)
+        if(order.goods_ids == orderAfter.goods_ids){
+          order.status = -1
+          let orderUpdateRet = await order.save({transaction: t})
+          if(!orderUpdateRet){
+            throw new Error('更新订单信息失败')
+          }
+        }
+
+      }
+
+    } catch (err) {
+      ctx.ret.code = 1
+      ctx.ret.message = err.message
+      t.rollback()
+    }
+  }
+
 }
 
 module.exports = MallController

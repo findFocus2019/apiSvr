@@ -177,6 +177,35 @@ class PubController extends Controller {
     return ctx.ret
 
   }
+
+  async getPushInfo(ctx){
+
+    this.logger.info(ctx.uuid , 'pushInfo()' , ctx.body)
+    let body = ctx.body
+
+    let clientId = body.client_id
+    let info = {
+      platform: body.platform,
+      status: body.status,
+      token: body.push_token
+    }
+
+    let pushModel = new this.models.push_model
+    let pushRet = await pushModel.infoByClient(clientId, info)
+    this.logger.info(ctx.uuid , 'pushInfo() pushRet' , pushRet)
+    if(!pushRet){
+      ctx.ret.code = 1
+      ctx.ret.message = '推送设备登记失败'
+      
+    }else{
+      ctx.ret.data = {
+        id: pushRet.id
+      }
+    }
+
+    return ctx.ret
+
+  }
 }
 
 module.exports = PubController

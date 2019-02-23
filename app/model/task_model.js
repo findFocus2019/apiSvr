@@ -177,7 +177,7 @@ class TaskModel extends Model {
       opts.transaction = t
     }
 
-    let status = balance ? 0 : 1
+    // let status = balance ? 0 : 1
     let taskLog = await this.logsModel().create({
       user_id: userId,
       type: type,
@@ -187,13 +187,30 @@ class TaskModel extends Model {
       ip: ip,
       log_date: dateUtils.dateFormat(null, 'YYYYMMDD'),
       task_id: taskId,
-      status: status
+      status: 0
     }, opts)
 
     Log.info('log task log :', taskLog.id)
     return taskLog
   }
 
+  /**
+   * 收益记录处理
+   * @param {*} ctx 
+   * @param {*} logId 
+   * @param {*} t 
+   */
+  async logDeal(ctx, logId , t){
+    let opts = {}
+    if (t) {
+      opts.transaction = t
+    }
+    let taskLog = await this.logsModel().findByPk(logId)
+    taskLog.status = 1
+    let updateRet = await taskLog.save(opts)
+    return updateRet
+  }
+  
   /**
    * 获取用户当日完成数
    * @param {*} ctx 
