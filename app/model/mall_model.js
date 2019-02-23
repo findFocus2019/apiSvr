@@ -66,7 +66,7 @@ class MallModel extends Model {
     }]
     list.forEach(item => {
       datas.push({
-        id: item.id,
+        id: item.jd_num,
         name: item.title
       })
     })
