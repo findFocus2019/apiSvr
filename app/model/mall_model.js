@@ -101,6 +101,58 @@ class MallModel extends Model {
 
     return datas
   }
+
+  //更新jd分类
+  async updateJDCategory(jdCategory) {
+    let page_num = jdCategory.page_num
+    let name = jdCategory.name
+    let categoryInfo = await this.categoryModel().findOne({
+      where: {jd_num: page_num},
+      attributes: ['id']
+    })
+    if (categoryInfo) {
+      categoryInfo.name = name
+      categoryInfo.title = name
+      categoryInfo.jd_num = page_num
+      await categoryInfo.save()
+    } else {
+      await this.categoryModel().create({
+        jd_num: page_num,
+        title: name,
+        name: name,
+        type: 'goods',
+        sort: 0,
+        pid: 0,
+        status:1 
+      })
+    }
+  }
+
+  async updateJDGood(goodInfo,page_num) {
+    let imgPrePath = 'https://img11.360buyimg.com/n1/'
+    let categoryInfo = await this.goodsModel().findOne({
+      where: {uuid: goodInfo.sku}
+    })
+    let content = goodInfo.introduction
+    if (categoryInfo) {
+      categoryInfo.content = content
+      categoryInfo.cover = imgPrePath + goodInfo.imagePath
+      categoryInfo.status = goodInfo.state
+      categoryInfo.title  = goodInfo.name
+      categoryInfo.category = page_num
+      await categoryInfo.save()
+    } else {
+      await this.goodsModel().create({
+        content: goodInfo.introduction,
+        cover: imgPrePath + goodInfo.imagePath,
+        status: goodInfo.state,
+        title: goodInfo.name,
+        category: page_num,
+        type: 2
+      })
+    }
+  }
+  
 }
 
 module.exports = MallModel
