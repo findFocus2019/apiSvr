@@ -115,6 +115,31 @@ class MallModel extends Model {
       })
     }
   }
+
+  async updateJDGood(goodInfo,page_num) {
+    let imgPrePath = 'https://img11.360buyimg.com/n1/'
+    let categoryInfo = await this.goodsModel().findOne({
+      where: {uuid: goodInfo.sku}
+    })
+    let content = goodInfo.introduction
+    if (categoryInfo) {
+      categoryInfo.content = content
+      categoryInfo.cover = imgPrePath + goodInfo.imagePath
+      categoryInfo.status = goodInfo.state
+      categoryInfo.title  = goodInfo.name
+      categoryInfo.category = page_num
+      await categoryInfo.save()
+    } else {
+      await this.goodsModel().create({
+        content: goodInfo.introduction,
+        cover: imgPrePath + goodInfo.imagePath,
+        status: goodInfo.state,
+        title: goodInfo.name,
+        category: page_num,
+        type: 2
+      })
+    }
+  }
   
 }
 

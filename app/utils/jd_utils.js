@@ -21,8 +21,8 @@ class jdUtils{
   constructor() {
     //监听自定义事件
     this.myEmitter = new eventEmitter()
-    this.myEmitter.on('insertGood',this.handleInsertGoodEvent)
-    this.myEmitter.on('updateCategory',this.hanldeUpdateCategory)
+    // this.myEmitter.on('insertGood',this.handleInsertGoodEvent)
+    this.myEmitter.on('updateCategory', this.hanldeUpdateCategory)
   }
   //同步商品入库
   async syncGoods() {
@@ -37,13 +37,15 @@ class jdUtils{
     //     console.log(numsResult[index].page_num)
         let skus = await this.getSkuByPage(numsResult[index].page_num);
         let skusObj = JSON.parse(skus)
-        if (skusObj.resultCode == "0000") {
-          // let pageCount = skusObj.result.pageCount
-          //现在暂时每个分类都是一页，不考虑分页，后续可以改进
-          // let skusResult = skusObj.result.skuIds
-          //拿到结果，异步执行
-          // this.handleInsertGoodEvent(skusResult)
-        }
+        if (skusObj.resultCode != "0000") { return false }
+        let pageCount = skusObj.result.pageCount
+        //现在暂时每个分类都是一页，不考虑分页，后续可以改进
+        let skusResult = skusObj.result.skuIds
+        // console.log({ pageCount, skusResult })
+        //拿到结果，异步执行
+        this.handleInsertGoodEvent(skusResult,numsResult[index].page_num)
+        // this.myEmitter.emit('insertGood',skusResult,numsResult[index].page_num)
+        
       }
       return true
     } catch (err) {
@@ -407,13 +409,39 @@ class jdUtils{
   
 
   //插入或更新数据库事件处理
-  async handleInsertGoodEvent(skusResult) {
+  async handleInsertGoodEvent(skusResult,page_num) {
     process.nextTick(async () => {
-    try {
-      skusResult.forEach(async (sku) => {
-          let skuDetail = await this.getDetail(sku) //TODO 入库
-      })
-        console.log(skusResult.length)
+      try {
+        /**
+         * content introduction
+         * cover imgPrePath+imagePath
+         * uuid sku
+         * status state
+         * title name
+         * type 2
+         * category  page_num
+         * description ''
+         * stock 库存
+         * */  
+        skusResult.forEach(async (sku) => {
+          //图书和音像没有，暂时不做，判断代码保留
+          // let BookOrRadioRegExp = /^\d{8}$/
+          // if (BookOrRadioRegExp.test(sku)) {
+          //   console.log('BookOrRadioRegExp')
+          // } else {
+          //   console.log('good')
+          // }
+          let goods = await this.getDetail(sku)
+          let goodsObj = JSON.parse(goods)
+          if (goodsObj.resultCode == "0000") { 
+            let goodInfo = goodsObj.result
+            // console.log(goodInfo)
+            let MallModel = new models.mall_model
+            await MallModel.updateJDGood(goodInfo,page_num)
+          }
+          // console.log(typeof getDetailFunc)
+        })
+        // console.log(skusResult.length)
       } catch (err) {
         console.log(err)
       }
@@ -464,8 +492,9 @@ class jdUtils{
 
 (async () => {
   let demo = new jdUtils
-  let data = await demo.syncCategory()
-  // let data = await demo.syncGoods()
+  // let data = await demo.getDetail(100000016109)
+  // let dataObj = JSON.parse(data)
+  let data = await demo.syncGoods()
   // let data = await demo.getDetail(100001409446)
   
   console.log(data)
