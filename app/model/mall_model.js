@@ -89,6 +89,33 @@ class MallModel extends Model {
 
     return datas
   }
+
+  //更新jd分类
+  async updateJDCategory(jdCategory) {
+    let page_num = jdCategory.page_num
+    let name = jdCategory.name
+    let categoryInfo = await this.categoryModel().findOne({
+      where: {jd_num: page_num},
+      attributes: ['id']
+    })
+    if (categoryInfo) {
+      categoryInfo.name = name
+      categoryInfo.title = name
+      categoryInfo.jd_num = page_num
+      await categoryInfo.save()
+    } else {
+      await this.categoryModel().create({
+        jd_num: page_num,
+        title: name,
+        name: name,
+        type: 'goods',
+        sort: 0,
+        pid: 0,
+        status:1 
+      })
+    }
+  }
+  
 }
 
 module.exports = MallModel
