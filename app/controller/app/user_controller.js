@@ -51,13 +51,18 @@ class UserController extends Controller {
     // let isVip = await userModel.isVip(userId)
 
     let isVip = false
+    let now = parseInt(Date.now() / 1000)
     if (info.vip && info.startline <= now && info.deadline >= now) {
       isVip = true
     }
 
+    let taskModel = new this.models.task_model
+    let balanceFrozenSum = await taskModel.getBalanceSumByUserId(userId, 0 , 0)
+
     ctx.ret.data = {
       info: info,
-      isVip: isVip
+      isVip: isVip,
+      balance_frozen: balanceFrozenSum
     }
 
     return ctx.ret
@@ -108,8 +113,11 @@ class UserController extends Controller {
     let shareCount = await shareModel.getShareCountByUserId(userId)
 
     let taskModel = new this.models.task_model
-    let balanceSum = await taskModel.getBalanceSumByUserId(userId)
-
+    let balanceStatus = {
+      [Op.gte]:0
+    }
+    let balanceSum = await taskModel.getBalanceSumByUserId(userId, 0 , balanceStatus)
+    
     let data = {}
     data.score = info.score
     data.balance = balanceSum
@@ -289,6 +297,7 @@ class UserController extends Controller {
 
     return ctx.ret
   }
+
   /**
    * 用户地址管理
    * @param {*} ctx 
