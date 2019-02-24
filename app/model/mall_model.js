@@ -134,20 +134,40 @@ class MallModel extends Model {
       where: {uuid: goodInfo.sku}
     })
     let content = goodInfo.introduction
+    //利润计算
+    
+    let priceDifference = parseInt(goodInfo.jdPrice * 100) - parseInt(goodInfo.price * 100)
+    let profit = parseInt(priceDifference * 50 / 100)
+    let profitVip = parseInt(priceDifference * 30 / 100)
+    let price_score_sell = parseInt(priceDifference * 30 / 100)/100
+    //普通销售价格 最低价
+    goodInfo.price_sell = (profit + goodInfo.price) / 100
+    goodInfo.price_vip = (profitVip + goodInfo.price) / 100
+    //
+    goodInfo.price_sell = goodInfo.jdPrice
     if (categoryInfo) {
       categoryInfo.content = content
+      categoryInfo.price_cost = goodInfo.price
+      categoryInfo.price_market =  goodInfo.jdPrice
       categoryInfo.cover = imgPrePath + goodInfo.imagePath
       categoryInfo.status = goodInfo.state
       categoryInfo.title  = goodInfo.name
       categoryInfo.category = page_num
+      categoryInfo.price_score_sell = price_score_sell
       await categoryInfo.save()
     } else {
       await this.goodsModel().create({
+        uuid: goodInfo.sku,
+        price_cost: goodInfo.price,
+        price_market: goodInfo.jdPrice,
         content: goodInfo.introduction,
         cover: imgPrePath + goodInfo.imagePath,
         status: goodInfo.state,
         title: goodInfo.name,
         category: page_num,
+        rabate_rate: 80,
+        rabate_rate_vip: 80,
+        price_score_sell:price_score_sell,
         type: 2
       })
     }
