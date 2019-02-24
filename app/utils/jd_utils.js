@@ -23,6 +23,10 @@ class jdUtils{
     this.myEmitter = new eventEmitter()
     // this.myEmitter.on('insertGood',this.handleInsertGoodEvent)
     this.myEmitter.on('updateCategory', this.hanldeUpdateCategory)
+    this.syncGoodsInfo = {
+      delayTime: 1000,
+      intervalTime: 500
+    }
   }
   //同步商品入库
   async syncGoods() {
@@ -431,14 +435,17 @@ class jdUtils{
           // } else {
           //   console.log('good')
           // }
-          let goods = await this.getDetail(sku)
-          let goodsObj = JSON.parse(goods)
-          if (goodsObj.resultCode == "0000") { 
-            let goodInfo = goodsObj.result
-            // console.log(goodInfo)
-            let MallModel = new models.mall_model
-            await MallModel.updateJDGood(goodInfo,page_num)
-          }
+          setTimeout(async () => {
+            let goods = await this.getDetail(sku)
+            let goodsObj = JSON.parse(goods)
+            if (goodsObj.resultCode == "0000") { 
+              let goodInfo = goodsObj.result
+              // console.log(goodInfo)
+              let MallModel = new models.mall_model
+              await MallModel.updateJDGood(goodInfo,page_num)
+            }
+          },this.syncGoodsInfo.delayTime)
+          this.syncGoodsInfo.delayTime += this.syncGoodsInfo.intervalTime
           // console.log(typeof getDetailFunc)
         })
         // console.log(skusResult.length)
