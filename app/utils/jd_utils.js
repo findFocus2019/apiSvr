@@ -210,7 +210,10 @@ class jdUtils{
       sku: sku
     }
     let url = 'https://bizapi.jd.com/api/price/getSellPrice'
-    return await this._ruquestUtil(params,url)
+    let priceResult = await this._ruquestUtil(params, url)
+    let priceResultObj = JSON.parse(priceResult)
+    if (priceResultObj.resultCode != "0000") { return false }
+    return priceResultObj.result
   }
 
   //库存相关 START
@@ -437,10 +440,12 @@ class jdUtils{
           // }
           setTimeout(async () => {
             let goods = await this.getDetail(sku)
+            let priceInfo = await this.getSellPrice(sku)
             let goodsObj = JSON.parse(goods)
             if (goodsObj.resultCode == "0000") { 
               let goodInfo = goodsObj.result
-              // console.log(goodInfo)
+              goodInfo.jdPrice = priceInfo[0].jdPrice
+              goodInfo.price = priceInfo[0].price
               let MallModel = new models.mall_model
               await MallModel.updateJDGood(goodInfo,page_num)
             }
@@ -499,9 +504,10 @@ class jdUtils{
 
 (async () => {
   let demo = new jdUtils
-  // let data = await demo.getDetail(100000016109)
+  let data
+  //  data = await demo.getDetail(100000016109)
   // let dataObj = JSON.parse(data)
-  let data = await demo.syncGoods()
+  data = await demo.syncGoods()
   // let data = await demo.getDetail(100001409446)
   
   console.log(data)
