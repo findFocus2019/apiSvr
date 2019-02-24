@@ -144,6 +144,8 @@ class MallController extends Controller {
     let search = ctx.body.search
     let userId = ctx.body.user_id || 0
     let status = ctx.body.status || ''
+    let type = ctx.body.type || ''
+    let orderIds = ctx.body.order_ids || ''
 
     let where = {}
     if (search) {
@@ -157,6 +159,16 @@ class MallController extends Controller {
     if (status !== '') {
       where.status = status
     }
+    if(type !== ''){
+      where.order_type = type
+    }
+    
+    if(orderIds){
+      where.id = {
+        [Op.in]: orderIds.substr(1, orderIds.length - 2).split('-')
+      }
+    }
+
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
     let userInfoModel = (new this.models.user_model).infoModel()
@@ -230,9 +242,7 @@ class MallController extends Controller {
     if (userId) {
       where.user_id = userId
     }
-    if (status !== '') {
-      where.status = status
-    }
+ 
     let mallModel = new this.models.mall_model
     let paymentModel = mallModel.paymentModel()
     let userInfoModel = (new this.models.user_model).infoModel()

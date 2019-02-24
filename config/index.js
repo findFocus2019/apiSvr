@@ -105,7 +105,7 @@ module.exports = {
   defaultInivteUserId: 1,
 
   getui:{
-    host: 'ttps://api.getui.com/apiex.htm',
+    host: 'https://api.getui.com/apiex.htm',
     appId:'j3F91JomB6AbpkCuDefJAA',
     appKey:'WeOHgklYJcALNyRa0W6dS5',
     appSecret:'akpv6EDmor8pOpBBNIMmC1',

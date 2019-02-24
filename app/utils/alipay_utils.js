@@ -115,7 +115,7 @@ class AlipayUtils {
       return ret
     } else {
       ret.code = response.code
-      ret.message = response.msg + ',' + response.submsg
+      ret.message = response.msg + ',' + response.sub_msg
       ret.data = response
       return ret
     }
