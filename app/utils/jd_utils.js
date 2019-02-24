@@ -502,16 +502,16 @@ class jdUtils{
 }
 //
 
-(async () => {
-  let demo = new jdUtils
-  let data
-  //  data = await demo.getDetail(100000016109)
-  // let dataObj = JSON.parse(data)
-  data = await demo.syncGoods()
-  // let data = await demo.getDetail(100001409446)
+// (async () => {
+//   let demo = new jdUtils
+//   let data
+//   //  data = await demo.getDetail(100000016109)
+//   // let dataObj = JSON.parse(data)
+//   data = await demo.syncGoods()
+//   // let data = await demo.getDetail(100001409446)
   
-  console.log(data)
+//   console.log(data)
  
-})()
+// })()
 
 module.exports = new jdUtils

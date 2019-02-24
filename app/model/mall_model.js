@@ -135,18 +135,20 @@ class MallModel extends Model {
     })
     let content = goodInfo.introduction
     //利润计算
-    
-    let priceDifference = parseInt(goodInfo.jdPrice * 100) - parseInt(goodInfo.price * 100)
+    let price_cost = parseInt(goodInfo.price * 100)
+    let priceDifference = parseInt(goodInfo.jdPrice * 100) - price_cost
     let profit = parseInt(priceDifference * 50 / 100)
     let profitVip = parseInt(priceDifference * 30 / 100)
-    let price_score_sell = parseInt(priceDifference * 30 / 100)/100
+    let price_score_sell = parseInt(priceDifference * 30 / 100) / 100
+    let price_score_vip = parseInt(priceDifference * 10 / 100) / 100
     //普通销售价格 最低价
-    goodInfo.price_sell = (profit + goodInfo.price) / 100
-    goodInfo.price_vip = (profitVip + goodInfo.price) / 100
+    goodInfo.price_sell = (profit + price_cost) / 100
+    goodInfo.price_vip = (profitVip + price_cost) / 100
     //
-    goodInfo.price_sell = goodInfo.jdPrice
     if (categoryInfo) {
       categoryInfo.content = content
+      categoryInfo.price_sell = goodInfo.price_sell
+      categoryInfo.price_vip = goodInfo.price_vip
       categoryInfo.price_cost = goodInfo.price
       categoryInfo.price_market =  goodInfo.jdPrice
       categoryInfo.cover = imgPrePath + goodInfo.imagePath
@@ -154,10 +156,13 @@ class MallModel extends Model {
       categoryInfo.title  = goodInfo.name
       categoryInfo.category = page_num
       categoryInfo.price_score_sell = price_score_sell
+      categoryInfo.price_score_vip = price_score_vip
       await categoryInfo.save()
     } else {
       await this.goodsModel().create({
         uuid: goodInfo.sku,
+        price_vip: goodInfo.price_vip,
+        price_sell: goodInfo.price_sell,
         price_cost: goodInfo.price,
         price_market: goodInfo.jdPrice,
         content: goodInfo.introduction,
@@ -167,7 +172,8 @@ class MallModel extends Model {
         category: page_num,
         rabate_rate: 80,
         rabate_rate_vip: 80,
-        price_score_sell:price_score_sell,
+        price_score_sell: price_score_sell,
+        price_score_vip: price_score_vip,
         type: 2
       })
     }
