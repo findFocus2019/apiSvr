@@ -229,8 +229,6 @@ router.post('/wxpay', async (req, res) => {
     obj = await Utils.wxpay_utils._xmlToObj(obj)
   }
 
-  obj = JSON.parse(`{"appid":"wx41b753c9ce99ea27","bank_type":"CFT","cash_fee":"1","device_info":"WEB","fee_type":"CNY","is_subscribe":"N","mch_id":"1522398771","nonce_str":"461c9d1fe90d478f9c861e914d7c15f2","openid":"ogH1I6MhvZMTSstmgl4s35Y_5pXY","out_trade_no":"ef9f9b6ff2d94b97876d87664d1ffbc6","result_code":"SUCCESS","return_code":"SUCCESS","sign":"D6F85B914BBCB00DC0F74CCBC3888557","time_end":"20190225173357","total_fee":"1","trade_type":"APP","transaction_id":"4200000246201902259259092793"}`)
-
   Logger.info('/wxpay obj', obj)
   let resultCode = obj.return_code
   let outTradeNo = obj.out_trade_no
