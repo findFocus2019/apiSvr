@@ -1,7 +1,8 @@
-const Controller = require('./../../../lib/controller')
+// const Controller = require('./../../../lib/controller')
+const CommonController = require('./../../common/common_controller')
 const Op = require('sequelize').Op
 
-class MallController extends Controller {
+class MallController extends CommonController {
 
   async _init_(ctx) {
 
@@ -964,6 +965,12 @@ class MallController extends Controller {
         if (!paymentRet) {
           throw new Error('支付信息更新失败')
         }
+
+        // 更新商品sales
+        let goodsUpdateRet = await this._paymentGoodsUpdate(ctx, order , t)
+        if(goodsUpdateRet.code !== 0){
+          throw new Error(goodsUpdateRet.message)
+        }
       }
 
 
@@ -990,31 +997,7 @@ class MallController extends Controller {
     return ctx.ret
   }
 
-  async _userVipDeal(ctx, order, t) {
-    this.logger.info(ctx.uuid, 'orderList()', 'body', ctx.body, 'query', ctx.query)
-    let amount = order.tatol
-    let price = amount
-    let userId = ctx.body.user_id
-    let opts = {}
-    if (t) {
-      opts.transaction = t
-    }
-    let userModel = new this.models.user_model
-    let ecardRet = await userModel.ecardModel.create({
-      amount: amount,
-      price: price,
-      status: 1,
-      user_id: userId
-    }, opts)
-
-    if (!ecardRet) {
-      ctx.ret.code = 1
-      ctx.ret.message = '用户代金券数据记录失败'
-      return ctx.ret
-    }
-
-    return ctx.ret
-  }
+  
 
   /**
    * 订单列表

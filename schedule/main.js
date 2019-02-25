@@ -3,8 +3,9 @@ const nodeSchedule = require('node-schedule')
 const ShowApiSdk = require('./../lib/showApi')
 const dateUtils = require('./../app/utils/date_utils')
 const config = require('./../config')
+const CommonControler = require('./../app/common/common_controller')
 
-class Schedule extends Controller {
+class Schedule extends CommonControler {
 
   async _init_() {
     let scheduleModel = new this.models.schedule_model
@@ -29,6 +30,14 @@ class Schedule extends Controller {
 
 
     })
+  }
+
+  async rabateDealDay(){
+    let ctx = {
+      uuid: this.utils.uuid_utils.v4()
+    }
+    await this._rabateDealDay(ctx)
+    await this._taskLogDealByUser(ctx)
   }
 
   async fetchNews() {

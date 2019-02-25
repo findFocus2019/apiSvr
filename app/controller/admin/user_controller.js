@@ -362,6 +362,90 @@ class UserController extends Controller {
 
     return ctx.ret
   }
+
+  async transactionList(ctx) {
+    this.logger.info(ctx.uuid, 'body', ctx.body, 'query', ctx.query)
+
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+    let offset = (page - 1) * limit
+    let type = ctx.body.type || 2
+    let where = {}
+    where.type = type
+
+    let search = ctx.body.search || ''
+    if (search) {
+      where.mobile = {
+        [Op.like]: '%' + search + '%'
+      }
+    }
+
+    let userModel = (new this.models.user_model())
+    let userInfoModel = userModel.infoModel()
+    let transationModel = userModel.transactionModel()
+
+    transationModel.belongsTo(userInfoModel, {
+      targetKey: 'user_id',
+      foreignKey: 'user_id'
+    })
+
+    let queryRet = await transationModel.findAndCountAll({
+      where: where,
+      offset: offset,
+      limit: limit,
+      order: [
+        ['status' , 'asc'],
+        ['create_time', 'desc']
+      ],
+      include: [{
+        model: userInfoModel,
+        attributes: ['id', 'nickname', 'mobile']
+      }]
+    })
+
+    this.logger.info(ctx.uuid, 'queryRet', queryRet)
+    ctx.ret.data = queryRet
+    return ctx.ret
+  }
+
+  async transactionUpdate(ctx){
+    let id= ctx.body.id
+
+    let userModel = (new this.models.user_model())
+    // let userInfoModel = userModel.infoModel()
+    let transationModel = userModel.transactionModel()
+    
+    let transaction = await transationModel.findByPk(id)
+    if(!transaction || transaction.status == 1){
+      return this._fail(ctx, '无效数据错误')
+    }
+
+    let userId = transaction.user_id
+    let userInfo = await userModel.getInfoByUserId(userId)
+    // let alipay = userInfo.alipay
+    if(transaction.type == 2){
+      // 支付宝 
+      let alipayAccount = userInfo.alipay
+      this.logger.info(ctx.uuid, 'transactionUpdate()', 'alipayAccount', alipayAccount)
+      let alipayUtils = this.utils.alipay_utils
+      let tradeNo = this.utils.uuid_utils.v4()
+      let balance = -1 * transaction.balance
+      if(this.config.DEBUG){
+        balance = 0.1
+      }
+      let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, balance)
+      this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
+      if (aliRet.code != 0) {
+        return this._fail(ctx, aliRet.message)
+      }
+    }
+
+    transaction.status = 1
+    await transaction.save()
+
+    return ctx.ret
+    
+  }
 }
 
 module.exports = UserController

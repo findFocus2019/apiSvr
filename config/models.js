@@ -308,6 +308,21 @@ module.exports = {
       }
     ]
   },
+  push: () => {
+    return [{
+        ...commonFieldGet(),
+        status: getStatusFields(0),
+        user_id: FIELDS.bigInt(),
+        platform: FIELDS.stringLen(16),
+        client_id: FIELDS.stringLen(64),
+        token: FIELDS.stringLen(64)
+      },
+      {
+        ...commonOpts,
+        tableName: 't_push'
+      }
+    ]
+  },
   admin: () => {
     return [{
         ...commonFieldGet(),
@@ -658,7 +673,8 @@ module.exports = {
         title: FIELDS.stringLen(64),
         type: FIELDS.stringLen(12),
         pid: FIELDS.bigInt(),
-        sort: FIELDS.defaultInt()
+        sort: FIELDS.defaultInt(),
+        jd_num: FIELDS.defaultInt()
       },
       {
         ...commonOpts,

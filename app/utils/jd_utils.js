@@ -4,6 +4,8 @@ const fs = require('fs')
 const md5 = require('md5')
 const path = require('path')
 const eventEmitter = require('events').EventEmitter
+const models = require('./../model/index')
+const Op = require('sequelize').Op
 const config = {
   username: "深圳聚仁2018",
   password: "jd360buy",
@@ -17,34 +19,58 @@ const config = {
 class jdUtils{
 
   constructor() {
+    //监听自定义事件
     this.myEmitter = new eventEmitter()
     // this.myEmitter.on('insertGood',this.handleInsertGoodEvent)
+    this.myEmitter.on('updateCategory', this.hanldeUpdateCategory)
+    this.syncGoodsInfo = {
+      delayTime: 1000,
+      intervalTime: 500
+    }
   }
   //同步商品入库
   async syncGoods() {
     try {
       let allPageNum = await this.getPageNum()
       let pageNumsObj = JSON.parse(allPageNum)
-      if (pageNumsObj.resultCode == '0000') {
-        let numsResult = pageNumsObj.result
-        for (let index in numsResult) {
-      //     console.log(numsResult[index].page_num)
-          let skus = await this.getSkuByPage(numsResult[index].page_num);
-          let skusObj = JSON.parse(skus)
-          if (skusObj.resultCode == "0000") {
-            // let pageCount = skusObj.result.pageCount
-            //现在暂时每个分类都是一页，不考虑分页，后续可以改进
-            let skusResult = skusObj.result.skuIds
-            //拿到结果，异步执行
-            // this.handleInsertGoodEvent(skusResult)
-          }
-        }
+      if (pageNumsObj.resultCode != '0000') { 
+        return false
+      }
+      let numsResult = pageNumsObj.result
+      for (let index in numsResult) {
+    //     console.log(numsResult[index].page_num)
+        let skus = await this.getSkuByPage(numsResult[index].page_num);
+        let skusObj = JSON.parse(skus)
+        if (skusObj.resultCode != "0000") { return false }
+        let pageCount = skusObj.result.pageCount
+        //现在暂时每个分类都是一页，不考虑分页，后续可以改进
+        let skusResult = skusObj.result.skuIds
+        // console.log({ pageCount, skusResult })
+        //拿到结果，异步执行
+        this.handleInsertGoodEvent(skusResult,numsResult[index].page_num)
+        // this.myEmitter.emit('insertGood',skusResult,numsResult[index].page_num)
+        
       }
       return true
     } catch (err) {
       
     }
     
+  }
+
+  //同步分类信息
+  async syncCategory() {
+    let allPageNum = await this.getPageNum()
+    let allPageNumObj = JSON.parse(allPageNum)
+    if (allPageNumObj.resultCode != "0000") {
+      return  false
+    }
+    let numsResult = allPageNumObj.result
+    for (let index in numsResult) { 
+       this.myEmitter.emit('updateCategory',numsResult[index])
+      // console.log(numsResult[index].page_num,numsResult[index].name)
+    }
+    return true
   }
   
   async getAccessToken() {
@@ -184,7 +210,10 @@ class jdUtils{
       sku: sku
     }
     let url = 'https://bizapi.jd.com/api/price/getSellPrice'
-    return await this._ruquestUtil(params,url)
+    let priceResult = await this._ruquestUtil(params, url)
+    let priceResultObj = JSON.parse(priceResult)
+    if (priceResultObj.resultCode != "0000") { return false }
+    return priceResultObj.result
   }
 
   //库存相关 START
@@ -387,17 +416,61 @@ class jdUtils{
   
 
   //插入或更新数据库事件处理
-  async handleInsertGoodEvent(skusResult) {
+  async handleInsertGoodEvent(skusResult,page_num) {
     process.nextTick(async () => {
-    try {
-      skusResult.forEach(async (sku) => {
-          let skuDetail = await this.getDetail(sku) //TODO 入库
-      })
-        console.log(skusResult.length)
+      try {
+        /**
+         * content introduction
+         * cover imgPrePath+imagePath
+         * uuid sku
+         * status state
+         * title name
+         * type 2
+         * category  page_num
+         * description ''
+         * stock 库存
+         * */  
+        skusResult.forEach(async (sku) => {
+          //图书和音像没有，暂时不做，判断代码保留
+          // let BookOrRadioRegExp = /^\d{8}$/
+          // if (BookOrRadioRegExp.test(sku)) {
+          //   console.log('BookOrRadioRegExp')
+          // } else {
+          //   console.log('good')
+          // }
+          setTimeout(async () => {
+            let goods = await this.getDetail(sku)
+            let priceInfo = await this.getSellPrice(sku)
+            let goodsObj = JSON.parse(goods)
+            if (goodsObj.resultCode == "0000") { 
+              let goodInfo = goodsObj.result
+              goodInfo.jdPrice = priceInfo[0].jdPrice
+              goodInfo.price = priceInfo[0].price
+              let MallModel = new models.mall_model
+              await MallModel.updateJDGood(goodInfo,page_num)
+            }
+          },this.syncGoodsInfo.delayTime)
+          this.syncGoodsInfo.delayTime += this.syncGoodsInfo.intervalTime
+          // console.log(typeof getDetailFunc)
+        })
+        // console.log(skusResult.length)
       } catch (err) {
         console.log(err)
       }
     })
+  }
+
+  /**
+   * 更新分类事件
+   * @param {*} jdCategory 
+   */
+  async hanldeUpdateCategory(jdCategory) {
+    try {
+      let MallModel = new models.mall_model
+      await MallModel.updateJDCategory(jdCategory)
+    } catch (err) {
+      console.log(err)
+    }
   }
   /**
    * 获取当前时间 格式：yyyy-MM-dd HH:MM:SS
@@ -430,9 +503,12 @@ class jdUtils{
 //
 
 // (async () => {
-  let demo = new jdUtils
-  // let data = await demo.syncGoods()
-  // let data = await demo.getDetail(100001409446)
+//   let demo = new jdUtils
+//   let data
+//   //  data = await demo.getDetail(100000016109)
+//   // let dataObj = JSON.parse(data)
+//   data = await demo.syncGoods()
+//   // let data = await demo.getDetail(100001409446)
   
 //   console.log(data)
  
