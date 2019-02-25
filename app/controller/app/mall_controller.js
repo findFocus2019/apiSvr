@@ -891,10 +891,11 @@ class MallController extends CommonController {
       let orderIds = payment.order_ids.substr(1, payment.order_ids.length - 2).split('-')
       this.logger.info(ctx.uuid, 'orderPayConfirm() orderIds', orderIds)
 
-      let userSetVip = 0
+      
 
       for (let index = 0; index < orderIds.length; index++) {
         const orderId = orderIds[index]
+        let userSetVip = 0
 
         let order = await orderModel.findByPk(orderId)
         if (order.status != 0) {
@@ -912,7 +913,7 @@ class MallController extends CommonController {
           }
         } else {
           // vip充值订单，发放代金券，更新用户vip时间
-          let userVipRet = this._userVipDeal(ctx, order, t)
+          let userVipRet = await this._userVipDeal(ctx, order, t)
           if (userVipRet.code != 0) {
             throw new Error(userVipRet.message)
           } else {
