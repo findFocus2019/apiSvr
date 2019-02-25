@@ -140,6 +140,9 @@ class PostsController extends Controller {
     this.logger.info(ctx.uuid, 'info()', 'body', ctx.body, 'query', ctx.query)
 
     let postId = ctx.body.post_id
+    let shareId = ctx.body.share_id || 0
+    this.logger.info(ctx.uuid, 'info()', 'shareId', shareId)
+
     let postsModel = new this.models.posts_model
 
     let info = await postsModel.model().findOne({
@@ -152,6 +155,9 @@ class PostsController extends Controller {
     let updateTime = info.update_time
     info.views = info.views + 1
     info.update_time = updateTime
+    if(shareId){
+      info.shares = info.shares + 1
+    }
     await info.save()
 
     // ctx.ret.data = info.dataValues
@@ -189,8 +195,7 @@ class PostsController extends Controller {
     info.dataValues.publish_time = publishTime
 
     // 分享积分
-    let shareId = ctx.body.share_id || 0
-    this.logger.info(ctx.uuid, 'info()', 'shareId', shareId)
+    
     if (shareId) {
       // 
       let shareModel = new this.models.share_model
