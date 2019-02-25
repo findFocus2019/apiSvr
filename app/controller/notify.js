@@ -149,9 +149,15 @@ class PaymentLogic extends CommonController {
           userInfo.vip = 1
           let now = parseInt(Date.now() / 1000)
           if (!userInfo.startline) {
-            userInfo.vip_startline = now
+            userInfo.startline = now
           }
-          userInfo.vip_deadline = this.utils.date_utils.monthPlus(parseInt(Date.now() / 1000), 1)
+          if(userInfo.deadline){
+            userInfo.deadline = this.utils.date_utils.monthPlus(userInfo.deadline, 1)
+       
+          }else {
+            userInfo.deadline = this.utils.date_utils.monthPlus(parseInt(Date.now() / 1000), 1)
+       
+          }
         }
         let userInfoRet = await userInfo.save({
           transaction: t
