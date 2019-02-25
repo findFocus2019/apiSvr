@@ -348,7 +348,7 @@ class MallController extends Controller {
     }
 
     orderModel.update({
-        express: JSON.stringify({company: expressCompany, express_no: expressNo}), 
+        express: {company: expressCompany, express_no: expressNo}, 
         status: 2
       }, 
       {
@@ -423,6 +423,35 @@ class MallController extends Controller {
       ctx.ret.message = err.message
       t.rollback()
     }
+  }
+
+  /**
+   * 交易后的商品评价列表
+   * @param {Object} ctx 
+   */
+  async orderCommentList (ctx) {
+    this.logger.info('orderCommentList: ', ctx.body)
+    let {page = 1, limit = 10, search = ""} = ctx.body
+
+    let mallModel = new this.models.mall_model()
+    let commentModel = mallModel.orderItemModel()
+
+    let ret = await commentModel.findAndCountAll({
+      where: {order_status: 9},
+      offset: (page - 1) * limit,
+      limit: limit,
+      order: [
+        ['create_time', 'desc']
+      ],
+    })
+
+    if (ret === null) { // 没找到
+      return ctx.ret.data = {rows: [], count: 0}
+    }
+
+    ctx.ret.data = ret
+
+    return ctx.ret
   }
 
 }
