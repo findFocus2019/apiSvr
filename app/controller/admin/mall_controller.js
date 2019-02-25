@@ -309,6 +309,47 @@ class MallController extends Controller {
 
     return ctx.ret
   }
+
+  /**
+   * 发货
+   * @param {Object} ctx 
+   */
+  async dispatchGoods (ctx) {
+    this.logger.info('dispatchGoods: ', ctx.body)
+
+    let orderId = ctx.body.orderId
+    let expressCompany = ctx.body.company
+    let expressNo = ctx.body.expressNo
+
+    let mallModel = new this.models.mall_model()
+    let orderModel = mallModel.orderModel()
+
+    let order = await orderModel.findByPk(orderId)
+    if (order === null) { // 没有找到订单
+      ctx.ret.data = {code: -1, error: '没有找到此订单'}
+      return
+    }
+    if (order.status !== 1) { // 不是支付完成的状态
+      ctx.ret.data = {code: -2, error: '订单不是“支付完成”状态'}
+      return
+    }
+
+    orderModel.update({
+        express: JSON.stringify({company: expressCompany, express_no: expressNo}), 
+        status: 2
+      }, 
+      {
+        where: {id: orderId}
+      }).then(result => {
+      this.logger.info('dispatchGoods update result: ', result)
+      ctx.ret.data = {code: 0}
+    }).catch(error => {
+      this.logger.error('dispatchGoods error: ', error)
+      ctx.ret.data = {code: -3, error: '更新失败'}
+    })
+  }
+
+
 }
 
 module.exports = MallController
