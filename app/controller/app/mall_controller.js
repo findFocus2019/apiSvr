@@ -1014,6 +1014,9 @@ class MallController extends CommonController {
     let where = {}
     where.user_id = userId
     where.status = status
+    where.order_type = {
+      [Op.gt]:0
+    }
     this.logger.info(ctx.uuid, 'orderList()', 'where', where)
 
     let mallModel = new this.models.mall_model
