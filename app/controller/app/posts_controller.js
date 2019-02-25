@@ -155,9 +155,6 @@ class PostsController extends Controller {
     let updateTime = info.update_time
     info.views = info.views + 1
     info.update_time = updateTime
-    if(shareId){
-      info.shares = info.shares + 1
-    }
     await info.save()
 
     // ctx.ret.data = info.dataValues
@@ -210,9 +207,12 @@ class PostsController extends Controller {
         model_id: shareId,
         ip: ctx.ip
       }
-      taskModel.logByName(ctx, 'user_share', taskData, t).then(ret => {
+      taskModel.logByName(ctx, 'user_share', taskData, t).then(async (ret) => {
         this.logger.info(ctx.uuid, 'info() taskModel.logByName', 'ret', ret)
         if (ret.code === 0) {
+          let post = await  postsModel.model().findByPk(postId)
+          post.shares = post.shares + 1
+          await post.save({transaction: t})
           t.commit()
         } else {
           t.rollback()
