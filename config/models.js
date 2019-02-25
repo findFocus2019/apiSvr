@@ -326,7 +326,11 @@ module.exports = {
   admin: () => {
     return [{
         ...commonFieldGet(),
-        status: getStatusFields(0)
+        status: getStatusFields(0),
+        email: FIELDS.stringLen(128),
+        password: FIELDS.stringLen(32),
+        pid: FIELDS.tinyInt(0),
+        type: FIELDS.tinyInt(0)
       },
       {
         ...commonOpts,
