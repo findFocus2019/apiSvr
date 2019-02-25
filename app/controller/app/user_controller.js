@@ -56,6 +56,8 @@ class UserController extends Controller {
       isVip = true
     }
 
+    info.dataValues.deadDate = this.utils.date_utils.dateFormat(info.deadline , 'YYYY-MM-DD')
+
     let taskModel = new this.models.task_model
     let balanceFrozenSum = await taskModel.getBalanceSumByUserId(userId, 0 , 0)
 
