@@ -174,16 +174,16 @@ class CommonController extends Controller {
   }
 
   async _userVipDeal(ctx, order, t) {
-    this.logger.info(ctx.uuid, 'orderList()', 'body', ctx.body, 'query', ctx.query)
-    let amount = order.tatol
+    this.logger.info(ctx.uuid, '_userVipDeal()', 'body', ctx.body, 'query', ctx.query)
+    let amount = order.total
     let price = amount
-    let userId = ctx.body.user_id
+    let userId = order.user_id
     let opts = {}
     if (t) {
       opts.transaction = t
     }
     let userModel = new this.models.user_model
-    let ecardRet = await userModel.ecardModel.create({
+    let ecardRet = await userModel.ecardModel().create({
       amount: amount,
       price: price,
       status: 1,
