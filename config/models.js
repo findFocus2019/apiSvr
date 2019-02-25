@@ -157,8 +157,8 @@ module.exports = {
         openid: FIELDS.stringLen(32),
         password_trade: FIELDS.stringLen(32),
         vip: FIELDS.tinyInt(),
-        vip_startline: FIELDS.defaultInt(),
-        vip_deadline: FIELDS.defaultInt(),
+        startline: FIELDS.defaultInt(),
+        deadline: FIELDS.defaultInt(),
       },
       {
         ...commonOpts,
