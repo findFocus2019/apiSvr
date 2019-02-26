@@ -150,7 +150,8 @@ class MallModel extends Model {
       categoryInfo.price_sell = goodInfo.price_sell
       categoryInfo.price_vip = goodInfo.price_vip
       categoryInfo.price_cost = goodInfo.price
-      categoryInfo.price_market =  goodInfo.jdPrice
+      categoryInfo.price_market = goodInfo.jdPrice
+      categoryInfo.price = goodInfo.jdPrice
       categoryInfo.cover = imgPrePath + goodInfo.imagePath
       categoryInfo.status = goodInfo.state
       categoryInfo.title  = goodInfo.name

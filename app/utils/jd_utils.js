@@ -316,9 +316,18 @@ class jdUtils{
     return await this._ruquestUtil(params,url)
   }
 
+  async selectJdOrder(jdOrderId,queryExts) {
+    
+  }
+
   //订单反查
-  async selectJdOrderIdByThirdOrder() {
+  async selectJdOrderIdByThirdOrder(thirdOrder) {
     let url = 'https://bizapi.jd.com/api/order/selectJdOrderIdByThirdOrder'
+    let params = {
+      token: await this.getAccessToken(),
+      thirdOrder: thirdOrder
+    }
+    return await this._ruquestUtil(params,url)
   }
   //订单相关 END
 
