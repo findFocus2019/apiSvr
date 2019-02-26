@@ -1,6 +1,7 @@
 // const Controller = require('./../../../lib/controller')
 const CommonController = require('./../../common/common_controller')
 const Op = require('sequelize').Op
+const jdUtils = require('../../utils/jd_utils')
 
 class MallController extends CommonController {
 
@@ -1467,6 +1468,112 @@ class MallController extends CommonController {
 
     return ctx.ret
 
+  }
+
+  /**
+   * 获取地址
+   * @param {string} action
+   * @param {int} id
+   */
+  async getAddress(ctx) {
+    let { id, action } = ctx.body
+    let data,dataObj
+    switch (action) {
+      case 'province':
+        data = await jdUtils.getProvince()
+        break;
+      case 'city':
+        data = await jdUtils.getCity(id)
+        break;
+      case 'county':
+        data = await jdUtils.getCounty(id)
+        break;
+      case 'town':
+        data = await jdUtils.getTown(id)
+        break;
+    }
+    dataObj = JSON.parse(data)
+    if (dataObj.success == true) {
+      ctx.ret.data = dataObj.result
+    } else {
+      ctx.ret.data = {}
+    }
+    return ctx.ret
+  }
+
+  //检查四级地址是否合法，暂无四级地址- -
+  async checkArea(ctx) {
+    let data,dataObj
+    let { provinceId, cityId, countyId, townId } = ctx.body
+    data = await jdUtils.checkArea(provinceId, cityId, countyId, townId)
+    dataObj = JSON.parse(data)
+    if (dataObj.success == true) {
+      ctx.ret.data = dataObj.result
+    } else {
+      ctx.ret.data = {}
+    }
+    return ctx.ret
+  }
+
+
+  /**
+   * 下单
+   * @param {*} ctx
+   * 
+   */
+  async submitOrder(ctx) {
+    let data,dataObj
+    let orderParams = {
+      thirdOrder: ctx.body.thirdOrder,
+      sku: ctx.body.sku,
+      name: ctx.body.name,
+      province: ctx.body.province,
+      city: ctx.body.city,
+      county: ctx.body.county,
+      town: ctx.body.town,
+      address: ctx.body.address,
+      zip: ctx.body.zip, //非必须  邮编
+      phone: ctx.body.phone, //非必须 座机
+      mobile: ctx.body.mobile,
+      email: ctx.body.email,
+      remark: ctx.body.remark, // 非必须 备注
+      invoiceState: ctx.body.invoiceState,
+      invoiceType: ctx.body.invoiceType,
+      selectedInvoiceTitle: ctx.body.selectedInvoiceTitle,
+      companyName: ctx.body.companyName,
+      regCode: ctx.body.regCode,
+      // 纳税人识别号  开普票并要打印出来识别号时， 需传入该字段
+      invoiceContent: ctx.body.invoiceContent,
+      paymentType: ctx.body.paymentType,
+      isUseBalance: ctx.body.isUseBalance,
+      submitState: ctx.body.submitState,
+      invoiceName: ctx.body.invoiceName,
+      invoicePhone: ctx.body.invoiceProvice, 
+      invoiceProvice: ctx.body.invoiceCity,
+      invoiceCity: ctx.body.invoiceCity,
+      invoiceCounty: ctx.body.invoiceCounty,
+      invoiceAddress: ctx.body.invoiceAddress, 
+      doOrderPriceMode: ctx.body.doOrderPriceMode, 
+      orderPriceSnap: ctx.body.orderPriceSnap,
+      reservingDate: ctx.body.reservingDate,
+      installDate: ctx.body.installDate,
+      needInstall: ctx.body.needInstall,
+      promiseDate: ctx.body.promiseDate,
+      promiseTimeRange: ctx.body.promiseTimeRange, 
+      promiseTimeRangeCode: ctx.body.promiseTimeRangeCode, 
+      reservedDateStr: ctx.body.reservedDateStr, 
+      reservedTimeRange: ctx.body.reservedTimeRange, 
+      poNo: ctx.body.poNo, 
+      customerName: ctx.body.customerName 
+    }
+    data = await jdUtils.submitOrder(orderParams)
+    dataObj = JSON.parse(data)
+    if (dataObj.success == true) {
+      ctx.ret.data = dataObj.result
+    } else {
+      ctx.ret.data = {}
+    }
+    return ctx.ret
   }
 }
 

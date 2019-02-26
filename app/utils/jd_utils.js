@@ -334,18 +334,18 @@ class jdUtils{
   //地址相关 start
 
   //获取一级地址 
-  async getProvince(token) {
+  async getProvince() {
     let params = {
-      token: token
+      token: await this.getAccessToken()
     }
     let url = 'https://bizapi.jd.com/api/area/getProvince'
     return await this._ruquestUtil(params,url)
   }
 
   //二级地址
-  async getCity(token, id) {
+  async getCity(id) {
     let params = {
-      token: token,
+      token: await this.getAccessToken(),
       id: id
     }
     let url = 'https://bizapi.jd.com/api/area/getCity'
@@ -355,7 +355,7 @@ class jdUtils{
   //三级地址
   async getCounty(token, id) {
     let params = {
-      token: token,
+      token: await this.getAccessToken(),
       id: id
     }
     let url = 'https://bizapi.jd.com/api/area/getCounty'
@@ -363,9 +363,9 @@ class jdUtils{
   }
   
   //四级地址
-  async getTown(token, id) {
+  async getTown(id) {
     let params = {
-      token: token,
+      token: await this.getAccessToken(),
       id: id
     }
     let url = 'https://bizapi.jd.com/api/area/getTown'
@@ -373,9 +373,9 @@ class jdUtils{
   }
 
   //验证四级地址是否正确 
-  async checkArea(token, provinceId,cityId,countyId=0,townId=0) {
+  async checkArea( provinceId,cityId,countyId=0,townId=0) {
     let params = {
-      token: token,
+      token: await this.getAccessToken(),
       provinceId: provinceId,
       cityId: cityId,
       countyId: countyId,
@@ -512,15 +512,27 @@ class jdUtils{
 //
 
 // (async () => {
-//   let demo = new jdUtils
-//   let data
+  // let demo = new jdUtils
+  // let data = await demo.getProvince()
+  // let data = await demo.getCity(19)
+  // let data = await demo.getTown(1705)
+  // let data = await demo.checkArea(1,2812,0,0)
+
+  //{"success":false,"resultMessage":"根据3级地址id列表。未能获取到4级地址id列表","resultCode":"3405","result":null}
 //   //  data = await demo.getDetail(100000016109)
-//   // let dataObj = JSON.parse(data)
+  // let dataObj = JSON.parse(data)
+  
 //   data = await demo.syncGoods()
 //   // let data = await demo.getDetail(100001409446)
+//   if (dataObj.success==true) {
+//     console.log(dataObj.result)
+//   } else {
+//     console.log(dataObj)
+//   }
   
-//   console.log(data)
  
 // })()
+
+  
 
 module.exports = new jdUtils
