@@ -499,7 +499,9 @@ module.exports = {
           sales: FIELDS.defaultInt(),
           img_1: FIELDS.stringLen(255),
           img_2: FIELDS.stringLen(255),
-          is_share: FIELDS.tinyInt()
+          is_share: FIELDS.tinyInt(),
+          price: FIELDS.money('price'),
+          rabate_score: FIELDS.defaultInt()
         },
         {
           ...commonOpts,

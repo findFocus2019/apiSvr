@@ -72,6 +72,7 @@ class MallController extends Controller {
     let limit = ctx.body.limit || 10
     let offset = (page - 1) * limit
     let search = ctx.body.search
+    let type = ctx.body.type || ''
 
     let where = {}
     if (search) {
@@ -79,10 +80,8 @@ class MallController extends Controller {
         [Op.like]: '%' + search + '%'
       }
     }
-    if (search) {
-      where.title = {
-        [Op.like]: '%' + search + '%'
-      }
+    if (type) {
+      where.type = type
     }
     let mallModel = new this.models.mall_model
     let queryRet = await mallModel.goodsModel().findAndCountAll({
