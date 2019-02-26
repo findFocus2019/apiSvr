@@ -214,36 +214,40 @@ class MallController extends CommonController {
     // info.content = info.content.replace(/&amp;/g, '&')
     const regex = new RegExp('<img', 'gi')
     info.content = info.content.replace(regex, `<img style="max-width: 100%;"`)
-    ctx.ret.data = {
-      info: info
-    }
+    
 
     // 分享积分
     let shareId = ctx.body.share_id || 0
     this.logger.info(ctx.uuid, 'info()', 'shareId', shareId)
-    if (shareId) {
+    if (shareId > 0) {
       // 
       let shareModel = new this.models.share_model
       let shareInfo = await shareModel.model().findByPk(shareId)
       this.logger.info(ctx.uuid, 'info()', 'shareInfo', shareInfo)
-      let shareUserId = shareInfo.user_id
-      this.logger.info(ctx.uuid, 'info()', 'shareUserId', shareUserId)
-      let taskModel = new this.models.task_model
-      let t = await mallModel.getTrans()
-      let taskData = {
-        user_id: shareUserId,
-        model_id: shareId,
-        ip: ctx.ip
-      }
-      taskModel.logByName(ctx, 'user_share', taskData, t).then(ret => {
-        this.logger.info(ctx.uuid, 'info() taskModel.logByName', 'ret', ret)
-        if (ret.code === 0) {
-          t.commit()
-        } else {
-          t.rollback()
+      if(shareInfo){
+        let shareUserId = shareInfo.user_id
+        this.logger.info(ctx.uuid, 'info()', 'shareUserId', shareUserId)
+        let taskModel = new this.models.task_model
+        let t = await mallModel.getTrans()
+        let taskData = {
+          user_id: shareUserId,
+          model_id: shareId,
+          ip: ctx.ip
         }
-      })
+        taskModel.logByName(ctx, 'user_share', taskData, t).then(ret => {
+          this.logger.info(ctx.uuid, 'info() taskModel.logByName', 'ret', ret)
+          if (ret.code === 0) {
+            t.commit()
+          } else {
+            t.rollback()
+          }
+        })
+      }
 
+    }
+
+    ctx.ret.data = {
+      info: info
     }
 
     return ctx.ret
