@@ -3,19 +3,23 @@
 
 const updateData = {
   ios: {
-    version: '0.9.4',
+    version: '0.9.5',
     notes: [
-      `1.修复评测关联商品跳转商品详情bug。
-2.修复签到日历界面记录显示bug`,
+      `1.修复评测关联商品跳转商品详情bug，
+2.修复签到日历界面记录显示bug，
+3.添加开机图，
+4.修复一些bug及优化`,
       '修复一些bug及优化'
     ],
     url: 'https://www.pgyer.com/DFcd'
   },
   andriod: {
-    version: '0.9.4',
+    version: '0.9.5',
     notes: [
-      `1.修复评测关联商品跳转商品详情bug。
-2.修复签到日历界面记录显示bug`,
+      `1.修复评测关联商品跳转商品详情bug，
+2.修复签到日历界面记录显示bug，
+3.添加开机图，
+4.修复一些bug及优化`,
       '修复一些bug及优化'
     ],
     url: 'https://www.pgyer.com/iHri'
