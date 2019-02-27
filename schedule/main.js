@@ -2,6 +2,7 @@ const Controller = require('./../lib/controller')
 const nodeSchedule = require('node-schedule')
 const ShowApiSdk = require('./../lib/showApi')
 const dateUtils = require('./../app/utils/date_utils')
+const jdUtils = require('./../app/utils/jd_utils')
 const config = require('./../config')
 const CommonControler = require('./../app/common/common_controller')
 const Op = require('sequelize').Op
@@ -149,6 +150,17 @@ class Schedule extends CommonControler {
 
   }
 
+  async syncCategory() {
+    let logger = arguments[0] || this.logger
+    logger.info('syncCategory() start')
+    await jdUtils.syncCategory()
+  }
+
+  async syncGoods() {
+    let logger = arguments[0] || this.logger
+    logger.info('syncGoods() start')
+    await jdUtils.syncGoods()
+  }
 }
 
 function start() {
