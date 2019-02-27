@@ -529,7 +529,9 @@ module.exports = {
         express: FIELDS.jsonObj('express'),
         vip: FIELDS.tinyInt(),
         score_use: FIELDS.tinyInt(),
-        rabate: FIELDS.tinyInt()
+        rabate: FIELDS.tinyInt(),
+        finish_time: FIELDS.defaultInt(),
+        express_time: FIELDS.defaultInt()
       },
       {
         ...commonOpts,

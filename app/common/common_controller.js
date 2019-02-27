@@ -411,6 +411,83 @@ class CommonController extends Controller {
   }
 
 
+  async _orderComplete(ctx, order , t){
+
+    try {
+      let mallModel = new this.models.mall_model
+      let orderItemModel = mallModel.orderItemModel()
+      let goodsModel = mallModel.goodsModel()
+
+      // 添加 orderRate
+      let items = order.goods_items
+      for (let index = 0; index < items.length; index++) {
+        let item = items[index]
+        this.logger.info(ctx.uuid, 'orderComplete()', 'goods_items', item)
+        let orderItem = await orderItemModel.findOne({
+          where: {
+            order_id: order.id,
+            goods_id: item.id
+          }
+        })
+        this.logger.info(ctx.uuid, 'orderComplete()', 'orderItem', orderItem)
+        if (orderItem) {
+          let dayAfter7Time = parseInt(Date.now() / 1000) + 7 * 24 * 3600
+          orderItem.order_status = 9
+          orderItem.rabate_date = this.utils.date_utils.dateFormat(dayAfter7Time, 'YYYYMMDD')
+          let orderItemRet = await orderItem.save({
+            transaction: t
+          })
+
+          if (!orderItemRet) {
+            throw new Error('更新订单条目失败')
+          }
+        }
+
+        // goods发放积分
+        let goods = await goodsModel.findByPk(item.id)
+        let rabateScore = goods.rabate_score || 0
+        this.logger.info(ctx.uuid, 'orderComplete()', 'rabateScore', rabateScore)
+        if(rabateScore){
+          let taskModel = new this.models.task_model
+          let t1 = await taskModel.getTrans()
+          let taskData = {
+            user_id: order.user_id,
+            model_id: item.id,
+            ip: ctx.ip,
+            ext_num: rabateScore * item.num
+          }
+          taskModel.logByName(ctx, 'user_buy_goods', taskData, t1).then(async (ret) => {
+            this.logger.info(ctx.uuid, 'orderComplete() taskModel.logByName', 'ret', ret)
+            if (ret.code === 0) {
+              t1.commit()
+            } else {
+              t1.rollback()
+            }
+          })
+        }
+
+      }
+
+      order.status = 9
+      order.finish_time = parseInt(Date.now() / 1000)
+      let orderSaveRet = await order.save({
+        transaction: t
+      })
+      if (!orderSaveRet) {
+        throw new Error('更新订单信息错误')
+      }
+
+    } catch(err) {
+      ctx.ret.code = 1
+      ctx.ret.message = err.message
+      return ctx.ret
+    }
+
+    ctx.ret.code = 0
+    ctx.ret.message = ''
+    return ctx.ret
+
+  }
 }
 
 module.exports = CommonController

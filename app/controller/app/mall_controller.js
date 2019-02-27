@@ -572,13 +572,6 @@ class MallController extends CommonController {
 
   }
 
-  /**
-   * 订单确认，不需要在线支付的直接成功
-   */
-  orderConfirm() {
-
-  }
-
   async _payThirdUnifiedorder(ctx, method, paymentData, isMpWx = 0, openid = '') {
 
     // TODO
@@ -1163,6 +1156,7 @@ class MallController extends CommonController {
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
     let orderItemModel = mallModel.orderItemModel()
+    let goodsModel = mallModel.goodsModel()
 
     let t = await mallModel.getTrans()
 
@@ -1172,40 +1166,68 @@ class MallController extends CommonController {
         throw new Error('订单数据错误')
       }
 
-      // 添加 orderRate
-      let items = order.goods_items
-      for (let index = 0; index < items.length; index++) {
-        let item = items[index]
-        this.logger.info(ctx.uuid, 'orderComplete()', 'goods_items', item)
-        let orderItem = await orderItemModel.findOne({
-          where: {
-            order_id: orderId,
-            goods_id: item.id
-          }
-        })
-        this.logger.info(ctx.uuid, 'orderComplete()', 'orderItem', orderItem)
-        if (orderItem) {
-          let dayAfter7Time = parseInt(Date.now() / 1000) + 7 * 24 * 3600
-          orderItem.order_status = 9
-          orderItem.rabate_date = this.utils.date_utils.dateFormat(dayAfter7Time, 'YYYYMMDD')
-          let orderItemRet = await orderItem.save({
-            transaction: t
-          })
-
-          if (!orderItemRet) {
-            throw new Error('更新订单条目失败')
-          }
-        }
-
+      let orderDealRet = await this._orderComplete(ctx, order , t)
+      if(orderDealRet.code != 0){
+        throw new Error(orderDealRet.message)
       }
+      // // 添加 orderRate
+      // let items = order.goods_items
+      // for (let index = 0; index < items.length; index++) {
+      //   let item = items[index]
+      //   this.logger.info(ctx.uuid, 'orderComplete()', 'goods_items', item)
+      //   let orderItem = await orderItemModel.findOne({
+      //     where: {
+      //       order_id: orderId,
+      //       goods_id: item.id
+      //     }
+      //   })
+      //   this.logger.info(ctx.uuid, 'orderComplete()', 'orderItem', orderItem)
+      //   if (orderItem) {
+      //     let dayAfter7Time = parseInt(Date.now() / 1000) + 7 * 24 * 3600
+      //     orderItem.order_status = 9
+      //     orderItem.rabate_date = this.utils.date_utils.dateFormat(dayAfter7Time, 'YYYYMMDD')
+      //     let orderItemRet = await orderItem.save({
+      //       transaction: t
+      //     })
 
-      order.status = 9
-      let orderSaveRet = await order.save({
-        transaction: t
-      })
-      if (!orderSaveRet) {
-        throw new Error('更新订单信息错误')
-      }
+      //     if (!orderItemRet) {
+      //       throw new Error('更新订单条目失败')
+      //     }
+      //   }
+
+      //   // goods发放积分
+      //   let goods = await goodsModel.findByPk(item.id)
+      //   let rabateScore = goods.rabate_score || 0
+      //   this.logger.info(ctx.uuid, 'orderComplete()', 'rabateScore', rabateScore)
+      //   if(rabateScore){
+      //     let taskModel = new this.models.task_model
+      //     let t1 = await mallModel.getTrans()
+      //     let taskData = {
+      //       user_id: userId,
+      //       model_id: item.id,
+      //       ip: ctx.ip,
+      //       ext_num: rabateScore
+      //     }
+      //     taskModel.logByName(ctx, 'user_buy_goods', taskData, t1).then(async (ret) => {
+      //       this.logger.info(ctx.uuid, 'orderComplete() taskModel.logByName', 'ret', ret)
+      //       if (ret.code === 0) {
+      //         t1.commit()
+      //       } else {
+      //         t1.rollback()
+      //       }
+      //     })
+      //   }
+
+      // }
+
+      // order.status = 9
+      // order.finish_time = parseInt(Date.now() / 1000)
+      // let orderSaveRet = await order.save({
+      //   transaction: t
+      // })
+      // if (!orderSaveRet) {
+      //   throw new Error('更新订单信息错误')
+      // }
 
       t.commit()
     } catch (err) {
@@ -1215,6 +1237,8 @@ class MallController extends CommonController {
 
     return ctx.ret
   }
+
+  
 
   /**
    * 申请售后
@@ -1251,7 +1275,7 @@ class MallController extends CommonController {
       }
     })
     if (find) {
-      return this._fail(ctx, '请不要重复提交')
+      return this._fail(ctx, '订单商品已提交过，请不要重复提交')
     }
 
 
@@ -1262,6 +1286,7 @@ class MallController extends CommonController {
       imgs: ctx.body.imgs,
       info: ctx.body.info,
       type: ctx.body.type || '',
+      category: ctx.body.category||'',
       after_no: afterNo
     })
     if (!orderAfter) {

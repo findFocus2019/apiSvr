@@ -115,8 +115,8 @@ class TaskModel extends Model {
 
     // 记录
     let extNum = data.ext_num || 0
-    let score = task.score * vipNum + extNum
-    let taskLog = this.log(ctx, data.user_id, task.id, type, score, task.balance, data.model_id, data.ip, t)
+    let score = task.score * vipNum + extNum * vipNum
+    let taskLog = await this.log(ctx, data.user_id, task.id, type, score, task.balance, data.model_id, data.ip, t)
     if (!taskLog) {
       ret.code = 1
       ret.message = '保存记录失败'

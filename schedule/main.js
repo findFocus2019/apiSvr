@@ -4,6 +4,7 @@ const ShowApiSdk = require('./../lib/showApi')
 const dateUtils = require('./../app/utils/date_utils')
 const config = require('./../config')
 const CommonControler = require('./../app/common/common_controller')
+const Op = require('sequelize').Op
 
 class Schedule extends CommonControler {
 
@@ -30,6 +31,39 @@ class Schedule extends CommonControler {
 
 
     })
+  }
+
+  /**
+   * 发货七天未确认收货自动确认
+   */
+  async orderConfirm(){
+    let logger = arguments[0] || this.logger
+    let ctx = {
+      uuid: this.utils.uuid_utils.v4()
+    }
+    let mallModel = new this.models.mall_model
+    let orderModel = mallModel.orderModel()
+    let expressTime = parseInt(Date.now()/ 1000) - 7 * 24 * 3600
+    let orders = await orderModel.findAll({
+      where: {
+        status:2,
+        express_time:{
+          [Op.lt]:expressTime
+        }
+      }
+    })
+
+    for (let index = 0; index < orders.length; index++) {
+      let order = orders[index]
+      let t = await mallModel.getTrans(t)
+      let completeRet = await this._orderComplete(ctx, order , t)
+      if(completeRet.code == 0){
+        logger.info(`orderConfirm() success: ${order.id}`)
+      }else {
+        logger.info(`orderConfirm() fail: ${order.id}`)
+      }
+      
+    }
   }
 
   async rabateDealDay(){
