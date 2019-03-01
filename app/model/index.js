@@ -9,5 +9,6 @@ module.exports = {
   config_model: require('./config_model'),
   album_model: require('./album_model'),
   push_model: require('./../model/push_model'),
-  verifycode_model: require('./verifycode_model')
+  verifycode_model: require('./verifycode_model'),
+  admin_model: require('./admin_model')
 }
