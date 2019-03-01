@@ -1,6 +1,7 @@
 // const Controller = require('./../../../lib/controller')
 const CommonController = require('./../../common/common_controller')
 const Op = require('sequelize').Op
+const jdUtils = require('../../utils/jd_utils')
 
 class MallController extends CommonController {
 
@@ -214,36 +215,40 @@ class MallController extends CommonController {
     // info.content = info.content.replace(/&amp;/g, '&')
     const regex = new RegExp('<img', 'gi')
     info.content = info.content.replace(regex, `<img style="max-width: 100%;"`)
-    ctx.ret.data = {
-      info: info
-    }
+    
 
     // 分享积分
     let shareId = ctx.body.share_id || 0
     this.logger.info(ctx.uuid, 'info()', 'shareId', shareId)
-    if (shareId) {
+    if (shareId > 0) {
       // 
       let shareModel = new this.models.share_model
       let shareInfo = await shareModel.model().findByPk(shareId)
       this.logger.info(ctx.uuid, 'info()', 'shareInfo', shareInfo)
-      let shareUserId = shareInfo.user_id
-      this.logger.info(ctx.uuid, 'info()', 'shareUserId', shareUserId)
-      let taskModel = new this.models.task_model
-      let t = await mallModel.getTrans()
-      let taskData = {
-        user_id: shareUserId,
-        model_id: shareId,
-        ip: ctx.ip
-      }
-      taskModel.logByName(ctx, 'user_share', taskData, t).then(ret => {
-        this.logger.info(ctx.uuid, 'info() taskModel.logByName', 'ret', ret)
-        if (ret.code === 0) {
-          t.commit()
-        } else {
-          t.rollback()
+      if(shareInfo){
+        let shareUserId = shareInfo.user_id
+        this.logger.info(ctx.uuid, 'info()', 'shareUserId', shareUserId)
+        let taskModel = new this.models.task_model
+        let t = await mallModel.getTrans()
+        let taskData = {
+          user_id: shareUserId,
+          model_id: shareId,
+          ip: ctx.ip
         }
-      })
+        taskModel.logByName(ctx, 'user_share', taskData, t).then(ret => {
+          this.logger.info(ctx.uuid, 'info() taskModel.logByName', 'ret', ret)
+          if (ret.code === 0) {
+            t.commit()
+          } else {
+            t.rollback()
+          }
+        })
+      }
 
+    }
+
+    ctx.ret.data = {
+      info: info
     }
 
     return ctx.ret
@@ -568,13 +573,6 @@ class MallController extends CommonController {
 
   }
 
-  /**
-   * 订单确认，不需要在线支付的直接成功
-   */
-  orderConfirm() {
-
-  }
-
   async _payThirdUnifiedorder(ctx, method, paymentData, isMpWx = 0, openid = '') {
 
     // TODO
@@ -891,10 +889,11 @@ class MallController extends CommonController {
       let orderIds = payment.order_ids.substr(1, payment.order_ids.length - 2).split('-')
       this.logger.info(ctx.uuid, 'orderPayConfirm() orderIds', orderIds)
 
-      let userSetVip = 0
+      
 
       for (let index = 0; index < orderIds.length; index++) {
         const orderId = orderIds[index]
+        let userSetVip = 0
 
         let order = await orderModel.findByPk(orderId)
         if (order.status != 0) {
@@ -912,7 +911,7 @@ class MallController extends CommonController {
           }
         } else {
           // vip充值订单，发放代金券，更新用户vip时间
-          let userVipRet = this._userVipDeal(ctx, order, t)
+          let userVipRet = await this._userVipDeal(ctx, order, t)
           if (userVipRet.code != 0) {
             throw new Error(userVipRet.message)
           } else {
@@ -1158,6 +1157,7 @@ class MallController extends CommonController {
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
     let orderItemModel = mallModel.orderItemModel()
+    let goodsModel = mallModel.goodsModel()
 
     let t = await mallModel.getTrans()
 
@@ -1167,40 +1167,68 @@ class MallController extends CommonController {
         throw new Error('订单数据错误')
       }
 
-      // 添加 orderRate
-      let items = order.goods_items
-      for (let index = 0; index < items.length; index++) {
-        let item = items[index]
-        this.logger.info(ctx.uuid, 'orderComplete()', 'goods_items', item)
-        let orderItem = await orderItemModel.findOne({
-          where: {
-            order_id: orderId,
-            goods_id: item.id
-          }
-        })
-        this.logger.info(ctx.uuid, 'orderComplete()', 'orderItem', orderItem)
-        if (orderItem) {
-          let dayAfter7Time = parseInt(Date.now() / 1000) + 7 * 24 * 3600
-          orderItem.order_status = 9
-          orderItem.rabate_date = this.utils.date_utils.dateFormat(dayAfter7Time, 'YYYYMMDD')
-          let orderItemRet = await orderItem.save({
-            transaction: t
-          })
-
-          if (!orderItemRet) {
-            throw new Error('更新订单条目失败')
-          }
-        }
-
+      let orderDealRet = await this._orderComplete(ctx, order , t)
+      if(orderDealRet.code != 0){
+        throw new Error(orderDealRet.message)
       }
+      // // 添加 orderRate
+      // let items = order.goods_items
+      // for (let index = 0; index < items.length; index++) {
+      //   let item = items[index]
+      //   this.logger.info(ctx.uuid, 'orderComplete()', 'goods_items', item)
+      //   let orderItem = await orderItemModel.findOne({
+      //     where: {
+      //       order_id: orderId,
+      //       goods_id: item.id
+      //     }
+      //   })
+      //   this.logger.info(ctx.uuid, 'orderComplete()', 'orderItem', orderItem)
+      //   if (orderItem) {
+      //     let dayAfter7Time = parseInt(Date.now() / 1000) + 7 * 24 * 3600
+      //     orderItem.order_status = 9
+      //     orderItem.rabate_date = this.utils.date_utils.dateFormat(dayAfter7Time, 'YYYYMMDD')
+      //     let orderItemRet = await orderItem.save({
+      //       transaction: t
+      //     })
 
-      order.status = 9
-      let orderSaveRet = await order.save({
-        transaction: t
-      })
-      if (!orderSaveRet) {
-        throw new Error('更新订单信息错误')
-      }
+      //     if (!orderItemRet) {
+      //       throw new Error('更新订单条目失败')
+      //     }
+      //   }
+
+      //   // goods发放积分
+      //   let goods = await goodsModel.findByPk(item.id)
+      //   let rabateScore = goods.rabate_score || 0
+      //   this.logger.info(ctx.uuid, 'orderComplete()', 'rabateScore', rabateScore)
+      //   if(rabateScore){
+      //     let taskModel = new this.models.task_model
+      //     let t1 = await mallModel.getTrans()
+      //     let taskData = {
+      //       user_id: userId,
+      //       model_id: item.id,
+      //       ip: ctx.ip,
+      //       ext_num: rabateScore
+      //     }
+      //     taskModel.logByName(ctx, 'user_buy_goods', taskData, t1).then(async (ret) => {
+      //       this.logger.info(ctx.uuid, 'orderComplete() taskModel.logByName', 'ret', ret)
+      //       if (ret.code === 0) {
+      //         t1.commit()
+      //       } else {
+      //         t1.rollback()
+      //       }
+      //     })
+      //   }
+
+      // }
+
+      // order.status = 9
+      // order.finish_time = parseInt(Date.now() / 1000)
+      // let orderSaveRet = await order.save({
+      //   transaction: t
+      // })
+      // if (!orderSaveRet) {
+      //   throw new Error('更新订单信息错误')
+      // }
 
       t.commit()
     } catch (err) {
@@ -1210,6 +1238,8 @@ class MallController extends CommonController {
 
     return ctx.ret
   }
+
+  
 
   /**
    * 申请售后
@@ -1246,7 +1276,7 @@ class MallController extends CommonController {
       }
     })
     if (find) {
-      return this._fail(ctx, '请不要重复提交')
+      return this._fail(ctx, '订单商品已提交过，请不要重复提交')
     }
 
 
@@ -1257,6 +1287,7 @@ class MallController extends CommonController {
       imgs: ctx.body.imgs,
       info: ctx.body.info,
       type: ctx.body.type || '',
+      category: ctx.body.category||'',
       after_no: afterNo
     })
     if (!orderAfter) {
@@ -1462,6 +1493,112 @@ class MallController extends CommonController {
 
     return ctx.ret
 
+  }
+
+  /**
+   * 获取地址
+   * @param {string} action
+   * @param {int} id
+   */
+  async getAddress(ctx) {
+    let { id, action } = ctx.body
+    let data,dataObj
+    switch (action) {
+      case 'province':
+        data = await jdUtils.getProvince()
+        break;
+      case 'city':
+        data = await jdUtils.getCity(id)
+        break;
+      case 'county':
+        data = await jdUtils.getCounty(id)
+        break;
+      case 'town':
+        data = await jdUtils.getTown(id)
+        break;
+    }
+    dataObj = JSON.parse(data)
+    if (dataObj.success == true) {
+      ctx.ret.data = dataObj.result
+    } else {
+      ctx.ret.data = {}
+    }
+    return ctx.ret
+  }
+
+  //检查四级地址是否合法，暂无四级地址- -
+  async checkArea(ctx) {
+    let data,dataObj
+    let { provinceId, cityId, countyId, townId } = ctx.body
+    data = await jdUtils.checkArea(provinceId, cityId, countyId, townId)
+    dataObj = JSON.parse(data)
+    if (dataObj.success == true) {
+      ctx.ret.data = dataObj.result
+    } else {
+      ctx.ret.data = {}
+    }
+    return ctx.ret
+  }
+
+
+  /**
+   * 下单
+   * @param {*} ctx
+   * 
+   */
+  async submitOrder(ctx) {
+    let data,dataObj
+    let orderParams = {
+      thirdOrder: ctx.body.thirdOrder,
+      sku: ctx.body.sku,
+      name: ctx.body.name,
+      province: ctx.body.province,
+      city: ctx.body.city,
+      county: ctx.body.county,
+      town: ctx.body.town,
+      address: ctx.body.address,
+      zip: ctx.body.zip, //非必须  邮编
+      phone: ctx.body.phone, //非必须 座机
+      mobile: ctx.body.mobile,
+      email: ctx.body.email,
+      remark: ctx.body.remark, // 非必须 备注
+      invoiceState: ctx.body.invoiceState,
+      invoiceType: ctx.body.invoiceType,
+      selectedInvoiceTitle: ctx.body.selectedInvoiceTitle,
+      companyName: ctx.body.companyName,
+      regCode: ctx.body.regCode,
+      // 纳税人识别号  开普票并要打印出来识别号时， 需传入该字段
+      invoiceContent: ctx.body.invoiceContent,
+      paymentType: ctx.body.paymentType,
+      isUseBalance: ctx.body.isUseBalance,
+      submitState: ctx.body.submitState,
+      invoiceName: ctx.body.invoiceName,
+      invoicePhone: ctx.body.invoiceProvice, 
+      invoiceProvice: ctx.body.invoiceCity,
+      invoiceCity: ctx.body.invoiceCity,
+      invoiceCounty: ctx.body.invoiceCounty,
+      invoiceAddress: ctx.body.invoiceAddress, 
+      doOrderPriceMode: ctx.body.doOrderPriceMode, 
+      orderPriceSnap: ctx.body.orderPriceSnap,
+      reservingDate: ctx.body.reservingDate,
+      installDate: ctx.body.installDate,
+      needInstall: ctx.body.needInstall,
+      promiseDate: ctx.body.promiseDate,
+      promiseTimeRange: ctx.body.promiseTimeRange, 
+      promiseTimeRangeCode: ctx.body.promiseTimeRangeCode, 
+      reservedDateStr: ctx.body.reservedDateStr, 
+      reservedTimeRange: ctx.body.reservedTimeRange, 
+      poNo: ctx.body.poNo, 
+      customerName: ctx.body.customerName 
+    }
+    data = await jdUtils.submitOrder(orderParams)
+    dataObj = JSON.parse(data)
+    if (dataObj.success == true) {
+      ctx.ret.data = dataObj.result
+    } else {
+      ctx.ret.data = {}
+    }
+    return ctx.ret
   }
 }
 

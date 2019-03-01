@@ -15,6 +15,7 @@ class PostsController extends Controller {
     //   [Op.gte]: 0
     // }
     let search = ctx.body.search || ''
+    
     if (search) {
       where.title = {
         [Op.like]: '%' + search + '%'
@@ -270,6 +271,44 @@ class PostsController extends Controller {
     let updateRet = await comment.update(body)
     this.logger.info(ctx.uuid, 'commentUpdate()', 'updateRet', updateRet)
     ctx.ret.data = updateRet
+    return ctx.ret
+  }
+
+  async searchGoods(ctx){
+    let keyword = ctx.body.keyword
+
+    if(!keyword){
+      ctx.ret.data = {
+        rows: []
+      }
+  
+      return ctx.ret
+    }
+    let mallModel = new this.models.mall_model
+    let goodsModel = mallModel.goodsModel()
+
+    let goods = await goodsModel.findAll({
+      where:{
+        status:1,
+        stock: {
+          [Op.ne]:0
+        },
+        title: {
+          [Op.like]: '%'+keyword+'%'
+        },
+        
+      },
+      order: [
+        ['update_time' , 'DESC']
+      ],
+      offset:0,
+      limit:10
+    })
+
+    ctx.ret.data = {
+      rows: goods || []
+    }
+
     return ctx.ret
   }
 }

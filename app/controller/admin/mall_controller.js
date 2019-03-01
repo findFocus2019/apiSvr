@@ -72,6 +72,7 @@ class MallController extends Controller {
     let limit = ctx.body.limit || 10
     let offset = (page - 1) * limit
     let search = ctx.body.search
+    let type = ctx.body.type || ''
 
     let where = {}
     if (search) {
@@ -79,10 +80,8 @@ class MallController extends Controller {
         [Op.like]: '%' + search + '%'
       }
     }
-    if (search) {
-      where.title = {
-        [Op.like]: '%' + search + '%'
-      }
+    if (type) {
+      where.type = type
     }
     let mallModel = new this.models.mall_model
     let queryRet = await mallModel.goodsModel().findAndCountAll({
@@ -349,6 +348,7 @@ class MallController extends Controller {
 
     orderModel.update({
         express: {company: expressCompany, express_no: expressNo}, 
+        express_time: parseInt(Date.now() / 1000),
         status: 2
       }, 
       {
@@ -362,7 +362,107 @@ class MallController extends Controller {
     })
   }
 
-   /* 
+  async orderAfters(ctx){
+    this.logger.info(ctx.uuid, 'orderAfters()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+    let offset = (page - 1) * limit
+    let search = ctx.body.search
+    let userId = ctx.body.user_id || 0
+    let status = ctx.body.status || ''
+    // let status = ctx.body.status || ''
+
+    let where = {}
+    if(status !== ''){
+      where.status = status
+    }
+    if (search) {
+      // where.title = {
+      //   [Op.like]: '%' + search + '%'
+      // }
+    }
+    if (userId) {
+      where.user_id = userId
+    }
+ 
+    let mallModel = new this.models.mall_model
+    let orderAfterModel = mallModel.orderAfterModel()
+    let orderModel = mallModel.orderModel()
+    let paymentModel = mallModel.paymentModel()
+    let userInfoModel = (new this.models.user_model).infoModel()
+    orderAfterModel.belongsTo(userInfoModel, {
+      targetKey: 'user_id',
+      foreignKey: 'user_id'
+    })
+
+    let queryRet = await orderAfterModel.findAndCountAll({
+      where: where,
+      offset: offset,
+      limit: limit,
+      order: [
+        ['create_time', 'desc']
+      ],
+      attributes: {
+        exclude: ['update_time', 'info']
+      },
+      include: [{
+        model: userInfoModel,
+        attributes: ['id', 'nickname', 'mobile']
+      }]
+    })
+
+    
+    for (let index = 0; index < queryRet.rows.length; index++) {
+      let row = queryRet.rows[index]
+      let order = await orderModel.findByPk(row.order_id)
+      this.logger.info(ctx.uuid, 'orderAfters()', 'order', order)
+      let payment = await paymentModel.findOne({
+        where: {
+          order_ids: {[Op.like]:'%-' + order.id + '-%'},
+          status:1
+        }
+      })
+      this.logger.info(ctx.uuid, 'orderAfters()', 'payment', payment)
+      let goodsItems = order.goods_items
+      let goodsIds = row.goods_ids.toString()
+      this.logger.info(ctx.uuid, 'orderAfters()', 'row.goods_ids', row.goods_ids)
+      let afterGoodsIds = goodsIds.substr(1,goodsIds.length - 2).split('-')
+      this.logger.info(ctx.uuid, 'orderAfters()', 'afterGoodsIds', afterGoodsIds)
+      let items = []
+      let total = 0
+      let score = 0
+      goodsItems.forEach(item => {
+        if(afterGoodsIds.indexOf(item.id.toString()) > -1){
+          items.push(item)
+          let itemTotal = order.vip ? (item.price_vip) : item.price_sell
+          this.logger.info(ctx.uuid, 'orderAfters()', 'itemTotal', itemTotal)
+          total += itemTotal
+          if(order.score_use){
+            let itemScore = order.vip ? item.price_score_vip : item.price_score_sell
+            this.logger.info(ctx.uuid, 'orderAfters()', 'itemScore', itemScore)
+            total += itemScore
+            score += itemScore
+          }
+        }
+
+      })
+
+      this.logger.info(ctx.uuid, 'orderAfters()', 'items', items)
+      row.dataValues.total = total
+      row.dataValues.score = score
+      row.dataValues.order = order
+      row.dataValues.payment = payment
+      row.dataValues.items = items
+      
+    }
+
+    ctx.ret.data = queryRet
+    this.logger.info(ctx.uuid, 'orderAfters()', 'ret', ctx.ret)
+    return ctx.ret
+  }
+
+  /* 
    * type : 1:退货 2:换货
    */
   async orderAfterDeal(ctx) {
@@ -453,6 +553,8 @@ class MallController extends Controller {
 
     return ctx.ret
   }
+
+  
 
 }
 

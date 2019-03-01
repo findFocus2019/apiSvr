@@ -157,8 +157,8 @@ module.exports = {
         openid: FIELDS.stringLen(32),
         password_trade: FIELDS.stringLen(32),
         vip: FIELDS.tinyInt(),
-        vip_startline: FIELDS.defaultInt(),
-        vip_deadline: FIELDS.defaultInt(),
+        startline: FIELDS.defaultInt(),
+        deadline: FIELDS.defaultInt(),
       },
       {
         ...commonOpts,
@@ -499,7 +499,9 @@ module.exports = {
           sales: FIELDS.defaultInt(),
           img_1: FIELDS.stringLen(255),
           img_2: FIELDS.stringLen(255),
-          is_share: FIELDS.tinyInt()
+          is_share: FIELDS.tinyInt(),
+          price: FIELDS.money('price'),
+          rabate_score: FIELDS.defaultInt()
         },
         {
           ...commonOpts,
@@ -527,7 +529,9 @@ module.exports = {
         express: FIELDS.jsonObj('express'),
         vip: FIELDS.tinyInt(),
         score_use: FIELDS.tinyInt(),
-        rabate: FIELDS.tinyInt()
+        rabate: FIELDS.tinyInt(),
+        finish_time: FIELDS.defaultInt(),
+        express_time: FIELDS.defaultInt()
       },
       {
         ...commonOpts,

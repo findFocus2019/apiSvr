@@ -110,10 +110,11 @@ class PaymentLogic extends CommonController {
       let orderIds = payment.order_ids.substr(1, payment.order_ids.length - 2).split('-')
       Logger.info(ctx.uuid, 'orderPayConfirm() orderIds', orderIds)
 
-      let userSetVip = 0
+      
 
       for (let index = 0; index < orderIds.length; index++) {
         const orderId = orderIds[index]
+        let userSetVip = 0
 
         let order = await orderModel.findByPk(orderId)
         if (order.status != 0) {
@@ -131,7 +132,7 @@ class PaymentLogic extends CommonController {
           }
         } else {
           // vip充值订单，发放代金券，更新用户vip时间
-          let userVipRet = this._userVipDeal(ctx, order, t)
+          let userVipRet = await this._userVipDeal(ctx, order, t)
           if (userVipRet.code != 0) {
             throw new Error(userVipRet.message)
           } else {
@@ -150,7 +151,13 @@ class PaymentLogic extends CommonController {
           if (!userInfo.startline) {
             userInfo.startline = now
           }
-          userInfo.deadline = this.utils.date_utils.monthPlus(parseInt(Date.now() / 1000), 1)
+          if(userInfo.deadline){
+            userInfo.deadline = this.utils.date_utils.monthPlus(userInfo.deadline, 1)
+       
+          }else {
+            userInfo.deadline = this.utils.date_utils.monthPlus(parseInt(Date.now() / 1000), 1)
+       
+          }
         }
         let userInfoRet = await userInfo.save({
           transaction: t
