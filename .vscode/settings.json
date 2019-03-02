@@ -1,4 +1,6 @@
 {
   "git.ignoreLimitWarning": true,
-  "editor.tabSize": 2
+  "editor.tabSize": 2,
+  "terminal.explorerKind": "external",
+  "terminal.external.osxExec": "iTerm.app"
 }
