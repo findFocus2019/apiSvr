@@ -212,7 +212,7 @@ class PubController extends Controller {
   async getAddress(ctx) {
     let type = ctx.body.addressType || ''
     let id = ctx.body.addressId || 0
-    let data,dataObj
+    let data,dataObj,result={}
     switch (type) {
       case 'city':
         data = await jdUtils.getCity(id)
@@ -227,7 +227,10 @@ class PubController extends Controller {
         data = await jdUtils.getProvince()
     }
     dataObj = JSON.parse(data)
-    return dataObj
+    if (dataObj.success) {
+      result = dataObj.result
+    }
+    return result
   }
 }
 
