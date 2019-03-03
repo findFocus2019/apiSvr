@@ -234,6 +234,14 @@ class PubController extends Controller {
     }
     return result
   }
+
+  async getStock(ctx) {
+    let { skuNums, area } = ctx.body
+    let data,dataObj
+    data = jdUtils.getNewStockById(skuNums, area)
+    dataObj = JSON.parse(data)
+    return dataObj
+  }
 }
 
 module.exports = PubController

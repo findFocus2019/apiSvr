@@ -217,7 +217,11 @@ class jdUtils{
   }
 
   //库存相关 START
-  //批量获取库存接口（建议订单详情页、下单使用）
+  /**
+   * 批量获取库存接口（建议订单详情页、下单使用）
+   * skuNums 商品和数量  [{skuId: 569172,num:101}] 
+   * area 格式：2_2830_51805_0 (分别代表 1、2、3 级地址) 
+   */
   async getNewStockById(skuNums, area) {
     let params = {
       token: await this.getAccessToken(),
