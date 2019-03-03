@@ -214,13 +214,13 @@ class PubController extends Controller {
     let addressId = ctx.body.addressId || 0
     let data,dataObj
     switch (addressType) {
-      case 2:
+      case 'city':
         data = await jdUtils.getCity(addressId)
         break;
-      case 3:
+      case 'county':
         data = await jdUtils.getCounty(addressId)
         break;
-      case 4:
+      case 'town':
         data = await jdUtils.getTown(addressId)
         break;
       default:
