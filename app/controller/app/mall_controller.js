@@ -1546,44 +1546,44 @@ class MallController extends CommonController {
    * @param {*} ctx
    * 
    */
-  async submitOrder(ctx) {
+  async submitOrder(params) {
     let data,dataObj
     let orderParams = {
-      thirdOrder: ctx.body.thirdOrder,
-      sku: ctx.body.sku,
-      name: ctx.body.name,
-      province: ctx.body.province,
-      city: ctx.body.city,
-      county: ctx.body.county,
-      town: ctx.body.town,
-      address: ctx.body.address,
-      zip: ctx.body.zip, //非必须  邮编
-      phone: ctx.body.phone, //非必须 座机
-      mobile: ctx.body.mobile,
-      email: ctx.body.email,
-      remark: ctx.body.remark, // 非必须 备注
-      invoiceState: ctx.body.invoiceState,
-      invoiceType: ctx.body.invoiceType,
-      selectedInvoiceTitle: ctx.body.selectedInvoiceTitle,
-      companyName: ctx.body.companyName,
-      regCode: ctx.body.regCode,
+      thirdOrder: params.thirdOrder,
+      sku: params.sku,
+      name: params.name,
+      province: params.province,
+      city: params.city,
+      county: params.county,
+      town: params.town,
+      address: params.address,
+      zip: params.zip, //非必须  邮编
+      phone: params.phone, //非必须 座机
+      mobile: params.mobile,
+      email: params.email,
+      remark: params.remark, // 非必须 备注
+      invoiceState: params.invoiceState,
+      invoiceType: params.invoiceType,
+      selectedInvoiceTitle: params.selectedInvoiceTitle,
+      companyName: params.companyName,
+      regCode: params.regCode,
       // 纳税人识别号  开普票并要打印出来识别号时， 需传入该字段
-      invoiceContent: ctx.body.invoiceContent,
-      paymentType: ctx.body.paymentType,
-      isUseBalance: ctx.body.isUseBalance,
-      submitState: ctx.body.submitState,
-      doOrderPriceMode: ctx.body.doOrderPriceMode, 
-      orderPriceSnap: ctx.body.orderPriceSnap,
-      reservingDate: ctx.body.reservingDate,
-      installDate: ctx.body.installDate,
-      needInstall: ctx.body.needInstall,
-      promiseDate: ctx.body.promiseDate,
-      promiseTimeRange: ctx.body.promiseTimeRange, 
-      promiseTimeRangeCode: ctx.body.promiseTimeRangeCode, 
-      reservedDateStr: ctx.body.reservedDateStr, 
-      reservedTimeRange: ctx.body.reservedTimeRange, 
-      poNo: ctx.body.poNo, 
-      customerName: ctx.body.customerName 
+      invoiceContent: params.invoiceContent,
+      paymentType: params.paymentType,
+      isUseBalance: params.isUseBalance,
+      submitState: params.submitState,
+      doOrderPriceMode: params.doOrderPriceMode, 
+      orderPriceSnap: params.orderPriceSnap,
+      reservingDate: params.reservingDate,
+      installDate: params.installDate,
+      needInstall: params.needInstall,
+      promiseDate: params.promiseDate,
+      promiseTimeRange: params.promiseTimeRange, 
+      promiseTimeRangeCode: params.promiseTimeRangeCode, 
+      reservedDateStr: params.reservedDateStr, 
+      reservedTimeRange: params.reservedTimeRange, 
+      poNo: params.poNo, 
+      customerName: params.customerName 
     }
     data = await jdUtils.submitOrder(orderParams)
     dataObj = JSON.parse(data)
