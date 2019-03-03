@@ -1,5 +1,6 @@
 const Controller = require('./../../../lib/controller')
 const Op = require('sequelize').Op
+const textChecker = require('../../utils/163yundun_utils')
 
 class PostsController extends Controller {
 
@@ -237,6 +238,17 @@ class PostsController extends Controller {
 
     if (!postId || !info.trim()) {
       return this._fail(ctx, '参数错误')
+    }
+
+    // 检查html的内容是否合法
+    let checkResult = await textChecker.check(info)
+    checkResult = checkResult.body
+    if (checkResult.code === 200) { // 请求正常
+      if (checkResult.result.action !== 0) { // 怀疑有问题，或者就是有问题
+        return this._fail(ctx, '内容不合法，请修改')
+      }
+    } else {
+      return this._fail(ctx, '网络请求失败，请稍后再试')
     }
 
     let postsModel = new this.models.posts_model
@@ -724,6 +736,17 @@ class PostsController extends Controller {
       html,
       cover
     } = contentsFormat(contents)
+
+    // 检查html的内容是否合法
+    let checkResult = await textChecker.check(html)
+    checkResult = checkResult.body
+    if (checkResult.code === 200) { // 请求正常
+      if (checkResult.result.action !== 0) {// 怀疑有问题，或者就是有问题
+        return this._fail(ctx, '内容不合法，请修改')
+      }
+    } else {
+      return this._fail(ctx, '网络请求失败，请稍后再试')
+    }
 
     if (!cover) {
       // 用商品的封面图
