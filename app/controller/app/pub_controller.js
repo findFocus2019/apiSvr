@@ -1,6 +1,7 @@
 const Controller = require('./../../../lib/controller')
 const Op = require('sequelize').Op
 const request = require('superagent')
+const jdUtils = require('../../utils/jd_utils')
 
 class PubController extends Controller {
 
@@ -205,6 +206,33 @@ class PubController extends Controller {
 
     return ctx.ret
 
+  }
+
+  //获取京东联级地址
+  async getAddress(ctx) {
+    let type = ctx.body.type || ''
+    let id = ctx.body.id || 0
+    let data,dataObj,result=[]
+    switch (type) {
+      case 'city':
+        data = await jdUtils.getCity(id)
+        break;
+      case 'county':
+        data = await jdUtils.getCounty(id)
+        break;
+      case 'town':
+        data = await jdUtils.getTown(id)
+        break;
+      default:
+        data = await jdUtils.getProvince()
+    }
+    dataObj = JSON.parse(data)
+    if (dataObj.success) {
+      Object.keys(dataObj.result).forEach(item => {
+        result.push({ id: dataObj.result[item], value: item })
+      })
+    }
+    return result
   }
 }
 

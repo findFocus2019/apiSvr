@@ -204,7 +204,12 @@ module.exports = {
         user_id: FIELDS.bigInt(),
         info: FIELDS.stringLen(255),
         name: FIELDS.stringLen(64),
-        mobile: FIELDS.stringLen(16)
+        mobile: FIELDS.stringLen(16),
+        province: FIELDS.defaultInt(),
+        city: FIELDS.defaultInt(),
+        county: FIELDS.defaultInt(),
+        town: FIELDS.defaultInt(),
+        address: FIELDS.stringLen(255)
       },
       {
         ...commonOpts,
