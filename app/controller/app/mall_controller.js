@@ -1557,11 +1557,8 @@ class MallController extends CommonController {
       county: ctx.body.county,
       town: ctx.body.town,
       address: ctx.body.address,
-      zip: ctx.body.zip, //非必须  邮编
-      phone: ctx.body.phone, //非必须 座机
       mobile: ctx.body.mobile,
       email: ctx.body.email,
-      remark: ctx.body.remark, // 非必须 备注
       invoiceState: ctx.body.invoiceState,
       invoiceType: ctx.body.invoiceType,
       selectedInvoiceTitle: ctx.body.selectedInvoiceTitle,

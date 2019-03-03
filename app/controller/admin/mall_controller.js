@@ -1,6 +1,8 @@
 const Controller = require('./../../../lib/controller')
 const Op = require('sequelize').Op
 
+const AppMallController = require('../app/mall_controller')
+
 class MallController extends Controller {
 
   async categoryList(ctx) {
@@ -344,6 +346,13 @@ class MallController extends Controller {
     if (order.status !== 1) { // 不是支付完成的状态
       ctx.ret.data = {code: -2, error: '订单不是“支付完成”状态'}
       return
+    }
+
+    if (order.order_type === 2) { // 是京东订单
+      let submitOrderParams = {
+        
+      }
+      let submitOrderResult = await AppMallController.submitOrder(submitOrderParams)
     }
 
     orderModel.update({
