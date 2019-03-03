@@ -210,18 +210,18 @@ class PubController extends Controller {
 
   //获取京东联级地址
   async getAddress(ctx) {
-    let addressType = ctx.body.addressType || ''
-    let addressId = ctx.body.addressId || 0
+    let type = ctx.body.addressType || ''
+    let id = ctx.body.addressId || 0
     let data,dataObj
-    switch (addressType) {
+    switch (type) {
       case 'city':
-        data = await jdUtils.getCity(addressId)
+        data = await jdUtils.getCity(id)
         break;
       case 'county':
-        data = await jdUtils.getCounty(addressId)
+        data = await jdUtils.getCounty(id)
         break;
       case 'town':
-        data = await jdUtils.getTown(addressId)
+        data = await jdUtils.getTown(id)
         break;
       default:
         data = await jdUtils.getProvince()
