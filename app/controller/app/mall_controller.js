@@ -1587,12 +1587,14 @@ class MallController extends CommonController {
     }
     data = await jdUtils.submitOrder(orderParams)
     dataObj = JSON.parse(data)
-    if (dataObj.success == true) {
-      ctx.ret.data = dataObj.result
-    } else {
-      ctx.ret.data = {}
-    }
-    return ctx.ret
+    
+    return dataObj
+  }
+
+  async doPay(jdOrderId) {
+    let data = await jdUtils.doPay(jdOrderId)
+    let dataObj = JSON.parse(data)
+    return dataObj
   }
 }
 
