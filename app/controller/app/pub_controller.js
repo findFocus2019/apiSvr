@@ -229,10 +229,13 @@ class PubController extends Controller {
     dataObj = JSON.parse(data)
     if (dataObj.success) {
       Object.keys(dataObj.result).forEach(item => {
-        result.push({ id: dataObj.result[item], value: item })
+        result.push({ id: dataObj.result[item], name: item })
       })
     }
-    return result
+
+    this.logger.info(ctx.uuid , 'getAddress()' , result)
+    ctx.ret.data= result
+    return ctx.ret
   }
 }
 
