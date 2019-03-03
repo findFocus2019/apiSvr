@@ -286,6 +286,7 @@ class jdUtils{
     let url = 'https://bizapi.jd.com/api/order/cancel'
     return await this._ruquestUtil(params,url)
   }
+  
 
   /**
    * 发起支付接口 
@@ -316,8 +317,32 @@ class jdUtils{
     return await this._ruquestUtil(params,url)
   }
 
+  /**
+   * 查询京东订单信息接口  
+   * @param {*} jdOrderId 
+   * @param {*} queryExts 
+   */
   async selectJdOrder(jdOrderId,queryExts) {
-    
+    let params = {
+      token: await this.getAccessToken(), 
+      jdOrderId:  jdOrderId,
+      queryExts: queryExts
+    }
+    let url = 'https://bizapi.jd.com/api/order/selectJdOrder'
+    return await this._ruquestUtil(params,url)
+  }
+
+  /**
+   * 查询配送信息接口
+   * @param {*} jdOrderId 
+   */
+  async orderTrack(jdOrderId) {
+    let params = {
+      token: await this.getAccessToken(),
+      jdOrderId: jdOrderId
+    }
+    let url = 'https://bizapi.jd.com/api/order/orderTrack'
+    return await this._ruquestUtil(params,url)
   }
 
   //订单反查
