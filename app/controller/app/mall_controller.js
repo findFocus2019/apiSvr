@@ -1279,6 +1279,33 @@ class MallController extends CommonController {
       return this._fail(ctx, '订单商品已提交过，请不要重复提交')
     }
 
+    let total = 0
+    let score = 0
+    let items = []
+
+    let goodsItems = order.goods_items
+    let afterGoodsIds = goodsIds.substr(1,goodsIds.length - 2).split('-')
+    this.logger.info(ctx.uuid, 'orderAfter()', 'afterGoodsIds', afterGoodsIds)
+    goodsItems.forEach(item => {
+      if(afterGoodsIds.indexOf(item.id.toString()) > -1){
+        
+        let itemTotal = order.vip ? (item.price_vip) : item.price_sell
+        this.logger.info(ctx.uuid, 'orderAfter()', 'itemTotal', itemTotal)
+        total += itemTotal * item.num
+        if(order.score_use){
+          let itemScore = order.vip ? item.price_score_vip : item.price_score_sell
+          this.logger.info(ctx.uuid, 'orderAfter()', 'itemScore', itemScore)
+          // total += itemScore
+          score += itemScore * item.num * 1000
+        }
+        items.push(item)
+      }
+
+    })
+
+    this.logger.info(ctx.uuid, 'orderAfter()', 'total', total)
+    this.logger.info(ctx.uuid, 'orderAfter()', 'score', score)
+    this.logger.info(ctx.uuid, 'orderAfter()', 'items', items)
 
     let orderAfter = await orderAfterModel.create({
       user_id: userId,
@@ -1288,7 +1315,10 @@ class MallController extends CommonController {
       info: ctx.body.info,
       type: ctx.body.type || '',
       category: ctx.body.category||'',
-      after_no: afterNo
+      after_no: afterNo,
+      total:total,
+      score: score,
+      items: items
     })
     if (!orderAfter) {
       return this._fail(ctx, '保存数据失败')
@@ -1327,25 +1357,25 @@ class MallController extends CommonController {
 
     let rows = []
     for (let index = 0; index < queryRet.rows.length; index++) {
-      const row = queryRet.rows[index];
+      const row = queryRet.rows[index]
       let createDate = this.utils.date_utils.dateFormat(row.crate_time, 'YYYY-MM-DD HH:mm')
       row.dataValues.create_date = createDate
 
       let order = await orderModel.findByPk(row.order_id)
       row.dataValues.order = order
 
-      let goodsIds = row.goods_ids.substr(1, row.goods_ids.length - 2).split('-')
-      let goodsItems = order.goods_items
-      console.log('goodsIds =================', goodsIds)
-      let items = []
-      goodsItems.forEach(item => {
-        console.log(item)
-        if (goodsIds.indexOf(item.id.toString()) > -1) {
-          items.push(item)
-        }
-      })
+      // let goodsIds = row.goods_ids.substr(1, row.goods_ids.length - 2).split('-')
+      // let goodsItems = order.goods_items
+      // console.log('goodsIds =================', goodsIds)
+      // let items = []
+      // goodsItems.forEach(item => {
+      //   console.log(item)
+      //   if (goodsIds.indexOf(item.id.toString()) > -1) {
+      //     items.push(item)
+      //   }
+      // })
 
-      row.dataValues.items = items
+      // row.dataValues.items = items
 
       rows.push(row)
     }

@@ -424,36 +424,36 @@ class MallController extends Controller {
         }
       })
       this.logger.info(ctx.uuid, 'orderAfters()', 'payment', payment)
-      let goodsItems = order.goods_items
-      let goodsIds = row.goods_ids.toString()
-      this.logger.info(ctx.uuid, 'orderAfters()', 'row.goods_ids', row.goods_ids)
-      let afterGoodsIds = goodsIds.substr(1,goodsIds.length - 2).split('-')
-      this.logger.info(ctx.uuid, 'orderAfters()', 'afterGoodsIds', afterGoodsIds)
-      let items = []
-      let total = 0
-      let score = 0
-      goodsItems.forEach(item => {
-        if(afterGoodsIds.indexOf(item.id.toString()) > -1){
-          items.push(item)
-          let itemTotal = order.vip ? (item.price_vip) : item.price_sell
-          this.logger.info(ctx.uuid, 'orderAfters()', 'itemTotal', itemTotal)
-          total += itemTotal
-          if(order.score_use){
-            let itemScore = order.vip ? item.price_score_vip : item.price_score_sell
-            this.logger.info(ctx.uuid, 'orderAfters()', 'itemScore', itemScore)
-            total += itemScore
-            score += itemScore
-          }
-        }
+      // let goodsItems = order.goods_items
+      // let goodsIds = row.goods_ids.toString()
+      // this.logger.info(ctx.uuid, 'orderAfters()', 'row.goods_ids', row.goods_ids)
+      // let afterGoodsIds = goodsIds.substr(1,goodsIds.length - 2).split('-')
+      // this.logger.info(ctx.uuid, 'orderAfters()', 'afterGoodsIds', afterGoodsIds)
+      // let items = []
+      // let total = 0
+      // let score = 0
+      // goodsItems.forEach(item => {
+      //   if(afterGoodsIds.indexOf(item.id.toString()) > -1){
+      //     items.push(item)
+      //     let itemTotal = order.vip ? (item.price_vip) : item.price_sell
+      //     this.logger.info(ctx.uuid, 'orderAfters()', 'itemTotal', itemTotal)
+      //     total += itemTotal
+      //     if(order.score_use){
+      //       let itemScore = order.vip ? item.price_score_vip : item.price_score_sell
+      //       this.logger.info(ctx.uuid, 'orderAfters()', 'itemScore', itemScore)
+      //       total += itemScore
+      //       score += itemScore
+      //     }
+      //   }
 
-      })
+      // })
 
-      this.logger.info(ctx.uuid, 'orderAfters()', 'items', items)
-      row.dataValues.total = total
-      row.dataValues.score = score
+      // this.logger.info(ctx.uuid, 'orderAfters()', 'items', items)
+      // row.dataValues.total = total
+      // row.dataValues.score = score
       row.dataValues.order = order
       row.dataValues.payment = payment
-      row.dataValues.items = items
+      // row.dataValues.items = items
       
     }
 
@@ -462,6 +462,71 @@ class MallController extends Controller {
     return ctx.ret
   }
 
+  async orderAftetDetail(ctx){
+    this.logger.info(ctx.uuid, 'orderAftetDetail()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    let id = ctx.body.id
+
+    let mallModel = new this.models.mall_model
+    let orderAfterModel = mallModel.orderAfterModel()
+    let orderModel = mallModel.orderModel()
+    let paymentModel = mallModel.paymentModel()
+    let userInfoModel = (new this.models.user_model).infoModel()
+
+    let row = await orderAfterModel.findByPk(id)
+
+    let userInfo = await userInfoModel.findByPk(row.user_id)
+
+    row.dataValues.user = userInfo
+
+    let order = await orderModel.findByPk(row.order_id)
+    this.logger.info(ctx.uuid, 'orderAftetDetail()', 'order', order)
+    let payment = await paymentModel.findOne({
+      where: {
+        order_ids: {[Op.like]:'%-' + order.id + '-%'},
+        status:1
+      }
+    })
+    this.logger.info(ctx.uuid, 'orderAftetDetail()', 'payment', payment)
+    // let goodsItems = order.goods_items
+    // let goodsIds = row.goods_ids.toString()
+    // this.logger.info(ctx.uuid, 'orderAftetDetail()', 'row.goods_ids', row.goods_ids)
+    // let afterGoodsIds = goodsIds.substr(1,goodsIds.length - 2).split('-')
+    // this.logger.info(ctx.uuid, 'orderAftetDetail()', 'afterGoodsIds', afterGoodsIds)
+    // let items = []
+    // let total = 0
+    // let score = 0
+
+    // goodsItems.forEach(item => {
+    //   if(afterGoodsIds.indexOf(item.id.toString()) > -1){
+        
+    //     let itemTotal = order.vip ? (item.price_vip) : item.price_sell
+    //     this.logger.info(ctx.uuid, 'orderAftetDetail()', 'itemTotal', itemTotal)
+    //     total += itemTotal
+    //     let priceBuy = itemTotal
+    //     if(order.score_use){
+    //       let itemScore = order.vip ? item.price_score_vip : item.price_score_sell
+    //       this.logger.info(ctx.uuid, 'orderAftetDetail()', 'itemScore', itemScore)
+    //       total += itemScore
+    //       score += itemScore
+    //       priceBuy += itemScore
+    //     }
+
+    //     item.price_buy = priceBuy
+    //     items.push(item)
+    //   }
+
+    // })
+
+    // this.logger.info(ctx.uuid, 'orderAftetDetail()', 'items', items)
+    // row.dataValues.total = total
+    // row.dataValues.score = score
+    row.dataValues.order = order
+    row.dataValues.payment = payment
+    // row.dataValues.items = items
+
+    ctx.ret.data = row
+    return ctx.ret
+  }
   /* 
    * type : 1:退货 2:换货
    */
@@ -472,7 +537,9 @@ class MallController extends Controller {
     let type = ctx.body.type || 0
 
     let mallModel = new this.models.mall_model
+    let userModel = new this.models.user_model
     let orderModel = mallModel.orderModel()
+    let paymentModel = mallModel.paymentModel()
     let orderItemModel = mallModel.orderItemModel()
     let orderAfterModel = mallModel.orderAfterModel()
 
@@ -480,23 +547,26 @@ class MallController extends Controller {
 
     try {
       let orderAfter = await orderAfterModel.findByPk(orderAfterId)
+      this.logger.info(ctx.uuid, 'orderAfterDeal()', 'orderAfter', orderAfter)
+
+      let userId = orderAfter.user_id
 
       let orderId = orderAfter.order_id
       let goodsIds = orderAfter.goods_ids
 
       if (type == 1) {
-        // 退货
+        // 退款
         let goodsIdsArr = goodsIds.substr(1, goodsIds.length - 2).split('-')
 
         for (let index = 0; index < goodsIdsArr.length; index++) {
-          let goodsId = goodsIdsArr[index];
+          let goodsId = goodsIdsArr[index]
           let orderItem = await orderItemModel.findOne({
             where: {
               order_id: orderId,
               goods_id: goodsId
             }
           })
-
+          this.logger.info(ctx.uuid, 'orderAfterDeal()', 'orderItem', orderItem)
           orderItem.status = -1
           let orderItemRet = await orderItem.save({
             transaction: t
@@ -508,6 +578,7 @@ class MallController extends Controller {
         }
 
         let order = await orderModel.findByPk(orderId)
+        this.logger.info(ctx.uuid, 'orderAfterDeal()', 'order', order)
         if(order.goods_ids == orderAfter.goods_ids){
           order.status = -1
           let orderUpdateRet = await order.save({transaction: t})
@@ -516,13 +587,139 @@ class MallController extends Controller {
           }
         }
 
+        let payment = await paymentModel.findOne({
+          where: {
+            order_ids: {[Op.like]:'%-' + order.id + '-%'},
+            status:1
+          }
+        })
+        this.logger.info(ctx.uuid, 'orderAfterDeal()', 'payment', payment)
+        if(!payment){
+          throw new Error('未查找到付款信息')
+        }
+
+        // 需要处理的refund
+        let refund = {
+          amount:0,
+          balance:0,
+          ecard:0,
+          score:0
+        }
+        // 支付处理过的退款总和
+        let paymentRefund =  payment.refund || {}
+        this.logger.info(ctx.uuid, 'orderAfterDeal()', 'paymentRefund', paymentRefund)
+        let paymentAmount = (payment.amount * 100 - (paymentRefund.amount || 0) * 100) /100
+        let paymentBalance = (payment.balance * 100 - (paymentRefund.balance || 0) * 100) /100
+        let paymentEcard = (payment.ecard * 100 - (paymentRefund.ecard || 0) * 100) / 100
+
+        let total = orderAfter.total
+        let score = orderAfter.score
+        
+        refund.score = score
+        if(total > paymentAmount){
+          refund.amount = paymentAmount
+          paymentRefund.amount = ((paymentRefund.amount || 0) * 100 + paymentAmount * 100) /100
+          total = (total * 100 - paymentAmount * 100) / 100
+        }else {
+          refund.amount = total
+          paymentRefund.amount = ((paymentRefund.amount || 0) * 100 + total * 100)/ 100
+          total = 0
+        }
+
+        if(total > paymentBalance){
+          refund.balance = paymentBalance
+          paymentRefund.balance = ((paymentRefund.balance || 0) * 100 + paymentBalance * 100) /100
+          total = (total * 100 - paymentBalance * 100) / 100
+        }else {
+          refund.balance = total
+          paymentRefund.balance = ((paymentRefund.balance || 0) * 100 + total * 100)/ 100
+          total = 0
+        }
+
+        if(total > paymentEcard){
+          refund.ecard = paymentEcard
+          paymentRefund.ecard = ((paymentRefund.ecard || 0) * 100 + paymentEcard * 100) /100
+          total = (total * 100 - paymentEcard * 100) / 100
+        }else {
+          refund.ecard = total
+          paymentRefund.ecard = ((paymentRefund.ecard || 0) * 100 + total * 100)/ 100
+          total = 0
+        }
+
+        this.logger.info(ctx.uuid, 'orderAfterDeal()', 'refund',refund)
+        this.logger.info(ctx.uuid, 'orderAfterDeal()', 'paymentRefund',paymentRefund)
+
+        payment.refund = paymentRefund
+        let paymentRet = payment.save({transaction: t})
+        if(!paymentRet){
+          throw new Error('更新账单支付信息失败')
+        }
+        
+        // 处理退款
+        let userInfo = await userModel.getInfoByUserId(userId)
+        if(refund.amount){
+          if(!userInfo.alipay){
+            throw new Error('用户未设置支付宝，请提醒用户设置')
+          }
+
+          // 支付宝退款
+          let alipayAccount = userInfo.alipay
+          this.logger.info(ctx.uuid, 'orderAfterDeal()', 'alipayAccount', alipayAccount)
+          let alipayUtils = this.utils.alipay_utils
+          let tradeNo = this.utils.uuid_utils.v4()
+          let amount = 1 * refund.amount
+          if(this.config.DEBUG){
+            amount = 0.1
+          }
+          let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
+          this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
+          if (aliRet.code != 0) {
+            return this._fail(ctx, aliRet.message)
+          }
+        }
+
+        userInfo.balance = userInfo.balance + refund.balance
+        userInfo.score = userInfo.score + refund.score
+
+        let userInfoRet = await userInfo.save({transaction: t})
+        if(!userInfoRet){
+          throw new Error('更新用户信息失败')
+        }
+
+        if(refund.ecard){
+          let ecardId = payment.ecard_id
+          let userEcardModel = userModel.ecardModel()
+          let ecard = await userEcardModel.findByPk(ecardId)
+          if(!ecard){
+            throw new Error('未找到对应退款代金券')
+          }
+
+          ecard.amount = ecard.amount + refund.ecard
+          ecard.status = 1
+          let ecardRet = await ecard.save({transaction: t})
+          if(!ecardRet){
+            throw new Error('代金券信息更新失败')
+          }
+        }
+        
       }
 
+      orderAfter.status = 1
+      orderAfter.remark = ctx.body.remark
+      let orderAfterRet = await orderAfter.save({
+        transaction: t
+      })
+      if(!orderAfterRet){
+        throw new Error('更新售后信息失败')
+      }
+      t.commit()
     } catch (err) {
       ctx.ret.code = 1
       ctx.ret.message = err.message
       t.rollback()
     }
+
+    return ctx.ret
   }
 
   /**
