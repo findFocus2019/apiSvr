@@ -3,8 +3,11 @@
 
 const updateData = {
   ios: {
-    version: '0.9.5',
+    version: '0.9.6',
     notes: [
+      `1.修复程序明显bug
+2.退款，文本检验，累计登录
+3.页面部分修改`,
       `1.修复评测关联商品跳转商品详情bug，
 2.修复签到日历界面记录显示bug，
 3.添加开机图，
@@ -14,8 +17,11 @@ const updateData = {
     url: 'https://www.pgyer.com/DFcd'
   },
   andriod: {
-    version: '0.9.5',
+    version: '0.9.6',
     notes: [
+      `1.修复程序明显bug
+2.退款，文本检验，累计登录
+3.页面部分修改`,
       `1.修复评测关联商品跳转商品详情bug，
 2.修复签到日历界面记录显示bug，
 3.添加开机图，

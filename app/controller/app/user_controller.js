@@ -746,14 +746,14 @@ class UserController extends Controller {
 
       if (continuesNum == 7) {
         // 连续7天，现金奖励
-        let taskLogRet7 = await taskModel.logByName(ctx, this.config.tasks.DAILY_SIGN_7, taskData, t)
-        this.logger.info(ctx.uuid, 'dailySign()', 'taskLogRet', taskLogRet)
-        if (taskLogRet7.code != 0) {
-          throw new Error(taskLogRet7.message)
-        } else {
-          score += taskLogRet7.data.score
-          balance += taskLogRet7.data.balance
-        }
+        // let taskLogRet7 = await taskModel.logByName(ctx, this.config.tasks.DAILY_SIGN_7, taskData, t)
+        // this.logger.info(ctx.uuid, 'dailySign()', 'taskLogRet', taskLogRet)
+        // if (taskLogRet7.code != 0) {
+        //   throw new Error(taskLogRet7.message)
+        // } else {
+        //   score += taskLogRet7.data.score
+        //   balance += taskLogRet7.data.balance
+        // }
       }
 
       ctx.ret.data = {
@@ -974,7 +974,7 @@ class UserController extends Controller {
         info.views = post.views
         info.shares = post.shares
         info.likes = post.likes
-        info.pub_date = this.utils.date_utils.dateFormat(info.pub_date, 'YYYY-MM-DD HH:mm')
+        info.pub_date = this.utils.date_utils.dateFormat(post.pub_date, 'YYYY-MM-DD HH:mm')
       } else {
         let goods = await goodsModel.findByPk(row.goods_id)
         info.title = goods.title
@@ -1432,8 +1432,6 @@ class UserController extends Controller {
     return ctx.ret
   }
 
-
-  
   async push(ctx){
     let body = ctx.body
 
@@ -1459,6 +1457,48 @@ class UserController extends Controller {
 
     return ctx.ret
 
+  }
+
+  async recodeSignDay(ctx){
+
+    this.logger.info(ctx.uuid, 'recodeSignDay()', 'body', ctx.body, 'query', ctx.query)
+    let userId = ctx.body.user_id
+    let userModel = new this.models.user_model
+
+    let user = await userModel.model().findByPk(userId)
+    let signDayNum = user.sign_day_num
+
+    if(signDayNum < ctx.body.num){
+      signDayNum += 1
+      user.sign_day_num = signDayNum
+      user.save()
+
+      if(signDayNum == 7){
+        let taskModel = new this.models.task_model
+        let t = await taskModel.getTrans()
+        let taskData = {
+          user_id: userId,
+          model_id: userId,
+          ip: ctx.ip
+        }
+        let taskRet = await taskModel.logByName(ctx, 'daily_sign_7', taskData, t)
+ 
+        this.logger.info(ctx.uuid, 'recodeSignDay() taskRet', taskRet)
+        if (taskRet.code != 0) {
+          t.rollback()
+        } else {
+          // score = taskRet.data.score || 0
+          // balance = taskRet.data.balance || 0
+          t.commit()
+        }
+      }
+    }
+
+    ctx.ret.data = {
+      num: signDayNum
+    }
+
+    return ctx.ret
   }
 }
 

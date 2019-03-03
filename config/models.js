@@ -129,7 +129,8 @@ module.exports = {
         // share_level: FIELDS.tinyInt(),
         auth_token: FIELDS.stringLen(64),
         password_trade: FIELDS.stringLen(32),
-        uuid: FIELDS.uuid()
+        uuid: FIELDS.uuid(),
+        sign_day_num: FIELDS.defaultInt()
       },
       {
         ...commonOpts,
@@ -559,7 +560,8 @@ module.exports = {
         info: FIELDS.text(),
         uuid: FIELDS.stringLen(64),
         score: FIELDS.money('score'),
-        notify_info: FIELDS.jsonObj('notify_info')
+        notify_info: FIELDS.jsonObj('notify_info'),
+        refund: FIELDS.jsonObj('refund')
       },
       {
         ...commonOpts,
@@ -617,7 +619,7 @@ module.exports = {
   orderAfter: () => {
     return [{
         ...commonFieldGet(),
-        status: getStatusFields(1),
+        status: getStatusFields(0),
         user_id: FIELDS.bigInt(),
         order_id: FIELDS.bigInt(),
         goods_ids: FIELDS.stringLen(1000),
@@ -625,7 +627,11 @@ module.exports = {
         info: FIELDS.text(),
         type: FIELDS.stringLen(64),
         category: FIELDS.stringLen(64),
-        after_no: FIELDS.stringLen(64)
+        after_no: FIELDS.stringLen(64),
+        total:FIELDS.money('total'),
+        score: FIELDS.defaultInt(),
+        items: FIELDS.jsonArr('items'),
+        remark: FIELDS.stringLen(1000)
       },
       {
         ...commonOpts,
