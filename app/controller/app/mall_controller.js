@@ -1576,59 +1576,52 @@ class MallController extends CommonController {
    * @param {*} ctx
    * 
    */
-  async submitOrder(ctx) {
+  async submitOrder(params) {
     let data,dataObj
     let orderParams = {
-      thirdOrder: ctx.body.thirdOrder,
-      sku: ctx.body.sku,
-      name: ctx.body.name,
-      province: ctx.body.province,
-      city: ctx.body.city,
-      county: ctx.body.county,
-      town: ctx.body.town,
-      address: ctx.body.address,
-      zip: ctx.body.zip, //非必须  邮编
-      phone: ctx.body.phone, //非必须 座机
-      mobile: ctx.body.mobile,
-      email: ctx.body.email,
-      remark: ctx.body.remark, // 非必须 备注
-      invoiceState: ctx.body.invoiceState,
-      invoiceType: ctx.body.invoiceType,
-      selectedInvoiceTitle: ctx.body.selectedInvoiceTitle,
-      companyName: ctx.body.companyName,
-      regCode: ctx.body.regCode,
+      thirdOrder: params.thirdOrder,
+      sku: params.sku,
+      name: params.name,
+      province: params.province,
+      city: params.city,
+      county: params.county,
+      town: params.town,
+      address: params.address,
+      mobile: params.mobile,
+      email: params.email,
+      invoiceState: params.invoiceState || 2,
+      invoiceType: params.invoiceType || 3,
+      selectedInvoiceTitle: params.selectedInvoiceTitle || 4,
+      companyName: params.companyName || '',
+      regCode: params.regCode || '',
       // 纳税人识别号  开普票并要打印出来识别号时， 需传入该字段
-      invoiceContent: ctx.body.invoiceContent,
-      paymentType: ctx.body.paymentType,
-      isUseBalance: ctx.body.isUseBalance,
-      submitState: ctx.body.submitState,
-      invoiceName: ctx.body.invoiceName,
-      invoicePhone: ctx.body.invoiceProvice, 
-      invoiceProvice: ctx.body.invoiceCity,
-      invoiceCity: ctx.body.invoiceCity,
-      invoiceCounty: ctx.body.invoiceCounty,
-      invoiceAddress: ctx.body.invoiceAddress, 
-      doOrderPriceMode: ctx.body.doOrderPriceMode, 
-      orderPriceSnap: ctx.body.orderPriceSnap,
-      reservingDate: ctx.body.reservingDate,
-      installDate: ctx.body.installDate,
-      needInstall: ctx.body.needInstall,
-      promiseDate: ctx.body.promiseDate,
-      promiseTimeRange: ctx.body.promiseTimeRange, 
-      promiseTimeRangeCode: ctx.body.promiseTimeRangeCode, 
-      reservedDateStr: ctx.body.reservedDateStr, 
-      reservedTimeRange: ctx.body.reservedTimeRange, 
-      poNo: ctx.body.poNo, 
-      customerName: ctx.body.customerName 
+      invoiceContent: params.invoiceContent || 1,
+      paymentType: params.paymentType || 5,
+      isUseBalance: params.isUseBalance || 1,
+      submitState: params.submitState || 1,
+      doOrderPriceMode: params.doOrderPriceMode || 0, 
+      orderPriceSnap: params.orderPriceSnap || '',
+      reservingDate: params.reservingDate || -1,
+      installDate: params.installDate || -1,
+      needInstall: params.needInstall || false,
+      promiseDate: params.promiseDate || '',
+      promiseTimeRange: params.promiseTimeRange || '', 
+      promiseTimeRangeCode: params.promiseTimeRangeCode || '', 
+      reservedDateStr: params.reservedDateStr || '', 
+      reservedTimeRange: params.reservedTimeRange || '',
+      poNo: params.poNo || 0, 
+      customerName: params.customerName || ''
     }
     data = await jdUtils.submitOrder(orderParams)
     dataObj = JSON.parse(data)
-    if (dataObj.success == true) {
-      ctx.ret.data = dataObj.result
-    } else {
-      ctx.ret.data = {}
-    }
-    return ctx.ret
+    
+    return dataObj
+  }
+
+  async doPay(jdOrderId) {
+    let data = await jdUtils.doPay(jdOrderId)
+    let dataObj = JSON.parse(data)
+    return dataObj
   }
 }
 

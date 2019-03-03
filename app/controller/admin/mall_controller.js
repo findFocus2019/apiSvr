@@ -1,6 +1,8 @@
 const Controller = require('./../../../lib/controller')
 const Op = require('sequelize').Op
 
+const AppMallController = require('../app/mall_controller')
+
 class MallController extends Controller {
 
   async categoryList(ctx) {
@@ -347,10 +349,59 @@ class MallController extends Controller {
       return
     }
 
+    let jdOrderId = ''
+
+    if (order.order_type === 2) { // 是京东订单
+      let sku = []
+      order.goods_items.forEach(item => {
+        sku.push({
+          skuId: item.id, // FIXME: 需要改成 狗东 商品ID
+          bNeedAnnex: false,
+          bNeedGift: false,
+          price: item.price_sell,
+        })
+      })
+      let submitOrderParams = {
+        thirdOrder: order.order_no,       
+        sku: sku,
+        name: order.address.name,
+        province: '',
+        city: '',
+        country: '',
+        town: '',
+        address: '',
+        mobile: order.address.mobile,
+        email: '',
+        // invoiceState: 1,
+      }
+      let submitOrderResult = await AppMallController.submitOrder(submitOrderParams)
+      this.logger.info('submitOrderResult: ', submitOrderResult)
+      if (!submitOrderResult.success) {
+        return ctx.ret.data = {
+          code: -5,
+          error: '提交京东订单失败'
+        }
+      }
+
+      jdOrderId = submitOrderResult.result.jdOrderId
+    }
+
+    // 拿到京东订单后，去确认支付
+    if (jdOrderId) {
+      let doPayResult = await AppMallController.doPay(jdOrderId)
+      if (!doPayResult.success) {
+        return ctx.ret.data = {
+          code: -4,
+          error: '京东确认订单失败'
+        }
+      }
+    }
+
     orderModel.update({
         express: {company: expressCompany, express_no: expressNo}, 
         express_time: parseInt(Date.now() / 1000),
-        status: 2
+        status: 2,
+        jd_order_id: jdOrderId
       }, 
       {
         where: {id: orderId}
