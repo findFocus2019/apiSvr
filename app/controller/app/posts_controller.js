@@ -672,9 +672,9 @@ class PostsController extends Controller {
     // 是否有评测资格
     let userModel = new this.models.user_model
     let user = await userModel.getInfoByUserId(userId)
-    if (user.share_level != 1) {
-      return this._fail(ctx, '无评测资格')
-    }
+    // if (user.share_level != 1) {
+    //   return this._fail(ctx, '无评测资格')
+    // }
 
     let contents = body.contents
     let video = body.video_url || ''

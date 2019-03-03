@@ -8,6 +8,7 @@ class MallController extends Controller {
 
     let where = {}
     where.type = this.config.categoryType.GOODS
+    where.jd_num = 0
     where.status = {
       [Op.gte]: 0
     }

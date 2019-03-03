@@ -974,7 +974,7 @@ class UserController extends Controller {
         info.views = post.views
         info.shares = post.shares
         info.likes = post.likes
-        info.pub_date = this.utils.date_utils.dateFormat(info.pub_date, 'YYYY-MM-DD HH:mm')
+        info.pub_date = this.utils.date_utils.dateFormat(post.pub_date, 'YYYY-MM-DD HH:mm')
       } else {
         let goods = await goodsModel.findByPk(row.goods_id)
         info.title = goods.title
