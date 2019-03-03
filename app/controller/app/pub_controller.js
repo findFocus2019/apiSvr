@@ -210,9 +210,9 @@ class PubController extends Controller {
 
   //获取京东联级地址
   async getAddress(ctx) {
-    let type = ctx.body.addressType || ''
-    let id = ctx.body.addressId || 0
-    let data,dataObj,result={}
+    let type = ctx.body.type || ''
+    let id = ctx.body.id || 0
+    let data,dataObj,result=[]
     switch (type) {
       case 'city':
         data = await jdUtils.getCity(id)
@@ -228,7 +228,9 @@ class PubController extends Controller {
     }
     dataObj = JSON.parse(data)
     if (dataObj.success) {
-      result = dataObj.result
+      Object.keys(dataObj.result).forEach(item => {
+        result.push({ id: dataObj.result[item], value: item })
+      })
     }
     return result
   }
