@@ -34,8 +34,10 @@ class AuthController extends Controller {
       this.logger.info('login: 账号密码错误' )
       ctx.ret.data = {code: -1, msg: '账号密码错误'}
     } else {
-      ctx.session.admin = {email: admin.email, password: admin.password, id: admin.id}
+      ctx.session.admin = admin
       ctx.ret.data = {code: 0, msg: 'success', data: {}}
+      ctx.ret.session = ctx.session.admin
+
     }
   }
 
