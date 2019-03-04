@@ -165,9 +165,13 @@ class PostsController extends Controller {
     if (ctx.body.user_id) {
       let userId = ctx.body.user_id
       let isLike = await postsModel.likeModel().count({
-        user_id: userId,
-        post_id: info.id
+        where: {
+          user_id: userId,
+          post_id: info.id
+        }
+        
       })
+      this.logger.info(ctx.uuid, 'info()', 'isLike', isLike)
       let commentCount = await postsModel.commentModel().count({
         post_id: info.id
       })

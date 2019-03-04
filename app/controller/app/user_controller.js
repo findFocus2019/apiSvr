@@ -695,8 +695,8 @@ class UserController extends Controller {
 
       let continuesNum = lastDailySign ? lastDailySign.continues_num : 0
       let lastTimeDay = lastDailySign ? lastDailySign.create_time : 0
-      let lastTimeDate = this.utils.date_utils.dateFormat(lastTimeDay, 'YYYYMMDD')
-      let dayPlusDate = this.utils.date_utils.dateFormat(lastTimeDay + 24 * 3600, 'YYYYMMDD')
+      let lastTimeDate = lastDailySign ? this.utils.date_utils.dateFormat(lastTimeDay, 'YYYYMMDD') : null
+      let dayPlusDate = lastDailySign ? this.utils.date_utils.dateFormat(lastTimeDay + 24 * 3600, 'YYYYMMDD') : null
       let today = this.utils.date_utils.dateFormat(null, 'YYYYMMDD')
       this.logger.info(ctx.uuid, 'dailySign()', 'lastTimeDate', lastTimeDate)
       this.logger.info(ctx.uuid, 'dailySign()', 'dayPlusDate', dayPlusDate)
@@ -1104,6 +1104,8 @@ class UserController extends Controller {
     let userId = ctx.body.user_id
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
+    let status = ctx.body.status || ''
+    let orderStatus = ctx.body.order_status || ''
 
     let mallModel = new this.models.mall_model
     let orderItemModel = mallModel.orderItemModel()
@@ -1114,11 +1116,17 @@ class UserController extends Controller {
       foreignKey: 'goods_id'
     })
 
+    let where = {
+      user_id: userId
+    }
+    if(status !== ''){
+      where.status = status
+    }
+    if(orderStatus !== ''){
+      where.order_status = orderStatus
+    }
     let queryRet = await orderItemModel.findAndCountAll({
-      where: {
-        user_id: userId,
-        status: 1
-      },
+      where: where,
       offset: (page - 1) * limit,
       limit: limit,
       order: [

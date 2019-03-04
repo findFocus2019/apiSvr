@@ -1055,7 +1055,7 @@ class MallController extends CommonController {
 
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
-
+    let orderItemsModel =  mallModel.orderItemModel()
     let order = await orderModel.findByPk(orderId)
     if (order.user_id != userId) {
       return this._fail(ctx, '无效数据')
@@ -1063,8 +1063,12 @@ class MallController extends CommonController {
 
     order.dataValues.create_date = this.utils.date_utils.dateFormat(order.create_time, 'YYYY-MM-DD HH:mm')
 
+    let orderItems = await orderItemsModel.findAll({where: {
+      order_id:order.id
+    }})
     ctx.ret.data = {
-      info: order
+      info: order,
+      items: orderItems
     }
 
     return ctx.ret
@@ -1444,7 +1448,7 @@ class MallController extends CommonController {
     let orderItemModel = mallModel.orderItemModel()
 
     let info = await orderItemModel.findByPk(id)
-
+    this.logger.info(ctx.uuid, 'orderItemList()', 'info', info)
     if (info.user_id != userId) {
       this._fail(ctx, '无效数据')
     }
