@@ -273,7 +273,7 @@ class AuthController extends Controller {
         return ctx.ret
       } else {
         // 更新用户信息
-        let userInfo = await userModel.getInfoByUserId(user.id)
+        let userInfo = await userModel.getInfoByUserId(user.id, mobile)
         this.logger.info(ctx.uuid, 'register(3)', 'user.userInfo', userInfo)
         if (!userInfo.avatar) {
           userInfo.avatar = oauthRet.avatar
