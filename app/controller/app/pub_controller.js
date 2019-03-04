@@ -240,10 +240,13 @@ class PubController extends Controller {
 
   async getStock(ctx) {
     let { skuNums, area } = ctx.body
+    ctx.ret.data = []
     let data,dataObj
     data = jdUtils.getNewStockById(skuNums, area)
     dataObj = JSON.parse(data)
-    ctx.ret.data= dataObj
+    if (dataObj.success) {
+      ctx.ret.data= dataObj.result
+    }
     return ctx.ret
   }
 
