@@ -6,15 +6,9 @@ const path = require('path')
 const eventEmitter = require('events').EventEmitter
 const models = require('./../model/index')
 const Op = require('sequelize').Op
-const config = {
-  username: "深圳聚仁2018",
-  password: "jd123456",
-  client_id: "5VQFKPYtsCZM2i3I4DD4",
-  client_secret: "jDaqQBtlcYbvzzs50S9N",
-  tokenFilePath: path.resolve(__dirname+'/token'),
-  tokenFile:'/jd_token'
-}
-
+const config = require('../../config/config.json')
+config.tokenFilePath = path.resolve(__dirname + '/token')
+config.tokenFile = '/jd_token'
 
 class jdUtils{
 
