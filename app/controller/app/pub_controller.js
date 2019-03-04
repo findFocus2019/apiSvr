@@ -243,7 +243,23 @@ class PubController extends Controller {
     let data,dataObj
     data = jdUtils.getNewStockById(skuNums, area)
     dataObj = JSON.parse(data)
-    return dataObj
+    ctx.ret.data= dataObj
+    return ctx.ret
+  }
+
+  async getFreight(ctx) {
+    let paramsObj = {
+      sku: ctx.body.sku,
+      province: ctx.body.province,
+      city: ctx.body.city,
+      county: ctx.body.county,
+      paymentType: ctx.body.paymentType//京东支付方式  (1：货到付款，2：邮局付款，4：余额支付，5：公司转账（公对公转账），7：网银钱包，101：金采支付)
+    }
+    let data,dataObj
+    data = jdUtils.getFreight(paramsObj)
+    dataObj = JSON.parse(data)
+    ctx.ret.data= dataObj
+    return ctx.ret
   }
 }
 

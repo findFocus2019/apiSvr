@@ -520,6 +520,23 @@ class jdUtils{
     let url = 'https://bizapi.jd.com/api/message/get'
     return await this._ruquestUtil(params,url)
   }
+
+  /**
+   * 运费查询接口
+   * @param {*} paramsObj 
+   */
+  async getFreight(paramsObj) {
+    let params = {
+      token: await this.getAccessToken(),
+      sku: paramsObj.sku,
+      province: paramsObj.province,
+      city: paramsObj.city,
+      county: paramsObj.county,
+      paymentType:paramsObj.paymentType//京东支付方式  (1：货到付款，2：邮局付款，4：余额支付，5：公司转账（公对公转账），7：网银钱包，101：金采支付)
+    }
+    let url = 'https://bizapi.jd.com/api/order/getFreight'
+    return await this._ruquestUtil(params,url)
+  }
   /**
    * 获取当前时间 格式：yyyy-MM-dd HH:MM:SS
    */
