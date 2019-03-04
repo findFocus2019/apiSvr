@@ -536,6 +536,7 @@ module.exports = {
         vip: FIELDS.tinyInt(),
         score_use: FIELDS.tinyInt(),
         rabate: FIELDS.tinyInt(),
+        remark: FIELDS.stringLen(255),
         finish_time: FIELDS.defaultInt(),
         express_time: FIELDS.defaultInt()
       },
