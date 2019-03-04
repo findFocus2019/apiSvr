@@ -146,6 +146,7 @@ class MallModel extends Model {
     goodInfo.price_vip = (profitVip + price_cost) / 100
     //
     if (categoryInfo) {
+      categoryInfo.stock = -1
       categoryInfo.content = content
       categoryInfo.price_sell = goodInfo.price_sell
       categoryInfo.price_vip = goodInfo.price_vip
@@ -175,7 +176,8 @@ class MallModel extends Model {
         rabate_rate_vip: 80,
         price_score_sell: price_score_sell,
         price_score_vip: price_score_vip,
-        type: 2
+        type: 2,
+        stock: -1
       })
     }
   }
