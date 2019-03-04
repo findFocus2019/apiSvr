@@ -533,6 +533,7 @@ module.exports = {
         address: FIELDS.jsonObj('address'),
         invoice: FIELDS.jsonObj('invoice'),
         express: FIELDS.jsonObj('express'),
+        express_fee: FIELDS.money('express_fee'),
         vip: FIELDS.tinyInt(),
         score_use: FIELDS.tinyInt(),
         rabate: FIELDS.tinyInt(),
@@ -629,7 +630,7 @@ module.exports = {
         type: FIELDS.stringLen(64),
         category: FIELDS.stringLen(64),
         after_no: FIELDS.stringLen(64),
-        total:FIELDS.money('total'),
+        total: FIELDS.money('total'),
         score: FIELDS.defaultInt(),
         items: FIELDS.jsonArr('items'),
         remark: FIELDS.stringLen(1000)
