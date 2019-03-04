@@ -6,7 +6,7 @@ const path = require('path')
 const eventEmitter = require('events').EventEmitter
 const models = require('./../model/index')
 const Op = require('sequelize').Op
-const config = require('../../config/config.json')
+const config = require('./../../config/config.json')
 config.tokenFilePath = path.resolve(__dirname + '/token')
 config.tokenFile = '/jd_token'
 

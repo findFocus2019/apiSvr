@@ -239,11 +239,13 @@ class PubController extends Controller {
   }
 
   async getStock(ctx) {
+    this.logger.info(ctx.uuid , 'getStock()' , ctx.body)
     let { skuNums, area } = ctx.body
     ctx.ret.data = []
     let data,dataObj
-    data = jdUtils.getNewStockById(skuNums, area)
+    data = await jdUtils.getNewStockById(skuNums, area)
     dataObj = JSON.parse(data)
+    this.logger.info(ctx.uuid , 'getAddress()' , dataObj)
     if (dataObj.success) {
       ctx.ret.data= dataObj.result
     }
