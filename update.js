@@ -3,7 +3,7 @@
 
 const updateData = {
   ios: {
-    version: '0.9.7',
+    version: '0.9.8',
     notes: [
       `1.修复bug
 2.京选商城调整`,
@@ -19,7 +19,7 @@ const updateData = {
     url: 'https://www.pgyer.com/DFcd'
   },
   andriod: {
-    version: '0.9.7',
+    version: '0.9.8',
     notes: [
       `1.修复bug
 2.京选商城调整`,
