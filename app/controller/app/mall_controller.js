@@ -1601,7 +1601,7 @@ class MallController extends CommonController {
    * @param {*} ctx
    * 
    */
-  async submitOrder(params) {
+  static async submitOrder(params) {
     let data, dataObj
     let orderParams = {
       thirdOrder: params.thirdOrder,
