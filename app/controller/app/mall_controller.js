@@ -1637,6 +1637,9 @@ class MallController extends CommonController {
       poNo: params.poNo || 0,
       customerName: params.customerName || ''
     }
+
+    console.log("orderParams: ", JSON.stringify(orderParams))
+    
     data = await jdUtils.submitOrder(orderParams)
     dataObj = JSON.parse(data)
 

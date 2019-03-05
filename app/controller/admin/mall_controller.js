@@ -355,7 +355,7 @@ class MallController extends Controller {
       let sku = []
       order.goods_items.forEach(item => {
         sku.push({
-          skuId: item.id, // FIXME: 需要改成 狗东 商品ID
+          skuId: item.uuid, 
           bNeedAnnex: false,
           bNeedGift: false,
           price: item.price_sell,
