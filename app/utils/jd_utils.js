@@ -571,24 +571,24 @@ class jdUtils {
 }
 //
 
-(async () => {
-  let demo = new jdUtils
+// (async () => {
+  // let demo = new jdUtils
   // let data = await demo.messageGet(1)
-  let data = await demo.getProvince()
+  // let data = await demo.getProvince()
   // let data = await demo.getCity(29)
   // let data = await demo.getCounty(2580)
   // let data = await demo.getTown(21654)
   // let data = await demo.checkArea(29,2580,21654,52769)
   //{"success":false,"resultMessage":"根据3级地址id列表。未能获取到4级地址id列表","resultCode":"3405","result":null}
   //   //  data = await demo.getDetail(100000016109)
-  let dataObj = JSON.parse(data)
+  // let dataObj = JSON.parse(data)
 
   // data = await demo.syncGoods()
   // let data = await demo.getDetail(100001409446)
 //   if (dataObj.success==true) {
 //     console.log(dataObj.result)
 //   } else {
-    console.log(dataObj)
+    // console.log(dataObj)
 //   }
 // let model = new models.token_model()
 // let tokenModel = model.model()
@@ -599,7 +599,7 @@ class jdUtils {
 // })
 // tokenResult.content = 111
 // tokenResult.save()
-})()
+// })()
 
 
 
