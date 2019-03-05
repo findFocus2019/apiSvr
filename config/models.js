@@ -736,5 +736,18 @@ module.exports = {
       }
     ]
   },
-
+  token: () => {
+    return [
+      {
+        ...commonFieldGet(),
+        name: FIELDS.stringLen(60),
+        content: FIELDS.text(),
+        status: FIELDS.tinyInt()
+      },
+      {
+        ...commonOpts,
+        tableName: 't_token'
+      }
+    ]
+  }
 }
