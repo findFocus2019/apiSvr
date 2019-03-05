@@ -67,11 +67,13 @@ const FIELDS = {
       type: Sequelize.BIGINT,
       defaultValue: 0,
       get() {
-        const val = this.getDataValue(filed)
-        return parseFloat( val / 100)
+        const val = this.getDataValue(filed) / 100
+        console.log('money get ============', val)
+        return val
       },
       set(val) {
-        this.setDataValue(filed, parseInt(val * 100))
+        console.log('money set ============', val)
+        this.setDataValue(filed, val * 100)
       }
     }
   },
@@ -737,8 +739,7 @@ module.exports = {
     ]
   },
   token: () => {
-    return [
-      {
+    return [{
         ...commonFieldGet(),
         name: FIELDS.stringLen(60),
         content: FIELDS.text(),

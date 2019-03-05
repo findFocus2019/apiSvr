@@ -21,9 +21,15 @@ class CommonController extends Controller {
     let postsModel = new this.models.posts_model
     let mallModel = new this.models.mall_model
     let orderItemModel = mallModel.orderItemModel()
-    let user = await userModel.model().findByPk(userId)
+    let goodsModel = mallModel.goodsModel()
 
-    let numRabate = order.vip ? (item.price_vip * 100 - item.price_cost * 100) / 100 : (item.price_sell * 100 - item.price_cost * 100) / 100
+    let user = await userModel.model().findByPk(userId)
+    let goods = await goodsModel.findByPk(item.id)
+
+    let rateRabate = order.vip ? goods.rabate_rate_vip : goods.rabate_rate
+    let numRabate = order.vip ? (item.price_vip - item.price_cost) : (item.price_sell - item.price_cost)
+    numRabate = numRabate * rateRabate / 100
+    this.logger.info(ctx.uuid, '_creareOrderItem rateRabate', rateRabate)
     this.logger.info(ctx.uuid, '_creareOrderItem numRabate', numRabate)
 
     // 记录返利
@@ -40,7 +46,7 @@ class CommonController extends Controller {
       if (!inviteUser) {
         inviteUserId = this.config.defaultInivteUserId
       } else {
-        inviteUser = user.pid
+        inviteUserId = user.pid
       }
     } else {
       inviteUserId = this.config.defaultInivteUserId
@@ -77,7 +83,7 @@ class CommonController extends Controller {
     } else {
       if (shareUserId && !postUserId) {
         // 分享直接购买
-        numRabatePost = numRabate * 70 / 100
+        numRabateShare = numRabate * 70 / 100
         if (inviteUserId) {
           numRabateInvite = numRabate * 30 / 100
         }
@@ -108,17 +114,27 @@ class CommonController extends Controller {
 
     }
 
+    numRabatePost = parseFloat(numRabatePost).toFixed(2)
+    numRabateInvite = parseFloat(numRabateInvite).toFixed(2)
+    numRabateShare = parseFloat(numRabateShare).toFixed(2)
+
+    this.logger.info(ctx.uuid, '_creareOrderItem numRabatePost', numRabatePost)
+    this.logger.info(ctx.uuid, '_creareOrderItem numRabateInvite', numRabateInvite)
+    this.logger.info(ctx.uuid, '_creareOrderItem numRabateShare', numRabateShare)
+
     let opts = {}
     if (t) {
       opts.transaction = t
     }
     let goodsAmount = 0
     if (order.vip) {
-      goodsAmount = order.score_use ? order.total_vip : (order.total_vip * 100 + order.score_vip * 100) / 100
+      goodsAmount = order.score_use ? order.total_vip : (order.total_vip + order.score_vip)
     } else {
-      goodsAmount = order.score_use ? order.total : (order.total * 100 + order.score * 100) / 100
+      goodsAmount = order.score_use ? order.total : (order.total + order.score)
     }
+    goodsAmount = parseFloat(goodsAmount).toFixed(2)
     this.logger.info(ctx.uuid, '_creareOrderItem goodsAmount', goodsAmount)
+
     let data = {
       user_id: userId,
       order_id: order.id,
@@ -246,7 +262,7 @@ class CommonController extends Controller {
     let logger = Log('rabate_deal')
 
     let today = this.utils.date_utils.dateFormat(null, 'YYYYMMDD')
-    logger.info(ctx.uuid , '_rabateDealDay date:' , today)
+    logger.info(ctx.uuid, '_rabateDealDay date:', today)
 
     let mallModel = new this.models.mall_model
     let userModel = new this.models.user_model
@@ -261,7 +277,7 @@ class CommonController extends Controller {
       }
     })
 
-    logger.info(ctx.uuid , '_rabateDealDay item.length:' , items.length)
+    logger.info(ctx.uuid, '_rabateDealDay item.length:', items.length)
     for (let index = 0; index < items.length; index++) {
       const item = items[index]
 
@@ -272,17 +288,17 @@ class CommonController extends Controller {
       item.status = 1
       await item.save()
 
-      logger.info(ctx.uuid, '_rabateDealDay item finish:' , item.id)
+      logger.info(ctx.uuid, '_rabateDealDay item finish:', item.id)
 
     }
 
-    logger.info(ctx.uuid , '_rabateDealDay item.finish:' , items.length)
+    logger.info(ctx.uuid, '_rabateDealDay item.finish:', items.length)
 
   }
 
   async _rabateDealByUser(ctx, itemId, userId, balance, userModel, taskModel, taskId, logger) {
 
-    if(!userId){
+    if (!userId) {
       logger.info(ctx.uuid, '_rabateDealByUser user 0', userId)
       return
     }
@@ -318,7 +334,7 @@ class CommonController extends Controller {
    * 结算vip
    * @param {*} ctx 
    */
-  async _taskLogDealByUser(ctx){
+  async _taskLogDealByUser(ctx) {
 
     let logger = Log('task_log_deal')
 
@@ -327,16 +343,16 @@ class CommonController extends Controller {
     let taskLogsModel = taskModel.logsModel()
     let dateUtils = this.utils.date_utils
 
-    let todayDate = dateUtils.dateFormat(null , 'YYYY-MM-DD')
+    let todayDate = dateUtils.dateFormat(null, 'YYYY-MM-DD')
     console.log(todayDate)
     let todayTimestamp = dateUtils.getTimestamp(todayDate)
     console.log(todayTimestamp)
     let startTimestamp = todayTimestamp - 30 * 24 * 3600
     let logs = await taskLogsModel.findAll({
       where: {
-        status : 0,
+        status: 0,
         balance: {
-          [Op.gt]:0
+          [Op.gt]: 0
         },
         create_time: {
           [Op.gte]: startTimestamp
@@ -345,13 +361,13 @@ class CommonController extends Controller {
     })
 
     for (let index = 0; index < logs.length; index++) {
-      let  taskLog = logs[index]
+      let taskLog = logs[index]
       let userInfo = await userModel.getInfoByUserId(taskLog.user_id)
       let isVip = userModel.isVipByInfo(userInfo)
 
-      if(isVip){
+      if (isVip) {
         // vip做计算
-        logger.info(ctx.uuid , `${userInfo.nickname}:${userInfo.user_id}是vip`)
+        logger.info(ctx.uuid, `${userInfo.nickname}:${userInfo.user_id}是vip`)
 
         let t = await userModel.getTrans()
         let opts = {
@@ -360,26 +376,26 @@ class CommonController extends Controller {
         try {
           userInfo.balance = userInfo.balance + taskLog.balance
           let userSaveRet = await userInfo.save(opts)
-          if(!userSaveRet){
+          if (!userSaveRet) {
             throw new Error(`更新${userInfo.nickname}:${userInfo.user_id}的balance 出错`)
           }
 
           taskLog.status = 1
-          let taskLogRet = await taskLog.save(opts) 
-          if(!taskLogRet){
+          let taskLogRet = await taskLog.save(opts)
+          if (!taskLogRet) {
             throw new Error(`更新${userInfo.nickname}:${userInfo.user_id}的task log status 出错`)
           }
 
           await t.commit()
 
-        } catch (err){
-          logger.info(ctx.uuid , err.message)
+        } catch (err) {
+          logger.info(ctx.uuid, err.message)
           await t.rollback()
         }
-        
-      }else{
+
+      } else {
         // 不是vip
-        logger.info(ctx.uuid , `${userInfo.nickname}:${userInfo.user_id}不是vip`)
+        logger.info(ctx.uuid, `${userInfo.nickname}:${userInfo.user_id}不是vip`)
       }
 
     }
@@ -387,31 +403,31 @@ class CommonController extends Controller {
     // 超过1个月未结算的
     let logs1 = await taskLogsModel.findAll({
       where: {
-        status : 0,
+        status: 0,
         balance: {
-          [Op.gt]:0
+          [Op.gt]: 0
         },
         create_time: {
           [Op.lt]: startTimestamp
         }
       }
     })
-    logger.info(ctx.uuid , `taskLog失效条目:${logs1.length}`)
+    logger.info(ctx.uuid, `taskLog失效条目:${logs1.length}`)
 
     for (let index = 0; index < logs1.length; index++) {
       const taskLog = logs1[index];
       taskLog.status = -1
       await taskLog.save()
 
-      logger.info(ctx.uuid , `taskLog:${taskLog.id}失效`)
-      
+      logger.info(ctx.uuid, `taskLog:${taskLog.id}失效`)
+
     }
 
-    logger.info(ctx.uuid , `taskLog失效条目:${logs1.length}处理完毕`)
+    logger.info(ctx.uuid, `taskLog失效条目:${logs1.length}处理完毕`)
   }
 
 
-  async _orderComplete(ctx, order , t){
+  async _orderComplete(ctx, order, t) {
 
     try {
       let mallModel = new this.models.mall_model
@@ -447,7 +463,7 @@ class CommonController extends Controller {
         let goods = await goodsModel.findByPk(item.id)
         let rabateScore = goods.rabate_score || 0
         this.logger.info(ctx.uuid, 'orderComplete()', 'rabateScore', rabateScore)
-        if(rabateScore){
+        if (rabateScore) {
           let taskModel = new this.models.task_model
           let t1 = await taskModel.getTrans()
           let taskData = {
@@ -477,7 +493,7 @@ class CommonController extends Controller {
         throw new Error('更新订单信息错误')
       }
 
-    } catch(err) {
+    } catch (err) {
       ctx.ret.code = 1
       ctx.ret.message = err.message
       return ctx.ret
