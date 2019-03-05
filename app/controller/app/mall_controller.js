@@ -356,6 +356,12 @@ class MallController extends CommonController {
           totalVip += expressFee
         }
 
+        total = parseFloat(total).toFixed(2)
+        totalVip = parseFloat(totalVip).toFixed(2)
+        score = parseFloat(score).toFixed(2)
+        scoreVip = parseFloat(scoreVip).toFixed(2)
+        expressFee = parseFloat(expressFee).toFixed(2)
+
         this.logger.info(ctx.uuid, 'orderCreate() goodsItems', goodsItems)
         let orderData = {
           user_id: userId,
@@ -387,6 +393,7 @@ class MallController extends CommonController {
         totals += isVip ? (useScore ? totalVip : totalVip + scoreVip) : (useScore ? total : total + score)
       }
 
+      totals = parseFloat(totals).toFixed(2)
       ctx.ret.data = {
         ids: orderIds,
         totals: totals
