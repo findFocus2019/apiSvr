@@ -365,21 +365,22 @@ class MallController extends Controller {
         thirdOrder: order.order_no,       
         sku: sku,
         name: order.address.name,
-        province: '',
-        city: '',
-        country: '',
-        town: '',
-        address: '',
+        province: order.address.province,
+        city: order.address.city,
+        country: order.address.country,
+        town: order.address.town,
+        address: order.address.address,
         mobile: order.address.mobile,
         email: '',
         // invoiceState: 1,
       }
+      this.logger.info('submitorderparams: ', submitOrderParams)
       let submitOrderResult = await AppMallController.submitOrder(submitOrderParams)
       this.logger.info('submitOrderResult: ', submitOrderResult)
       if (!submitOrderResult.success) {
         return ctx.ret.data = {
-          code: -5,
-          error: '提交京东订单失败'
+          code: submitOrderResult.resultCode,
+          error: submitOrderResult.resultMessage
         }
       }
 
