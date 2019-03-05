@@ -1622,7 +1622,7 @@ class MallController extends CommonController {
       // 纳税人识别号  开普票并要打印出来识别号时， 需传入该字段
       invoiceContent: params.invoiceContent || 1,
       paymentType: params.paymentType || 5,
-      isUseBalance: params.isUseBalance || 1,
+      isUseBalance: params.isUseBalance || 0,
       submitState: params.submitState || 1,
       doOrderPriceMode: params.doOrderPriceMode || 0,
       orderPriceSnap: params.orderPriceSnap || '',
