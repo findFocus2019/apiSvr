@@ -70,13 +70,17 @@ class jdUtils {
   }
 
   async getAccessToken() {
-    let token = config.tokenFilePath + config.tokenFile
-    let tokenFile = fs.readFileSync(token)
+    let model = new models.token_model()
+    let tokenModel = model.model()
+    let tokenResult = await tokenModel.findOne({
+      where: {
+        name: 'jd'
+      }
+    })
     let tokenObj = {}
-    if (tokenFile.length > 0) tokenObj = JSON.parse(tokenFile)
+    if (tokenResult.content) tokenObj = JSON.parse(tokenResult.content)
     let millisecond = Date.now()
     let rspData
-
     if (Object.keys(tokenObj).length > 0) {
       switch (true) {
         //有效期内
@@ -92,7 +96,8 @@ class jdUtils {
     }
     let rspObj = JSON.parse(rspData)
     if (rspObj.success) {
-      fs.writeFileSync(token, JSON.stringify(rspObj.result))
+      tokenResult.content = JSON.stringify(rspObj.result)
+      tokenResult.save()
       return rspObj.result.access_token
     } else {
       return 'request token err'
@@ -583,10 +588,17 @@ class jdUtils {
 //   if (dataObj.success==true) {
 //     console.log(dataObj.result)
 //   } else {
-//     console.log(dataObj)
+    // console.log(dataObj)
 //   }
-
-
+// let model = new models.token_model()
+// let tokenModel = model.model()
+// let tokenResult = await tokenModel.findOne({
+//   where: {
+//     name: 'jd'
+//   }
+// })
+// tokenResult.content = 111
+// tokenResult.save()
 // })()
 
 
