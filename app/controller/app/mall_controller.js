@@ -1623,19 +1623,19 @@ class MallController extends CommonController {
       invoiceContent: params.invoiceContent || 1,
       paymentType: params.paymentType || 5,
       isUseBalance: params.isUseBalance || 0,
-      submitState: params.submitState || 1,
+      submitState: params.submitState || 1, 
       doOrderPriceMode: params.doOrderPriceMode || 0,
-      orderPriceSnap: params.orderPriceSnap || '',
+      // orderPriceSnap: params.orderPriceSnap || '',
       reservingDate: params.reservingDate || -1,
       installDate: params.installDate || -1,
       needInstall: params.needInstall || false,
-      promiseDate: params.promiseDate || '',
-      promiseTimeRange: params.promiseTimeRange || '',
-      promiseTimeRangeCode: params.promiseTimeRangeCode || '',
-      reservedDateStr: params.reservedDateStr || '',
-      reservedTimeRange: params.reservedTimeRange || '',
-      poNo: params.poNo || 0,
-      customerName: params.customerName || ''
+      promiseDate: params.promiseDate || '2019-03-06',
+      promiseTimeRange: params.promiseTimeRange || '9:00-15:00 ',
+      promiseTimeRangeCode: params.promiseTimeRangeCode || '9:00-15:00',
+      reservedDateStr: params.reservedDateStr || '2019-03-06',
+      reservedTimeRange: params.reservedTimeRange || '9:00-15:00',
+      poNo: params.poNo || 10,
+      customerName: params.customerName || '元'
     }
 
     console.log("orderParams: ", JSON.stringify(orderParams))
