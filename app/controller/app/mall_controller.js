@@ -701,12 +701,15 @@ class MallController extends CommonController {
 
         let scoreUse = order.score_use
 
-        let totalFee = isVip ? order.total_vip : order.total
-        let score = isVip ? order.score_vip : order.score
-
-        total += scoreUse ? totalFee : totalFee + score
+        let totalFee = isVip ? parseInt(order.total_vip * 100) : parseInt(order.total * 100)
+        let score = isVip ? parseInt(order.score_vip * 100) : parseInt(order.score * 100)
+        this.logger.info(ctx.uuid , 'orderPayPre totalFee' , totalFee)
+        total += scoreUse ? totalFee : totalFee + score 
         scoreNum += scoreUse ? score * 1000 : 0
       }
+
+      total = total / 100
+      this.logger.info(ctx.uuid , 'orderPayPre total' , total)
 
       let amount = 0
       let balance = 0
@@ -723,12 +726,12 @@ class MallController extends CommonController {
           }
 
           if (payMethod == 'balance') {
-            balance = total - userEcard.amount
+            balance = parseInt(total * 100 - userEcard.amount * 100) / 100
             if (balance > userBalance) {
               throw new Error('账户余额不足')
             }
           } else if (payMethod == 'wxpay' || payMethod == 'alipay') {
-            amount = total - userEcard.amount
+            amount = parseInt(total * 100 - userEcard.amount * 100) / 100
           }
 
           ecard = userEcard.amount
@@ -751,9 +754,10 @@ class MallController extends CommonController {
         // amount = 0.01
         let paymentData = {
           out_trade_no: paymentUuid,
-          amount: DEBUG ? 0.01 : amount,
+          // amount: DEBUG ? 0.01 : amount,
+          amount:amount,
           body: '发现焦点-商品支付',
-          subject: '订单金额:￥' + amount
+          subject: '发现焦点-订单支付'
         }
         this.logger.info(ctx.uuid, 'orderPayPre()', payMethod, paymentData)
         let payThirdRet = await this._payThirdUnifiedorder(ctx, payMethod, paymentData, isMpWx, openid)
