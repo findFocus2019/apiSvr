@@ -979,7 +979,7 @@ class UserController extends Controller {
         let goods = await goodsModel.findByPk(row.goods_id)
         info.title = goods.title
         info.cover = goods.cover
-        info.price = (goods.price_sell * 100 + goods.price_score_sell * 100) / 100
+        info.price = parseFloat(goods.price_sell + goods.price_score_sell).toFixed(2)
         info.score = goods.price_score_sell
       }
 

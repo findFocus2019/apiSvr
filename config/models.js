@@ -68,10 +68,10 @@ const FIELDS = {
       defaultValue: 0,
       get() {
         const val = this.getDataValue(filed)
-        return val / 100
+        return parseFloat( val / 100)
       },
       set(val) {
-        this.setDataValue(filed, val * 100)
+        this.setDataValue(filed, parseInt(val * 100))
       }
     }
   },

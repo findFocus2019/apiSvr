@@ -267,7 +267,7 @@ class MallController extends CommonController {
     let address = ctx.body.address
     let invoice = ctx.body.invoice
     let remark = ctx.body.remark || ''
-    let expressFee = ctx.body.express_fee || 0 // 京东运费
+    let expressFee = ctx.body.express_fee || 0.00 // 京东运费
 
     let mallModel = new this.models.mall_model
     let goodsModel = mallModel.goodsModel()
@@ -277,7 +277,7 @@ class MallController extends CommonController {
     // 是否是vip不信任前端传递
     let isVip = await userModel.isVip(userId)
     let orderIds = []
-    let totals = 0
+    let totals = 0.00
 
     let t = await mallModel.getTrans()
     try {
@@ -289,10 +289,10 @@ class MallController extends CommonController {
 
         let goodsIds = []
         let goodsItems = []
-        let total = 0 // 订单金额
-        let totalVip = 0
-        let score = 0 // 积分金额
-        let scoreVip = 0
+        let total = 0.00 // 订单金额
+        let totalVip = 0.00
+        let score = 0.00 // 积分金额
+        let scoreVip = 0.00
 
         for (let index = 0; index < items.length; index++) {
           let item = items[index]
@@ -322,15 +322,19 @@ class MallController extends CommonController {
           }
 
 
-          total += goods.price_sell * num
-          totalVip += goods.price_vip * num
-          score += goods.price_score_sell * num
-          scoreVip += goods.price_score_vip * num
+          total += parseFloat(goods.price_sell * num)
+          totalVip += parseFloat(goods.price_vip * num)
+          score += parseFloat(goods.price_score_sell * num)
+          scoreVip += parseFloat(goods.price_score_vip * num)
 
           goodsIds.push(item.id)
           goodsItems.push(item)
 
         }
+        this.logger.info(ctx.uuid, 'orderCreate()', 'total', total)
+        this.logger.info(ctx.uuid, 'orderCreate()', 'totalVip', totalVip)
+        this.logger.info(ctx.uuid, 'orderCreate()', 'score', score)
+        this.logger.info(ctx.uuid, 'orderCreate()', 'scoreVip', scoreVip)
 
         // 
         let scoreCost = isVip ? scoreVip : score
@@ -351,16 +355,21 @@ class MallController extends CommonController {
           }
         }
 
+        expressFee = parseFloat(expressFee)
+        this.logger.info(ctx.uuid, 'orderCreate()', 'expressFee', expressFee)
+
         if (orderType == 2) {
           total += expressFee
           totalVip += expressFee
         }
 
+        this.logger.info(ctx.uuid, 'orderCreate()', 'total', total)
+        this.logger.info(ctx.uuid, 'orderCreate()', 'totalVip', totalVip)
         total = parseFloat(total).toFixed(2)
         totalVip = parseFloat(totalVip).toFixed(2)
         score = parseFloat(score).toFixed(2)
         scoreVip = parseFloat(scoreVip).toFixed(2)
-        expressFee = parseFloat(expressFee).toFixed(2)
+        
 
         this.logger.info(ctx.uuid, 'orderCreate() goodsItems', goodsItems)
         let orderData = {
@@ -390,7 +399,7 @@ class MallController extends CommonController {
         }
 
         orderIds.push(order.id)
-        totals += isVip ? (useScore ? totalVip : totalVip + scoreVip) : (useScore ? total : total + score)
+        totals += isVip ? (useScore ? totalVip : (totalVip + scoreVip)) : (useScore ? total : (total + score))
       }
 
       totals = parseFloat(totals).toFixed(2)
@@ -464,7 +473,8 @@ class MallController extends CommonController {
     let orderItemModel = mallModel.orderItemModel()
     let user = await userModel.model().findByPk(userId)
 
-    let numRabate = order.vip ? (item.price_vip * 100 - item.price_cost * 100) / 100 : (item.price_sell * 100 - item.price_cost * 100) / 100
+    let numRabate = order.vip ? (item.price_vip - item.price_cost) : (item.price_sell - item.price_cost)
+    numRabate = parseFloat(numRabate)
     this.logger.info(ctx.uuid, '_creareOrderItem numRabate', numRabate)
 
     // 记录返利
@@ -549,16 +559,22 @@ class MallController extends CommonController {
 
     }
 
+    numRabatePost = parseFloat(numRabatePost).toFixed(2)
+    numRabateInvite = parseFloat(numRabateInvite).toFixed(2)
+    numRabateShare = parseFloat(numRabateShare).toFixed(2)
+
     let opts = {}
     if (t) {
       opts.transaction = t
     }
     let goodsAmount = 0
     if (order.vip) {
-      goodsAmount = order.score_use ? order.total_vip : (order.total_vip * 100 + order.score_vip * 100) / 100
+      goodsAmount = order.score_use ? order.total_vip : (order.total_vip + order.score_vip)
     } else {
-      goodsAmount = order.score_use ? order.total : (order.total * 100 + order.score * 100) / 100
+      goodsAmount = order.score_use ? order.total : (order.total + order.score)
     }
+    goodsAmount = parseFloat(goodsAmount).toFixed(2)
+
     this.logger.info(ctx.uuid, '_creareOrderItem goodsAmount', goodsAmount)
     let data = {
       user_id: userId,
@@ -708,14 +724,14 @@ class MallController extends CommonController {
 
         let scoreUse = order.score_use
 
-        let totalFee = isVip ? parseInt(order.total_vip * 100) : parseInt(order.total * 100)
-        let score = isVip ? parseInt(order.score_vip * 100) : parseInt(order.score * 100)
+        let totalFee = isVip ? order.total_vip  : order.total 
+        let score = isVip ? order.score_vip : order.score
         this.logger.info(ctx.uuid , 'orderPayPre totalFee' , totalFee)
         total += scoreUse ? totalFee : totalFee + score 
         scoreNum += scoreUse ? score * 1000 : 0
       }
 
-      total = total / 100
+      total = parseFloat(total)
       this.logger.info(ctx.uuid , 'orderPayPre total' , total)
 
       let amount = 0
@@ -733,12 +749,12 @@ class MallController extends CommonController {
           }
 
           if (payMethod == 'balance') {
-            balance = parseInt(total * 100 - userEcard.amount * 100) / 100
+            balance = total * 100 - userEcard.amount
             if (balance > userBalance) {
               throw new Error('账户余额不足')
             }
           } else if (payMethod == 'wxpay' || payMethod == 'alipay') {
-            amount = parseInt(total * 100 - userEcard.amount * 100) / 100
+            amount = total * 100 - userEcard.amount
           }
 
           ecard = userEcard.amount
@@ -779,6 +795,11 @@ class MallController extends CommonController {
       if (typeof info !== 'string') {
         info = JSON.stringify(info)
       }
+
+      amount = parseFloat(amount)
+      balance = parseFloat(balance)
+      ecard = parseFloat(ecard)
+
       // 生成payment
       let paymentData = {
         user_id: userId,
@@ -1326,6 +1347,8 @@ class MallController extends CommonController {
       }
 
     })
+
+    total = parseFloat(total).toFixed(2)
 
     this.logger.info(ctx.uuid, 'orderAfter()', 'total', total)
     this.logger.info(ctx.uuid, 'orderAfter()', 'score', score)
