@@ -378,8 +378,8 @@ class MallController extends Controller {
       this.logger.info('submitOrderResult: ', submitOrderResult)
       if (!submitOrderResult.success) {
         return ctx.ret.data = {
-          code: -5,
-          error: '提交京东订单失败'
+          code: submitOrderResult.resultCode,
+          error: submitOrderResult.resultMessage
         }
       }
 
