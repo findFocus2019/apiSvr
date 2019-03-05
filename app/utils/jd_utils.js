@@ -566,7 +566,7 @@ class jdUtils {
 }
 //
 
-(async () => {
+// (async () => {
   // let demo = new jdUtils
   // let data = await demo.messageGet(1)
   // let data = await demo.getProvince()
@@ -580,14 +580,14 @@ class jdUtils {
 
   // data = await demo.syncGoods()
   // let data = await demo.getDetail(100001409446)
-  // if (dataObj.success==true) {
-  //   console.log(dataObj.result)
-  // } else {
-  //   console.log(dataObj)
-  // }
+//   if (dataObj.success==true) {
+//     console.log(dataObj.result)
+//   } else {
+//     console.log(dataObj)
+//   }
 
 
-})()
+// })()
 
 
 
