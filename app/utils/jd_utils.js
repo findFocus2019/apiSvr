@@ -10,7 +10,7 @@ const config = require('./../../config/config.json')
 config.tokenFilePath = path.resolve(__dirname + '/token')
 config.tokenFile = '/jd_token'
 
-class jdUtils{
+class jdUtils {
 
   constructor() {
     //监听自定义事件
@@ -27,29 +27,31 @@ class jdUtils{
     try {
       let allPageNum = await this.getPageNum()
       let pageNumsObj = JSON.parse(allPageNum)
-      if (pageNumsObj.resultCode != '0000') { 
+      if (pageNumsObj.resultCode != '0000') {
         return false
       }
       let numsResult = pageNumsObj.result
       for (let index in numsResult) {
-    //     console.log(numsResult[index].page_num)
+        //     console.log(numsResult[index].page_num)
         let skus = await this.getSkuByPage(numsResult[index].page_num);
         let skusObj = JSON.parse(skus)
-        if (skusObj.resultCode != "0000") { return false }
+        if (skusObj.resultCode != "0000") {
+          return false
+        }
         let pageCount = skusObj.result.pageCount
         //现在暂时每个分类都是一页，不考虑分页，后续可以改进
         let skusResult = skusObj.result.skuIds
         // console.log({ pageCount, skusResult })
         //拿到结果，异步执行
-        this.handleInsertGoodEvent(skusResult,numsResult[index].page_num)
+        this.handleInsertGoodEvent(skusResult, numsResult[index].page_num)
         // this.myEmitter.emit('insertGood',skusResult,numsResult[index].page_num)
-        
+
       }
       return true
     } catch (err) {
-      
+
     }
-    
+
   }
 
   //同步分类信息
@@ -57,21 +59,21 @@ class jdUtils{
     let allPageNum = await this.getPageNum()
     let allPageNumObj = JSON.parse(allPageNum)
     if (allPageNumObj.resultCode != "0000") {
-      return  false
+      return false
     }
     let numsResult = allPageNumObj.result
-    for (let index in numsResult) { 
-       this.myEmitter.emit('updateCategory',numsResult[index])
+    for (let index in numsResult) {
+      this.myEmitter.emit('updateCategory', numsResult[index])
       // console.log(numsResult[index].page_num,numsResult[index].name)
     }
     return true
   }
-  
+
   async getAccessToken() {
     let token = config.tokenFilePath + config.tokenFile
     let tokenFile = fs.readFileSync(token)
     let tokenObj = {}
-    if (tokenFile.length>0) tokenObj = JSON.parse(tokenFile) 
+    if (tokenFile.length > 0) tokenObj = JSON.parse(tokenFile)
     let millisecond = Date.now()
     let rspData
 
@@ -80,11 +82,11 @@ class jdUtils{
         //有效期内
         case millisecond - tokenObj.time < tokenObj.expires_in * 1000:
           return tokenObj.access_token
-        //过期时,可刷新token时间内
+          //过期时,可刷新token时间内
         case tokenObj.refresh_token_expires > millisecond:
           rspData = await this._refreshToken(tokenObj.refresh_token)
           break;
-      } 
+      }
     } else {
       rspData = await this._getToken()
     }
@@ -95,7 +97,7 @@ class jdUtils{
     } else {
       return 'request token err'
     }
-    
+
   }
 
   async _getToken() {
@@ -109,9 +111,9 @@ class jdUtils{
       scope: '',
       sign: ''
     }
-    let sign_str = params.client_secret + params.timestamp + params.client_id + params.username + params.password 
-        + params.grant_type + params.scope + params.client_secret
-    params.sign = md5(sign_str).toUpperCase() 
+    let sign_str = params.client_secret + params.timestamp + params.client_id + params.username + params.password +
+      params.grant_type + params.scope + params.client_secret
+    params.sign = md5(sign_str).toUpperCase()
     let url = 'https://bizapi.jd.com/oauth2/accessToken'
     return await this._ruquestUtil(params, url)
   }
@@ -120,10 +122,10 @@ class jdUtils{
     let params = {
       refresh_token: refresh_token,
       client_id: config.client_id,
-      client_secret:config.client_secret
+      client_secret: config.client_secret
     }
     let url = 'https://bizapi.jd.com/oauth2/refreshToken'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   //商品相关 START
@@ -133,7 +135,7 @@ class jdUtils{
       token: await this.getAccessToken()
     }
     let url = 'https://bizapi.jd.com/api/product/getPageNum'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   /**
@@ -142,16 +144,16 @@ class jdUtils{
    * @param {*} pageNo  页码，默认取第一页；每页最多 10000 条数据，
    *                    品类商品池可能存在多页数据
    */
-  async getSkuByPage( pageNum, pageNo=1) {
+  async getSkuByPage(pageNum, pageNo = 1) {
     let params = {
       token: await this.getAccessToken(),
       pageNum: pageNum,
       pageNo: pageNo
     }
     let url = 'https://bizapi.jd.com/api/product/getSkuByPage'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
-  
+
 
   /**
    * 获取商品详细信息接口 
@@ -164,7 +166,7 @@ class jdUtils{
       sku: skuId
     }
     let url = 'https://bizapi.jd.com/api/product/getDetail'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   /**
@@ -178,7 +180,7 @@ class jdUtils{
       sku: sku
     }
     let url = 'https://bizapi.jd.com/api/product/skuState'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   /**
@@ -192,9 +194,9 @@ class jdUtils{
       sku: sku
     }
     let url = 'https://bizapi.jd.com/api/product/skuImage'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
-  
+
   //商品相关 END
 
   //批量查询商品售卖价
@@ -206,7 +208,9 @@ class jdUtils{
     let url = 'https://bizapi.jd.com/api/price/getSellPrice'
     let priceResult = await this._ruquestUtil(params, url)
     let priceResultObj = JSON.parse(priceResult)
-    if (priceResultObj.resultCode != "0000") { return false }
+    if (priceResultObj.resultCode != "0000") {
+      return false
+    }
     return priceResultObj.result
   }
 
@@ -223,7 +227,7 @@ class jdUtils{
       area: area
     }
     let url = 'https://bizapi.jd.com/api/stock/getNewStockById'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   /**
@@ -233,14 +237,14 @@ class jdUtils{
     商品编号 批量以逗号分隔  (最高支持 100 个商品)  
     格式：1_0_0 (分别代表 1、2、3 级地址) 
    */
-  async getStockById(sku,area) {
+  async getStockById(sku, area) {
     let params = {
       token: await this.getAccessToken(),
       sku: sku,
       area: area
     }
     let url = 'https://bizapi.jd.com/api/stock/getStockById'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
   //库存相关 END
 
@@ -252,7 +256,7 @@ class jdUtils{
    * @param {*} params
    *  
    */
-  async submitOrder(orderParams){
+  async submitOrder(orderParams) {
     let params = {
       token: await this.getAccessToken()
     }
@@ -260,19 +264,19 @@ class jdUtils{
       params[item] = orderParams[item]
     })
     let url = 'https://bizapi.jd.com/api/order/submitOrder'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
 
   //确认预占库存订单接口
-  async confirmOrder( jdOrderId, companyPayMoney) {
+  async confirmOrder(jdOrderId, companyPayMoney) {
     let params = {
       token: await this.getAccessToken(),
       jdOrderId: jdOrderId,
       companyPayMoney: companyPayMoney
     }
     let url = 'https://bizapi.jd.com/api/order/confirmOrder'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   //取消未确认订单接口
@@ -282,22 +286,22 @@ class jdUtils{
       jdOrderId: jdOrderId
     }
     let url = 'https://bizapi.jd.com/api/order/cancel'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
-  
+
 
   /**
    * 发起支付接口 
    * @param {*} orderId 
    */
   async doPay(orderId) {
-    
+
     let params = {
       token: await this.getAccessToken(),
       jdOrderId: orderId
     }
     let url = 'https://bizapi.jd.com/api/order/doPay'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   /**
@@ -312,7 +316,7 @@ class jdUtils{
       params[item] = calendarParams[item]
     })
     let url = 'https://bizapi.jd.com/api/order/promiseCalendar'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   /**
@@ -320,14 +324,14 @@ class jdUtils{
    * @param {*} jdOrderId 
    * @param {*} queryExts 
    */
-  async selectJdOrder(jdOrderId,queryExts) {
+  async selectJdOrder(jdOrderId, queryExts) {
     let params = {
-      token: await this.getAccessToken(), 
-      jdOrderId:  jdOrderId,
+      token: await this.getAccessToken(),
+      jdOrderId: jdOrderId,
       queryExts: queryExts
     }
     let url = 'https://bizapi.jd.com/api/order/selectJdOrder'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   /**
@@ -340,7 +344,7 @@ class jdUtils{
       jdOrderId: jdOrderId
     }
     let url = 'https://bizapi.jd.com/api/order/orderTrack'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   //订单反查
@@ -350,7 +354,7 @@ class jdUtils{
       token: await this.getAccessToken(),
       thirdOrder: thirdOrder
     }
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
   //订单相关 END
 
@@ -362,7 +366,7 @@ class jdUtils{
       token: await this.getAccessToken()
     }
     let url = 'https://bizapi.jd.com/api/area/getProvince'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   //二级地址
@@ -372,7 +376,7 @@ class jdUtils{
       id: id
     }
     let url = 'https://bizapi.jd.com/api/area/getCity'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   //三级地址
@@ -382,9 +386,9 @@ class jdUtils{
       id: id
     }
     let url = 'https://bizapi.jd.com/api/area/getCounty'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
-  
+
   //四级地址
   async getTown(id) {
     let params = {
@@ -392,31 +396,31 @@ class jdUtils{
       id: id
     }
     let url = 'https://bizapi.jd.com/api/area/getTown'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   //验证四级地址是否正确 
-  async checkArea( provinceId,cityId,countyId=0,townId=0) {
+  async checkArea(provinceId, cityId, countyId = 0, townId = 0) {
     let params = {
       token: await this.getAccessToken(),
       provinceId: provinceId,
       cityId: cityId,
       countyId: countyId,
-      townId:townId
+      townId: townId
     }
     let url = 'https://bizapi.jd.com/api/area/checkArea'
-    return await this._ruquestUtil(params,url)
- 
+    return await this._ruquestUtil(params, url)
+
   }
 
   //根据地址查询京东地址编码
-  async getJDAddressFromAddress(token,address) {
+  async getJDAddressFromAddress(token, address) {
     let params = {
       token: token,
       address: address
     }
     let url = 'https://bizapi.jd.com/api/area/getJDAddressFromAddress'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   //根据经纬度查询京东地址编码
@@ -427,9 +431,9 @@ class jdUtils{
       lat: lat
     }
     let url = 'https://bizapi.jd.com/api/area/getJDAddressFromLatLng'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
-   //地址相关 END
+  //地址相关 END
   async _ruquestUtil(params, url) {
     try {
       let action = await util.promisify(request)({
@@ -445,10 +449,10 @@ class jdUtils{
     }
   }
 
-  
+
 
   //插入或更新数据库事件处理
-  async handleInsertGoodEvent(skusResult,page_num) {
+  async handleInsertGoodEvent(skusResult, page_num) {
     process.nextTick(async () => {
       try {
         /**
@@ -461,7 +465,7 @@ class jdUtils{
          * category  page_num
          * description ''
          * stock 库存
-         * */  
+         * */
         skusResult.forEach(async (sku) => {
           //图书和音像没有，暂时不做，判断代码保留
           // let BookOrRadioRegExp = /^\d{8}$/
@@ -474,14 +478,14 @@ class jdUtils{
             let goods = await this.getDetail(sku)
             let priceInfo = await this.getSellPrice(sku)
             let goodsObj = JSON.parse(goods)
-            if (goodsObj.resultCode == "0000") { 
+            if (goodsObj.resultCode == "0000") {
               let goodInfo = goodsObj.result
               goodInfo.jdPrice = priceInfo[0].jdPrice
               goodInfo.price = priceInfo[0].price
               let MallModel = new models.mall_model
-              await MallModel.updateJDGood(goodInfo,page_num)
+              await MallModel.updateJDGood(goodInfo, page_num)
             }
-          },this.syncGoodsInfo.delayTime)
+          }, this.syncGoodsInfo.delayTime)
           this.syncGoodsInfo.delayTime += this.syncGoodsInfo.intervalTime
           // console.log(typeof getDetailFunc)
         })
@@ -509,10 +513,10 @@ class jdUtils{
   async messageGet(type) {
     let params = {
       token: await this.getAccessToken(),
-      type: type||''
+      type: type || ''
     }
     let url = 'https://bizapi.jd.com/api/message/get'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
 
   /**
@@ -526,31 +530,32 @@ class jdUtils{
       province: paramsObj.province,
       city: paramsObj.city,
       county: paramsObj.county,
-      paymentType:paramsObj.paymentType//京东支付方式  (1：货到付款，2：邮局付款，4：余额支付，5：公司转账（公对公转账），7：网银钱包，101：金采支付)
+      town: paramsObj.town || 0,
+      paymentType: paramsObj.paymentType //京东支付方式  (1：货到付款，2：邮局付款，4：余额支付，5：公司转账（公对公转账），7：网银钱包，101：金采支付)
     }
     let url = 'https://bizapi.jd.com/api/order/getFreight'
-    return await this._ruquestUtil(params,url)
+    return await this._ruquestUtil(params, url)
   }
   /**
-   * 获取当前时间 格式：yyyy-MM-dd HH:MM:SS
-   */
+   * 获取当前时间 格式：yyyy-MM-dd HH:MM:SS
+   */
   _getCurrentTime() {
-      let date = new Date();//当前时间
-      let month = this._zeroFill(date.getMonth() + 1);//月
-      let day = this._zeroFill(date.getDate());//日
-      let hour = this._zeroFill(date.getHours());//时
-      let minute = this._zeroFill(date.getMinutes());//分
-      let second = this._zeroFill(date.getSeconds());//秒
-      
-      //当前时间
-      let curTime = date.getFullYear() + "-" + month + "-" + day
-              + " " + hour + ":" + minute + ":" + second;
-      return curTime;
+    let date = new Date(); //当前时间
+    let month = this._zeroFill(date.getMonth() + 1); //月
+    let day = this._zeroFill(date.getDate()); //日
+    let hour = this._zeroFill(date.getHours()); //时
+    let minute = this._zeroFill(date.getMinutes()); //分
+    let second = this._zeroFill(date.getSeconds()); //秒
+
+    //当前时间
+    let curTime = date.getFullYear() + "-" + month + "-" + day +
+      " " + hour + ":" + minute + ":" + second;
+    return curTime;
   }
-   
+
   /**
-   * 补零
-   */
+   * 补零
+   */
   _zeroFill(i) {
     if (i >= 0 && i <= 9) {
       return "0" + i;
@@ -561,7 +566,7 @@ class jdUtils{
 }
 //
 
-(async () => {
+// (async () => {
   // let demo = new jdUtils
   // let data = await demo.messageGet(1)
   // let data = await demo.getProvince()
@@ -570,20 +575,20 @@ class jdUtils{
   // let data = await demo.getTown(21654)
   // let data = await demo.checkArea(29,2580,21654,52769)
   //{"success":false,"resultMessage":"根据3级地址id列表。未能获取到4级地址id列表","resultCode":"3405","result":null}
-//   //  data = await demo.getDetail(100000016109)
+  //   //  data = await demo.getDetail(100000016109)
   // let dataObj = JSON.parse(data)
-  
+
   // data = await demo.syncGoods()
   // let data = await demo.getDetail(100001409446)
-  // if (dataObj.success==true) {
-  //   console.log(dataObj.result)
-  // } else {
-  //   console.log(dataObj)
-  // }
-  
- 
-})()
+//   if (dataObj.success==true) {
+//     console.log(dataObj.result)
+//   } else {
+//     console.log(dataObj)
+//   }
 
-  
+
+// })()
+
+
 
 module.exports = new jdUtils

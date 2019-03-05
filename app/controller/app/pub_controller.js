@@ -135,7 +135,7 @@ class PubController extends Controller {
     let mobile = ctx.body.mobile
     let verifyModel = new this.models.verifycode_model
     let retMsg = await verifyModel.send(mobile)
-    if(retMsg.code != 0){
+    if (retMsg.code != 0) {
       this._fail(ctx, retMsg.message)
     }
     return ctx.ret
@@ -159,7 +159,7 @@ class PubController extends Controller {
       where.type_id = typeId
     }
 
-    this.logger.info(ctx.uuid , 'albums' , where)
+    this.logger.info(ctx.uuid, 'albums', where)
     let albumModel = new this.models.album_model
     let rows = await albumModel.model().findAll({
       where: where,
@@ -179,9 +179,9 @@ class PubController extends Controller {
 
   }
 
-  async getPushInfo(ctx){
+  async getPushInfo(ctx) {
 
-    this.logger.info(ctx.uuid , 'pushInfo()' , ctx.body)
+    this.logger.info(ctx.uuid, 'pushInfo()', ctx.body)
     let body = ctx.body
 
     let clientId = body.client_id
@@ -193,12 +193,12 @@ class PubController extends Controller {
 
     let pushModel = new this.models.push_model
     let pushRet = await pushModel.infoByClient(clientId, info)
-    this.logger.info(ctx.uuid , 'pushInfo() pushRet' , pushRet)
-    if(!pushRet){
+    this.logger.info(ctx.uuid, 'pushInfo() pushRet', pushRet)
+    if (!pushRet) {
       ctx.ret.code = 1
       ctx.ret.message = '推送设备登记失败'
-      
-    }else{
+
+    } else {
       ctx.ret.data = {
         id: pushRet.id
       }
@@ -212,7 +212,7 @@ class PubController extends Controller {
   async getAddress(ctx) {
     let type = ctx.body.type || ''
     let id = ctx.body.id || 0
-    let data,dataObj,result=[]
+    let data, dataObj, result = []
     switch (type) {
       case 'city':
         data = await jdUtils.getCity(id)
@@ -229,41 +229,71 @@ class PubController extends Controller {
     dataObj = JSON.parse(data)
     if (dataObj.success) {
       Object.keys(dataObj.result).forEach(item => {
-        result.push({ id: dataObj.result[item], name: item })
+        result.push({
+          id: dataObj.result[item],
+          name: item
+        })
       })
     }
 
-    this.logger.info(ctx.uuid , 'getAddress()' , result)
-    ctx.ret.data= result
+    this.logger.info(ctx.uuid, 'getAddress()', result)
+    ctx.ret.data = result
     return ctx.ret
   }
 
   async getStock(ctx) {
-    this.logger.info(ctx.uuid , 'getStock()' , ctx.body)
-    let { skuNums, area } = ctx.body
-    ctx.ret.data = []
-    let data,dataObj
-    data = await jdUtils.getNewStockById(skuNums, area)
-    dataObj = JSON.parse(data)
-    this.logger.info(ctx.uuid , 'getAddress()' , dataObj)
-    if (dataObj.success) {
-      ctx.ret.data= dataObj.result
+    this.logger.info(ctx.uuid, 'getStock()', ctx.body)
+    let {
+      skuNums,
+      area
+    } = ctx.body
+    try {
+      let data, dataObj
+      data = await jdUtils.getNewStockById(skuNums, area)
+      dataObj = JSON.parse(data)
+      this.logger.info(ctx.uuid, 'getStock()', dataObj)
+      if (dataObj.success) {
+        ctx.ret.data = JSON.parse(dataObj.result)
+      } else {
+        ctx.ret.code = 1
+        ctx.ret.message = '请求jdApi失败!'
+      }
+      this.logger.info(ctx.uuid, 'getStock()', ctx.ret)
+    } catch (err) {
+      ctx.ret.code = 1
+      ctx.ret.message = '请求jdApi失败'
     }
+
     return ctx.ret
   }
 
   async getFreight(ctx) {
-    let paramsObj = {
-      sku: ctx.body.sku,
-      province: ctx.body.province,
-      city: ctx.body.city,
-      county: ctx.body.county,
-      paymentType: ctx.body.paymentType//京东支付方式  (1：货到付款，2：邮局付款，4：余额支付，5：公司转账（公对公转账），7：网银钱包，101：金采支付)
+
+    try {
+      let paramsObj = {
+        sku: ctx.body.sku,
+        province: ctx.body.province,
+        city: ctx.body.city,
+        county: ctx.body.county,
+        town: ctx.body.town || 0,
+        paymentType: 5 //京东支付方式  (1：货到付款，2：邮局付款，4：余额支付，5：公司转账（公对公转账），7：网银钱包，101：金采支付)
+      }
+      let data, dataObj
+      data = await jdUtils.getFreight(paramsObj)
+      dataObj = JSON.parse(data)
+
+      if (dataObj.success) {
+        ctx.ret.data = dataObj.result
+      } else {
+        ctx.ret.code = 1
+        ctx.ret.message = '请求jdApi失败!'
+      }
+      this.logger.info(ctx.uuid, 'getFreight()', ctx.ret)
+    } catch (err) {
+      console.log(err)
+      ctx.ret.code = 1
+      ctx.ret.message = '请求jdApi失败'
     }
-    let data,dataObj
-    data = jdUtils.getFreight(paramsObj)
-    dataObj = JSON.parse(data)
-    ctx.ret.data= dataObj
     return ctx.ret
   }
 }

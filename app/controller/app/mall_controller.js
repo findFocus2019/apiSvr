@@ -215,7 +215,7 @@ class MallController extends CommonController {
     // info.content = info.content.replace(/&amp;/g, '&')
     const regex = new RegExp('<img', 'gi')
     info.content = info.content.replace(regex, `<img style="max-width: 100%;"`)
-    
+
 
     // 分享积分
     let shareId = ctx.body.share_id || 0
@@ -225,7 +225,7 @@ class MallController extends CommonController {
       let shareModel = new this.models.share_model
       let shareInfo = await shareModel.model().findByPk(shareId)
       this.logger.info(ctx.uuid, 'info()', 'shareInfo', shareInfo)
-      if(shareInfo){
+      if (shareInfo) {
         let shareUserId = shareInfo.user_id
         this.logger.info(ctx.uuid, 'info()', 'shareUserId', shareUserId)
         let taskModel = new this.models.task_model
@@ -267,6 +267,7 @@ class MallController extends CommonController {
     let address = ctx.body.address
     let invoice = ctx.body.invoice
     let remark = ctx.body.remark || ''
+    let expressFee = ctx.body.express_fee || 0 // 京东运费
 
     let mallModel = new this.models.mall_model
     let goodsModel = mallModel.goodsModel()
@@ -350,6 +351,11 @@ class MallController extends CommonController {
           }
         }
 
+        if (orderType == 2) {
+          total += expressFee
+          totalVip += expressFee
+        }
+
         this.logger.info(ctx.uuid, 'orderCreate() goodsItems', goodsItems)
         let orderData = {
           user_id: userId,
@@ -364,7 +370,8 @@ class MallController extends CommonController {
           invoice: invoice,
           remark: remark,
           vip: isVip,
-          score_use: useScore ? 1 : 0
+          score_use: useScore ? 1 : 0,
+          express_fee: (orderType == 2) ? expressFee : 0
         }
 
         orderData.order_no = this._createOrderNo(ctx)
@@ -694,12 +701,15 @@ class MallController extends CommonController {
 
         let scoreUse = order.score_use
 
-        let totalFee = isVip ? order.total_vip : order.total
-        let score = isVip ? order.score_vip : order.score
-
-        total += scoreUse ? totalFee : totalFee + score
+        let totalFee = isVip ? parseInt(order.total_vip * 100) : parseInt(order.total * 100)
+        let score = isVip ? parseInt(order.score_vip * 100) : parseInt(order.score * 100)
+        this.logger.info(ctx.uuid , 'orderPayPre totalFee' , totalFee)
+        total += scoreUse ? totalFee : totalFee + score 
         scoreNum += scoreUse ? score * 1000 : 0
       }
+
+      total = total / 100
+      this.logger.info(ctx.uuid , 'orderPayPre total' , total)
 
       let amount = 0
       let balance = 0
@@ -716,12 +726,12 @@ class MallController extends CommonController {
           }
 
           if (payMethod == 'balance') {
-            balance = total - userEcard.amount
+            balance = parseInt(total * 100 - userEcard.amount * 100) / 100
             if (balance > userBalance) {
               throw new Error('账户余额不足')
             }
           } else if (payMethod == 'wxpay' || payMethod == 'alipay') {
-            amount = total - userEcard.amount
+            amount = parseInt(total * 100 - userEcard.amount * 100) / 100
           }
 
           ecard = userEcard.amount
@@ -744,9 +754,10 @@ class MallController extends CommonController {
         // amount = 0.01
         let paymentData = {
           out_trade_no: paymentUuid,
-          amount: DEBUG ? 0.01 : amount,
+          // amount: DEBUG ? 0.01 : amount,
+          amount:amount,
           body: '发现焦点-商品支付',
-          subject: '订单金额:￥' + amount
+          subject: '发现焦点-订单支付'
         }
         this.logger.info(ctx.uuid, 'orderPayPre()', payMethod, paymentData)
         let payThirdRet = await this._payThirdUnifiedorder(ctx, payMethod, paymentData, isMpWx, openid)
@@ -889,7 +900,7 @@ class MallController extends CommonController {
       let orderIds = payment.order_ids.substr(1, payment.order_ids.length - 2).split('-')
       this.logger.info(ctx.uuid, 'orderPayConfirm() orderIds', orderIds)
 
-      
+
 
       for (let index = 0; index < orderIds.length; index++) {
         const orderId = orderIds[index]
@@ -966,8 +977,8 @@ class MallController extends CommonController {
         }
 
         // 更新商品sales
-        let goodsUpdateRet = await this._paymentGoodsUpdate(ctx, order , t)
-        if(goodsUpdateRet.code !== 0){
+        let goodsUpdateRet = await this._paymentGoodsUpdate(ctx, order, t)
+        if (goodsUpdateRet.code !== 0) {
           throw new Error(goodsUpdateRet.message)
         }
       }
@@ -996,7 +1007,7 @@ class MallController extends CommonController {
     return ctx.ret
   }
 
-  
+
 
   /**
    * 订单列表
@@ -1014,7 +1025,7 @@ class MallController extends CommonController {
     where.user_id = userId
     where.status = status
     where.order_type = {
-      [Op.gt]:0
+      [Op.gt]: 0
     }
     this.logger.info(ctx.uuid, 'orderList()', 'where', where)
 
@@ -1055,7 +1066,7 @@ class MallController extends CommonController {
 
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
-    let orderItemsModel =  mallModel.orderItemModel()
+    let orderItemsModel = mallModel.orderItemModel()
     let order = await orderModel.findByPk(orderId)
     if (order.user_id != userId) {
       return this._fail(ctx, '无效数据')
@@ -1063,9 +1074,11 @@ class MallController extends CommonController {
 
     order.dataValues.create_date = this.utils.date_utils.dateFormat(order.create_time, 'YYYY-MM-DD HH:mm')
 
-    let orderItems = await orderItemsModel.findAll({where: {
-      order_id:order.id
-    }})
+    let orderItems = await orderItemsModel.findAll({
+      where: {
+        order_id: order.id
+      }
+    })
     ctx.ret.data = {
       info: order,
       items: orderItems
@@ -1171,8 +1184,8 @@ class MallController extends CommonController {
         throw new Error('订单数据错误')
       }
 
-      let orderDealRet = await this._orderComplete(ctx, order , t)
-      if(orderDealRet.code != 0){
+      let orderDealRet = await this._orderComplete(ctx, order, t)
+      if (orderDealRet.code != 0) {
         throw new Error(orderDealRet.message)
       }
       // // 添加 orderRate
@@ -1243,7 +1256,7 @@ class MallController extends CommonController {
     return ctx.ret
   }
 
-  
+
 
   /**
    * 申请售后
@@ -1288,15 +1301,15 @@ class MallController extends CommonController {
     let items = []
 
     let goodsItems = order.goods_items
-    let afterGoodsIds = goodsIds.substr(1,goodsIds.length - 2).split('-')
+    let afterGoodsIds = goodsIds.substr(1, goodsIds.length - 2).split('-')
     this.logger.info(ctx.uuid, 'orderAfter()', 'afterGoodsIds', afterGoodsIds)
     goodsItems.forEach(item => {
-      if(afterGoodsIds.indexOf(item.id.toString()) > -1){
-        
+      if (afterGoodsIds.indexOf(item.id.toString()) > -1) {
+
         let itemTotal = order.vip ? (item.price_vip) : item.price_sell
         this.logger.info(ctx.uuid, 'orderAfter()', 'itemTotal', itemTotal)
         total += itemTotal * item.num
-        if(order.score_use){
+        if (order.score_use) {
           let itemScore = order.vip ? item.price_score_vip : item.price_score_sell
           this.logger.info(ctx.uuid, 'orderAfter()', 'itemScore', itemScore)
           // total += itemScore
@@ -1318,9 +1331,9 @@ class MallController extends CommonController {
       imgs: ctx.body.imgs,
       info: ctx.body.info,
       type: ctx.body.type || '',
-      category: ctx.body.category||'',
+      category: ctx.body.category || '',
       after_no: afterNo,
-      total:total,
+      total: total,
       score: score,
       items: items
     })
@@ -1535,8 +1548,11 @@ class MallController extends CommonController {
    * @param {int} id
    */
   async getAddress(ctx) {
-    let { id, action } = ctx.body
-    let data,dataObj
+    let {
+      id,
+      action
+    } = ctx.body
+    let data, dataObj
     switch (action) {
       case 'province':
         data = await jdUtils.getProvince()
@@ -1562,8 +1578,13 @@ class MallController extends CommonController {
 
   //检查四级地址是否合法，暂无四级地址- -
   async checkArea(ctx) {
-    let data,dataObj
-    let { provinceId, cityId, countyId, townId } = ctx.body
+    let data, dataObj
+    let {
+      provinceId,
+      cityId,
+      countyId,
+      townId
+    } = ctx.body
     data = await jdUtils.checkArea(provinceId, cityId, countyId, townId)
     dataObj = JSON.parse(data)
     if (dataObj.success == true) {
@@ -1581,7 +1602,7 @@ class MallController extends CommonController {
    * 
    */
   async submitOrder(params) {
-    let data,dataObj
+    let data, dataObj
     let orderParams = {
       thirdOrder: params.thirdOrder,
       sku: params.sku,
@@ -1603,22 +1624,22 @@ class MallController extends CommonController {
       paymentType: params.paymentType || 5,
       isUseBalance: params.isUseBalance || 1,
       submitState: params.submitState || 1,
-      doOrderPriceMode: params.doOrderPriceMode || 0, 
+      doOrderPriceMode: params.doOrderPriceMode || 0,
       orderPriceSnap: params.orderPriceSnap || '',
       reservingDate: params.reservingDate || -1,
       installDate: params.installDate || -1,
       needInstall: params.needInstall || false,
       promiseDate: params.promiseDate || '',
-      promiseTimeRange: params.promiseTimeRange || '', 
-      promiseTimeRangeCode: params.promiseTimeRangeCode || '', 
-      reservedDateStr: params.reservedDateStr || '', 
+      promiseTimeRange: params.promiseTimeRange || '',
+      promiseTimeRangeCode: params.promiseTimeRangeCode || '',
+      reservedDateStr: params.reservedDateStr || '',
       reservedTimeRange: params.reservedTimeRange || '',
-      poNo: params.poNo || 0, 
+      poNo: params.poNo || 0,
       customerName: params.customerName || ''
     }
     data = await jdUtils.submitOrder(orderParams)
     dataObj = JSON.parse(data)
-    
+
     return dataObj
   }
 
