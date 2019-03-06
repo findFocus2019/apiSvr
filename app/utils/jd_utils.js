@@ -618,34 +618,34 @@ class jdUtils {
 }
 //
 
-(async () => {
-  let params = {}
-  let str = JSON.stringify([{skuId:"231406",bNeedAnnex:true,num:1,bNeedGift:true,num:1,yanbao:[]}])
-  let orderParams = {
-    thirdOrder: params.thirdOrder || '41969320190305163952354462',
-    sku: params.sku || str,
-    name: params.name || "鲁总",
-    province: params.province || 19,
-    city: params.city || 1607,
-    county: params.county || 3155,
-    town: params.town || 0,
-    address: params.address || '详细地址',
-    mobile: params.mobile || 17666136141,
-    email: params.email || '244847258@qq.com',
-    invoiceState: params.invoiceState || 2,
-    invoiceType: params.invoiceType || 3,
-    selectedInvoiceTitle: params.selectedInvoiceTitle || 5,
-    companyName: params.companyName || '聚仁传媒',
-    regCode: params.regCode || '91110105678793913T',
-    // 纳税人识别号  开普票并要打印出来识别号时， 需传入该字段
-    invoiceContent: params.invoiceContent || 100,
-    paymentType: params.paymentType || 4,
-    isUseBalance: params.isUseBalance || 1,
-    submitState: params.submitState || 0,
-    doOrderPriceMode: params.doOrderPriceMode || 1,
-    orderPriceSnap: params.orderPriceSnap || JSON.stringify([{skuId:231406,price:13.30}]),
-    invoicePhone:params.mobile || 17666136141
-  }
+// (async () => {
+//   let params = {}
+//   let str = JSON.stringify([{skuId:"231406",bNeedAnnex:true,num:1,bNeedGift:true,num:1,yanbao:[]}])
+//   let orderParams = {
+//     thirdOrder: params.thirdOrder || '41969320190305163952354462',
+//     sku: params.sku || str,
+//     name: params.name || "鲁总",
+//     province: params.province || 19,
+//     city: params.city || 1607,
+//     county: params.county || 3155,
+//     town: params.town || 0,
+//     address: params.address || '详细地址',
+//     mobile: params.mobile || 17666136141,
+//     email: params.email || '244847258@qq.com',
+//     invoiceState: params.invoiceState || 2,
+//     invoiceType: params.invoiceType || 3,
+//     selectedInvoiceTitle: params.selectedInvoiceTitle || 5,
+//     companyName: params.companyName || '聚仁传媒',
+//     regCode: params.regCode || '91110105678793913T',
+//     // 纳税人识别号  开普票并要打印出来识别号时， 需传入该字段
+//     invoiceContent: params.invoiceContent || 100,
+//     paymentType: params.paymentType || 4,
+//     isUseBalance: params.isUseBalance || 1,
+//     submitState: params.submitState || 0,
+//     doOrderPriceMode: params.doOrderPriceMode || 1,
+//     orderPriceSnap: params.orderPriceSnap || JSON.stringify([{skuId:231406,price:13.30}]),
+//     invoicePhone:params.mobile || 17666136141
+//   }
   // console.log(orderParams)
   // let demo = new jdUtils
   // let data = await demo.getAccessToken()
