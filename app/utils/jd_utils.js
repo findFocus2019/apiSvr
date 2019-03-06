@@ -264,15 +264,15 @@ class jdUtils {
     let params = {
       token: await this.getAccessToken()
     }
-    let url = 'https://bizapi.jd.com/api/order/submitOrder'
+    let url = `https://bizapi.jd.com/api/order/submitOrder`
     Object.keys(orderParams).forEach(item => {
       params[item] = `${ orderParams[item] }`
-    })
-    let strList=[]
-      Object.keys(params).forEach(item => {
-        strList.push([`${item}=${params[item]}`])
-      })
-    let str = strList.join('&')
+    }) 
+    // Object.keys(params).forEach(item => {
+    //   url += `&${item}=${params[item]}`
+    // })
+    // console.log(url)
+    // let str = strList.join('&')
 
     return new Promise((resolve, reject) => {
       superAgent.post(url)
@@ -287,6 +287,25 @@ class jdUtils {
           }
         })
     })
+
+    // let action = await util.promisify(request)({
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'text/plain' 
+    //   },
+    //   url: url,
+    //   form: orderParams
+    // })
+    // console.log(str)
+    
+    // superAgent.post(url).type('json').send(params).end(function (res) {
+    //   console.log(">>>>>>>", res)
+      // let body = res.body
+    // })
+    // request.type(json=='json')
+    // console.log(action)
+    // return action.body
+
   }
 
 
@@ -601,19 +620,19 @@ class jdUtils {
 
 (async () => {
   let params = {}
-  let str = JSON.stringify([{skuId:"231406",bNeedAnnex:true,bNeedGift:true,price:'19.1',yanbao:[]}])
+  let str = JSON.stringify([{skuId:"231406",bNeedAnnex:true,num:1,bNeedGift:true,num:1,yanbao:[]}])
   let orderParams = {
     thirdOrder: params.thirdOrder || '41969320190305163952354462',
     sku: params.sku || str,
     name: params.name || "鲁总",
-    province: params.province || 12,
-    city: params.city || 933,
-    county: params.county || 934,
+    province: params.province || 19,
+    city: params.city || 1607,
+    county: params.county || 3155,
     town: params.town || 0,
     address: params.address || '详细地址',
     mobile: params.mobile || 17666136141,
     email: params.email || '244847258@qq.com',
-    invoiceState: params.invoiceState || 4,
+    invoiceState: params.invoiceState || 2,
     invoiceType: params.invoiceType || 3,
     selectedInvoiceTitle: params.selectedInvoiceTitle || 5,
     companyName: params.companyName || '聚仁传媒',
@@ -621,30 +640,23 @@ class jdUtils {
     // 纳税人识别号  开普票并要打印出来识别号时， 需传入该字段
     invoiceContent: params.invoiceContent || 100,
     paymentType: params.paymentType || 4,
-    isUseBalance: params.isUseBalance || 0,
-    submitState: params.submitState || 1,
-    doOrderPriceMode: params.doOrderPriceMode || 0,
-    orderPriceSnap: params.orderPriceSnap || JSON.stringify([]),
+    isUseBalance: params.isUseBalance || 1,
+    submitState: params.submitState || 0,
+    doOrderPriceMode: params.doOrderPriceMode || 1,
+    orderPriceSnap: params.orderPriceSnap || JSON.stringify([{skuId:231406,price:13.30}]),
     invoicePhone:params.mobile || 17666136141
-    // reservingDate: params.reservingDate || -1,
-    // installDate: params.installDate || 0,
-    // needInstall: params.needInstall || false,
-    // promiseDate: params.promiseDate || '',
-    // promiseTimeRange: params.promiseTimeRange || '',
-    // promiseTimeRangeCode: params.promiseTimeRangeCode || 0,
-    // reservedDateStr: params.reservedDateStr || '2019-03-06',
-    // reservedTimeRange: params.reservedTimeRange || '9:00-15:00',
-    // poNo: params.poNo || '10',
-    // customerName: params.customerName || '元'
   }
   // console.log(orderParams)
-  let demo = new jdUtils
+  // let demo = new jdUtils
   // let data = await demo.getAccessToken()
-  let data = await demo.submitOrder(orderParams)
+  // let data = await demo.submitOrder(orderParams)
+  // let data = await demo.getProvince()
+  // let data = await demo.getCity(19)
+  // let data = await demo.getCounty(1607)
+  // let data = await demo.getTown(3155)
+    // console.log(data)
 
-    console.log(data)
-
-})()
+// })()
 
 
 
