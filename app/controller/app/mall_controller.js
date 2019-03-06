@@ -1652,11 +1652,10 @@ class MallController extends CommonController {
    */
   static async submitOrder(params) {
     let data, dataObj
-    // let str = JSON.stringify([{skuId:"231406",bNeedAnnex:true,num:1,bNeedGift:true,num:1,yanbao:[]}])
     // let orderPriceSnap= JSON.stringify([{skuId:231406,price:13.30}])
     let orderParams = {
       thirdOrder: params.thirdOrder,
-      sku: str,
+      sku: params.sku,
       name: params.name,
       province: params.province,
       city: params.city,

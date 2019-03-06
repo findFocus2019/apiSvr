@@ -353,6 +353,8 @@ class MallController extends Controller {
 
     if (order.order_type === 2) { // 是京东订单
       let sku = []
+      let orderPriceSnap = []
+      
       order.goods_items.forEach(item => {
         sku.push({
           num: 1,
@@ -362,10 +364,14 @@ class MallController extends Controller {
           price: item.price_sell,
           yanbao: [{skuId: item.uuid}]
         })
+
+        orderPriceSnap.push({skuId: item.uuid, price: item.price_sell})
       })
+
+            
       let submitOrderParams = {
         thirdOrder: order.order_no,       
-        sku: sku,
+        sku: JSON.stringify(sku),
         name: order.address.name,
         province: order.address.province,
         city: order.address.city,
@@ -375,7 +381,15 @@ class MallController extends Controller {
         mobile: order.address.mobile,
         email: '',
         // invoiceState: 1,
+        invoiceContent: 100,
+        paymentType: 4,
+        isUseBalance: 1,
+        submitState: 0,
+        doOrderPriceMode:  1,
+        orderPriceSnap: JSON.stringify(orderPriceSnap) ,
+        invoicePhone: order.address.mobile
       }
+      
       this.logger.info('submitorderparams: ', submitOrderParams)
       let submitOrderResult = await AppMallController.submitOrder(submitOrderParams)
       this.logger.info('submitOrderResult: ', submitOrderResult)
