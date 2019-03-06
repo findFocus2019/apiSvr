@@ -1668,7 +1668,7 @@ class MallController extends CommonController {
       invoiceType: 3,
       selectedInvoiceTitle: 5,
       companyName: '聚仁传媒',
-      regCode: '',//91110105678793913T
+      regCode: '91440300359634501M',//91110105678793913T
       // 纳税人识别号  开普票并要打印出来识别号时， 需传入该字段
       invoiceContent: 100,
       paymentType: 4,
