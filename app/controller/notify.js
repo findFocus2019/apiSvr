@@ -151,7 +151,7 @@ class PaymentLogic extends CommonController {
           Logger.info(ctx.uuid, 'orderPayConfirm() orderVipCount', orderVipCount)
           Logger.info(ctx.uuid, 'orderPayConfirm() paymentCount', paymentCount)
           if(paymentCount == 0 && orderVipCount == 0){
-            userSetVip
+            userSetVip = 1
           }
 
         } else {
