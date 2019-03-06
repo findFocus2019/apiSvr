@@ -348,6 +348,7 @@ class MallController extends Controller {
       ctx.ret.data = {code: -2, error: '订单不是“支付完成”状态'}
       return
     }
+    this.logger.info('dispatchGoods order: ', order)
 
     let jdOrderId = ''
 
@@ -375,7 +376,7 @@ class MallController extends Controller {
         name: order.address.name,
         province: order.address.province,
         city: order.address.city,
-        country: order.address.country,
+        country: order.address.country || order.address.county,
         town: order.address.town,
         address: order.address.address,
         mobile: order.address.mobile,
