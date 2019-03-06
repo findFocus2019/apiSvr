@@ -362,11 +362,11 @@ class MallController extends Controller {
           skuId: item.uuid, 
           bNeedAnnex: false,
           bNeedGift: false,
-          price: item.price_sell,
+          // price: item.price_sell,
           yanbao: [{skuId: item.uuid}]
         })
 
-        orderPriceSnap.push({skuId: item.uuid, price: item.price_sell})
+        orderPriceSnap.push({skuId: item.uuid, price: item.price_cost})
       })
 
             
@@ -376,11 +376,11 @@ class MallController extends Controller {
         name: order.address.name,
         province: order.address.province,
         city: order.address.city,
-        country: order.address.country || order.address.county,
+        county: order.address.county,
         town: order.address.town,
         address: order.address.address,
         mobile: order.address.mobile,
-        email: '',
+        email:'244847258@qq.com',
         // invoiceState: 1,
         invoiceContent: 100,
         paymentType: 4,
