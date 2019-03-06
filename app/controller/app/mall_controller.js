@@ -1650,37 +1650,35 @@ class MallController extends CommonController {
    */
   static async submitOrder(params) {
     let data, dataObj
+    // let str = JSON.stringify([{skuId:"231406",bNeedAnnex:true,num:1,bNeedGift:true,num:1,yanbao:[]}])
+    // let orderPriceSnap= JSON.stringify([{skuId:231406,price:13.30}])
     let orderParams = {
-      thirdOrder: params.thirdOrder || 41969320190305163952354462,
-      sku: params.sku || [{skuId:"231406",bNeedAnnex:false,bNeedGift:false,price:19.1}],
-      name: params.name || "鲁总",
-      province: params.province || 12,
-      city: params.city || 933,
-      county: params.county || 934,
+      thirdOrder: params.thirdOrder,
+      sku: str,
+      name: params.name,
+      province: params.province,
+      city: params.city,
+      county: params.county,
       town: params.town || 0,
-      address: params.address || '详细地址',
-      mobile: params.mobile || 17666136141,
-      email: params.email || '244847258@qq.com',
-      invoiceState: params.invoiceState || 4,
-      invoiceType: params.invoiceType || 3,
-      selectedInvoiceTitle: params.selectedInvoiceTitle || 4,
-      // companyName: params.companyName || '',
-      // regCode: params.regCode || '',
-
+      address: params.address,
+      mobile: params.mobile,
+      email: params.email,
+      invoiceState: 2,
+      invoiceType: 3,
+      selectedInvoiceTitle: 5,
+      companyName: '聚仁传媒',
+      regCode: '',//91110105678793913T
       // 纳税人识别号  开普票并要打印出来识别号时， 需传入该字段
-      invoiceContent: params.invoiceContent || 100,
-      paymentType: params.paymentType || 5,
-      isUseBalance: params.isUseBalance || 0,
-      submitState: params.submitState || 1,
-      doOrderPriceMode: params.doOrderPriceMode || 0,
-      orderPriceSnap: params.orderPriceSnap || [],
-      reservingDate: params.reservingDate || -1,
-      promiseTimeRangeCode: params.promiseTimeRangeCode || 0,
-      // reservedDateStr: params.reservedDateStr || '2019-03-06',
-      // reservedTimeRange: params.reservedTimeRange || '9:00-15:00',
-      // poNo: params.poNo || '10',
-      // customerName: params.customerName || '元'
+      invoiceContent: 100,
+      paymentType: 4,
+      isUseBalance: 1,
+      submitState: 0,
+      doOrderPriceMode:  1,
+      orderPriceSnap: params.orderPriceSnap ,
+      invoicePhone:params.mobile
     }
+
+
     /**
      * &sku=[{"skuId":4545192,"num":1,"bNeedGift":true,"bNeedAnnex ":true,"yanbao":[]}]
      * &doOrderPriceMode=1&orderPriceSnap=[{"skuId":4545192,"price":47.98}]
