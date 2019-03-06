@@ -101,8 +101,17 @@ module.exports = {
     return params
   },
 
-  check (content) {
-    let params = this.buildPostData(content)
-    return request.get(API_URL, params)
+  async check (content) {
+    // let params = this.buildPostData(content)
+    // return request.get(API_URL, params)
+    return {
+      body: {
+        code: 200,
+        result: {
+          action: 0
+        }
+      }
+    }
+    
   }
 }
