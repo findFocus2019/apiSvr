@@ -1697,7 +1697,7 @@ class MallController extends CommonController {
     return dataObj
   }
 
-  async doPay(jdOrderId) {
+  static async doPay(jdOrderId) {
     let data = await jdUtils.doPay(jdOrderId)
     let dataObj = JSON.parse(data)
     return dataObj
