@@ -5,6 +5,7 @@ const CommonController = require('./../common/common_controller')
 const uuid = require('uuid/v4')
 const Utils = require('./../utils/index')
 const Logger = require('./../../lib/log')('NOTIFY')
+const Op = require('sequelize').Op
 
 class PaymentLogic extends CommonController {
 
@@ -130,6 +131,25 @@ class PaymentLogic extends CommonController {
           if (rabateRet.code != 0) {
             throw new Error(rabateRet.message)
           }
+
+          // 判断是否首次
+          let count = await orderModel.count({
+            where:{
+              user_id: userId,
+              order_type: {
+                [Op.ne]:0
+              },
+              status: {
+                [Op.gte]:0
+              }
+            }
+          })
+          Logger.info(ctx.uuid, 'orderPayConfirm() order finish count', count)
+
+          if(count == 1){
+            userSetVip = 1
+          }
+
         } else {
           // vip充值订单，发放代金券，更新用户vip时间
           let userVipRet = await this._userVipDeal(ctx, order, t)
@@ -140,6 +160,7 @@ class PaymentLogic extends CommonController {
           }
         }
 
+        
         // 更新用户信息
         userInfo.balance = userInfo.balance - payment.balance
         userInfo.score = userInfo.score - payment.score
