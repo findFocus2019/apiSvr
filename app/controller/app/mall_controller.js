@@ -788,6 +788,8 @@ class MallController extends CommonController {
         amount = total
       }
 
+      amount = parseFloat(amount).toFixed(2)
+
       if (amount > 0) {
         // 去3方支付下单
         const DEBUG = this.config.DEBUG

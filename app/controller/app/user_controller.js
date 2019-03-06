@@ -1187,8 +1187,9 @@ class UserController extends Controller {
       rows.push({
         id: row.id,
         uuid: row.uuid,
-        nikcname: userInfo.nikcname,
+        nickname: userInfo.nickname || '',
         avatar: userInfo.avatar,
+        cover: userInfo.avatar,
         create_date: createDate
       })
     }
