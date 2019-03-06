@@ -1189,7 +1189,7 @@ class UserController extends Controller {
         uuid: row.uuid,
         nickname: userInfo.nickname || '',
         avatar: userInfo.avatar,
-        cover: userInfo.cover,
+        cover: userInfo.avatar,
         create_date: createDate
       })
     }
