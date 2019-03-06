@@ -289,6 +289,15 @@ class UserController extends Controller {
     let addressId = ctx.body.address_id
     let userModel = new this.models.user_model
 
+    let count = await userModel.addressModel().count({
+      where: {
+        user_id: userId
+      }
+    })
+    if(count <= 1){
+      return this._fail(ctx, '默认地址无法删除')
+    } 
+
     let address = await userModel.addressModel().findByPk(addressId)
     this.logger.info(ctx.uuid, 'addressDelete()', 'address', address)
     if (!address && address.user_id != userId) {
@@ -1472,14 +1481,18 @@ class UserController extends Controller {
 
     this.logger.info(ctx.uuid, 'recodeSignDay()', 'body', ctx.body, 'query', ctx.query)
     let userId = ctx.body.user_id
+    let userSignDay = ctx.body.today
+
     let userModel = new this.models.user_model
 
     let user = await userModel.model().findByPk(userId)
     let signDayNum = user.sign_day_num
+    let signDayLast = user.sign_day_last
 
-    if(signDayNum < ctx.body.num){
+    if(userSignDay != signDayLast){
       signDayNum += 1
       user.sign_day_num = signDayNum
+      user.sign_day_last = userSignDay
       user.save()
 
       if(signDayNum == 7){

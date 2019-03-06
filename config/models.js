@@ -132,7 +132,8 @@ module.exports = {
         auth_token: FIELDS.stringLen(64),
         password_trade: FIELDS.stringLen(32),
         uuid: FIELDS.uuid(),
-        sign_day_num: FIELDS.defaultInt()
+        sign_day_num: FIELDS.defaultInt(),
+        sign_day_last: FIELDS.stringLen(8)
       },
       {
         ...commonOpts,

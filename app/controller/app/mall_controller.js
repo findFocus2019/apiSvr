@@ -796,8 +796,8 @@ class MallController extends CommonController {
         // amount = 0.01
         let paymentData = {
           out_trade_no: paymentUuid,
-          // amount: DEBUG ? 0.01 : amount,
-          amount: amount,
+          amount: DEBUG ? 0.01 : amount,
+          // amount: amount,
           body: '发现焦点-商品支付',
           subject: '发现焦点-订单支付'
         }
