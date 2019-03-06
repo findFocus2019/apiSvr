@@ -132,22 +132,26 @@ class PaymentLogic extends CommonController {
             throw new Error(rabateRet.message)
           }
 
-          // 判断是否首次
-          let count = await orderModel.count({
-            where:{
+          // 第一次支付,送vip
+          // 未有过vip订单
+          let orderVipCount = await orderModel.count({
+            where: {
               user_id: userId,
-              order_type: {
-                [Op.ne]:0
-              },
-              status: {
-                [Op.gte]:0
-              }
+              order_type:2,
+              status:1
             }
           })
-          Logger.info(ctx.uuid, 'orderPayConfirm() order finish count', count)
-
-          if(count == 1){
-            userSetVip = 1
+          // 未有过支付
+          let paymentCount = await paymentModel.count({
+            where: {
+              user_id: userId,
+              status:1
+            }
+          })
+          Logger.info(ctx.uuid, 'orderPayConfirm() orderVipCount', orderVipCount)
+          Logger.info(ctx.uuid, 'orderPayConfirm() paymentCount', paymentCount)
+          if(paymentCount == 0 && orderVipCount == 0){
+            userSetVip
           }
 
         } else {
@@ -159,7 +163,6 @@ class PaymentLogic extends CommonController {
             userSetVip = 1
           }
         }
-
         
         // 更新用户信息
         userInfo.balance = userInfo.balance - payment.balance
