@@ -268,6 +268,9 @@ class jdUtils {
     Object.keys(orderParams).forEach(item => {
       params[item] = orderParams[item]
     })
+
+    console.log('token: ', params.token)
+    
     let url = 'https://bizapi.jd.com/api/order/submitOrder'
     return await this._ruquestUtil(params, url)
   }
@@ -446,7 +449,7 @@ class jdUtils {
         url: url,
         form: params
       })
-      // console.log(action)
+      // console.log("action: ", action)
       return action.body
     } catch (err) {
       console.log(err)

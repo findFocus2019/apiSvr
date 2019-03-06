@@ -1617,8 +1617,8 @@ class MallController extends CommonController {
       invoiceState: params.invoiceState || 2,
       invoiceType: params.invoiceType || 3,
       selectedInvoiceTitle: params.selectedInvoiceTitle || 4,
-      companyName: params.companyName || '',
-      regCode: params.regCode || '',
+      // companyName: params.companyName || '',
+      // regCode: params.regCode || '',
       // 纳税人识别号  开普票并要打印出来识别号时， 需传入该字段
       invoiceContent: params.invoiceContent || 1,
       paymentType: params.paymentType || 5,
@@ -1628,13 +1628,13 @@ class MallController extends CommonController {
       // orderPriceSnap: params.orderPriceSnap || '',
       reservingDate: params.reservingDate || -1,
       installDate: params.installDate || -1,
-      needInstall: params.needInstall || false,
+      needInstall: !!params.needInstall,
       promiseDate: params.promiseDate || '2019-03-06',
       promiseTimeRange: params.promiseTimeRange || '9:00-15:00 ',
       promiseTimeRangeCode: params.promiseTimeRangeCode || '9:00-15:00',
       reservedDateStr: params.reservedDateStr || '2019-03-06',
       reservedTimeRange: params.reservedTimeRange || '9:00-15:00',
-      poNo: params.poNo || 10,
+      poNo: params.poNo || "10",
       customerName: params.customerName || '元'
     }
 

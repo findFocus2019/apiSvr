@@ -355,10 +355,12 @@ class MallController extends Controller {
       let sku = []
       order.goods_items.forEach(item => {
         sku.push({
+          num: 1,
           skuId: item.uuid, 
           bNeedAnnex: false,
           bNeedGift: false,
           price: item.price_sell,
+          yanbao: [{skuId: item.uuid}]
         })
       })
       let submitOrderParams = {
