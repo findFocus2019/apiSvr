@@ -1693,7 +1693,7 @@ class MallController extends CommonController {
      * &reservingDate=-1&installDate=0&needInstall=false&promiseDate=&promiseTimeRange=&promiseTimeRangeCode=0&remark=测试下单后，即可取消
      */
     data = await jdUtils.submitOrder(orderParams)
-    dataObj = JSON.parse(data)
+    dataObj = typeof data === 'string' ? JSON.parse(data) : data
 
     return dataObj
   }

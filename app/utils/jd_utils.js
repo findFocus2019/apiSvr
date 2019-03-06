@@ -273,25 +273,20 @@ class jdUtils {
         strList.push([`${item}=${params[item]}`])
       })
     let str = strList.join('&')
-    // console.log(str)
-    // let action = await util.promisify(request)({
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'json' 
-    //   },
-    //   url: url,
-    //   body: JSON.stringify(params)
-    // })
 
-    
-    superAgent.post(url).type('json').send(params).end(function (res) {
-      console.log(">>>>>>>", res)
-      // let body = res.body
+    return new Promise((resolve, reject) => {
+      superAgent.post(url)
+        .type('json')
+        .query(params)
+        .end((err, res) => {
+          console.log(">>>>>>>", err, res.text)
+          if (err) {
+            reject(err)
+          } else {
+            resolve(JSON.parse(res.text))
+          }
+        })
     })
-return
-    // request.type(json=='json')
-    // console.log(action)
-    // return action.body
   }
 
 
