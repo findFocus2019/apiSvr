@@ -12,7 +12,9 @@ class Schedule extends CommonControler {
   async _init_() {
     let scheduleModel = new this.models.schedule_model
     let schedules = await scheduleModel.model().findAll({
-      status: 1
+      where:{
+        status:1
+      }
     })
 
     this.logger.info('schedules', schedules.length)
