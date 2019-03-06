@@ -348,34 +348,49 @@ class MallController extends Controller {
       ctx.ret.data = {code: -2, error: '订单不是“支付完成”状态'}
       return
     }
+    this.logger.info('dispatchGoods order: ', order)
 
     let jdOrderId = ''
 
     if (order.order_type === 2) { // 是京东订单
       let sku = []
+      let orderPriceSnap = []
+      
       order.goods_items.forEach(item => {
         sku.push({
           num: 1,
           skuId: item.uuid, 
           bNeedAnnex: false,
           bNeedGift: false,
-          price: item.price_sell,
+          // price: item.price_sell,
           yanbao: [{skuId: item.uuid}]
         })
+
+        orderPriceSnap.push({skuId: item.uuid, price: item.price_cost})
       })
+
+            
       let submitOrderParams = {
         thirdOrder: order.order_no,       
-        sku: sku,
+        sku: JSON.stringify(sku),
         name: order.address.name,
         province: order.address.province,
         city: order.address.city,
-        country: order.address.country,
+        county: order.address.county,
         town: order.address.town,
         address: order.address.address,
         mobile: order.address.mobile,
-        email: '',
+        email:'244847258@qq.com',
         // invoiceState: 1,
+        invoiceContent: 100,
+        paymentType: 4,
+        isUseBalance: 1,
+        submitState: 0,
+        doOrderPriceMode:  1,
+        orderPriceSnap: JSON.stringify(orderPriceSnap) ,
+        invoicePhone: order.address.mobile
       }
+      
       this.logger.info('submitorderparams: ', submitOrderParams)
       let submitOrderResult = await AppMallController.submitOrder(submitOrderParams)
       this.logger.info('submitOrderResult: ', submitOrderResult)
