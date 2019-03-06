@@ -7,8 +7,7 @@ const eventEmitter = require('events').EventEmitter
 const models = require('./../model/index')
 const Op = require('sequelize').Op
 const config = require('./../../config/config.json')
-config.tokenFilePath = path.resolve(__dirname + '/token')
-config.tokenFile = '/jd_token'
+const superAgent = require('superagent')
 
 class jdUtils {
 
@@ -97,7 +96,7 @@ class jdUtils {
     let rspObj = JSON.parse(rspData)
     if (rspObj.success) {
       tokenResult.content = JSON.stringify(rspObj.result)
-      tokenResult.save()
+      await tokenResult.save()
       return rspObj.result.access_token
     } else {
       return 'request token err'
@@ -265,14 +264,34 @@ class jdUtils {
     let params = {
       token: await this.getAccessToken()
     }
-    Object.keys(orderParams).forEach(item => {
-      params[item] = orderParams[item]
-    })
-
-    console.log('token: ', params.token)
-    
     let url = 'https://bizapi.jd.com/api/order/submitOrder'
-    return await this._ruquestUtil(params, url)
+    Object.keys(orderParams).forEach(item => {
+      params[item] = `${ orderParams[item] }`
+    })
+    let strList=[]
+      Object.keys(params).forEach(item => {
+        strList.push([`${item}=${params[item]}`])
+      })
+    let str = strList.join('&')
+    // console.log(str)
+    // let action = await util.promisify(request)({
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'json' 
+    //   },
+    //   url: url,
+    //   body: JSON.stringify(params)
+    // })
+
+    
+    superAgent.post(url).type('json').send(params).end(function (res) {
+      console.log(">>>>>>>", res)
+      // let body = res.body
+    })
+return
+    // request.type(json=='json')
+    // console.log(action)
+    // return action.body
   }
 
 
@@ -444,12 +463,23 @@ class jdUtils {
   //地址相关 END
   async _ruquestUtil(params, url) {
     try {
+      // console.log(params)
+      // let strList=[]
+      // Object.keys(params).forEach(item => {
+      //   strList.push[`${item}=${params[item]}`]
+      // })
+      // let str = strList.join(',')
       let action = await util.promisify(request)({
         method: 'POST',
         url: url,
         form: params
       })
-      // console.log("action: ", action)
+
+      // let action = await superAgent.post(url,{
+      //   body: params
+      // })
+      // console.log(action)
+
       return action.body
     } catch (err) {
       console.log(err)
@@ -574,35 +604,52 @@ class jdUtils {
 }
 //
 
-// (async () => {
-  // let demo = new jdUtils
-  // let data = await demo.messageGet(1)
-  // let data = await demo.getProvince()
-  // let data = await demo.getCity(29)
-  // let data = await demo.getCounty(2580)
-  // let data = await demo.getTown(21654)
-  // let data = await demo.checkArea(29,2580,21654,52769)
-  //{"success":false,"resultMessage":"根据3级地址id列表。未能获取到4级地址id列表","resultCode":"3405","result":null}
-  //   //  data = await demo.getDetail(100000016109)
-  // let dataObj = JSON.parse(data)
+(async () => {
+  let params = {}
+  let str = JSON.stringify([{skuId:"231406",bNeedAnnex:true,bNeedGift:true,price:'19.1',yanbao:[]}])
+  let orderParams = {
+    thirdOrder: params.thirdOrder || '41969320190305163952354462',
+    sku: params.sku || str,
+    name: params.name || "鲁总",
+    province: params.province || 12,
+    city: params.city || 933,
+    county: params.county || 934,
+    town: params.town || 0,
+    address: params.address || '详细地址',
+    mobile: params.mobile || 17666136141,
+    email: params.email || '244847258@qq.com',
+    invoiceState: params.invoiceState || 4,
+    invoiceType: params.invoiceType || 3,
+    selectedInvoiceTitle: params.selectedInvoiceTitle || 5,
+    companyName: params.companyName || '聚仁传媒',
+    regCode: params.regCode || '91110105678793913T',
+    // 纳税人识别号  开普票并要打印出来识别号时， 需传入该字段
+    invoiceContent: params.invoiceContent || 100,
+    paymentType: params.paymentType || 4,
+    isUseBalance: params.isUseBalance || 0,
+    submitState: params.submitState || 1,
+    doOrderPriceMode: params.doOrderPriceMode || 0,
+    orderPriceSnap: params.orderPriceSnap || JSON.stringify([]),
+    invoicePhone:params.mobile || 17666136141
+    // reservingDate: params.reservingDate || -1,
+    // installDate: params.installDate || 0,
+    // needInstall: params.needInstall || false,
+    // promiseDate: params.promiseDate || '',
+    // promiseTimeRange: params.promiseTimeRange || '',
+    // promiseTimeRangeCode: params.promiseTimeRangeCode || 0,
+    // reservedDateStr: params.reservedDateStr || '2019-03-06',
+    // reservedTimeRange: params.reservedTimeRange || '9:00-15:00',
+    // poNo: params.poNo || '10',
+    // customerName: params.customerName || '元'
+  }
+  // console.log(orderParams)
+  let demo = new jdUtils
+  // let data = await demo.getAccessToken()
+  let data = await demo.submitOrder(orderParams)
 
-  // data = await demo.syncGoods()
-  // let data = await demo.getDetail(100001409446)
-//   if (dataObj.success==true) {
-//     console.log(dataObj.result)
-//   } else {
-    // console.log(dataObj)
-//   }
-// let model = new models.token_model()
-// let tokenModel = model.model()
-// let tokenResult = await tokenModel.findOne({
-//   where: {
-//     name: 'jd'
-//   }
-// })
-// tokenResult.content = 111
-// tokenResult.save()
-// })()
+    console.log(data)
+
+})()
 
 
 

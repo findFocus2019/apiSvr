@@ -1651,42 +1651,47 @@ class MallController extends CommonController {
   static async submitOrder(params) {
     let data, dataObj
     let orderParams = {
-      thirdOrder: params.thirdOrder,
-      sku: params.sku,
-      name: params.name,
-      province: params.province,
-      city: params.city,
-      county: params.county,
-      town: params.town,
-      address: params.address,
-      mobile: params.mobile,
-      email: params.email,
-      invoiceState: params.invoiceState || 2,
+      thirdOrder: params.thirdOrder || 41969320190305163952354462,
+      sku: params.sku || [{skuId:"231406",bNeedAnnex:false,bNeedGift:false,price:19.1}],
+      name: params.name || "鲁总",
+      province: params.province || 12,
+      city: params.city || 933,
+      county: params.county || 934,
+      town: params.town || 0,
+      address: params.address || '详细地址',
+      mobile: params.mobile || 17666136141,
+      email: params.email || '244847258@qq.com',
+      invoiceState: params.invoiceState || 4,
       invoiceType: params.invoiceType || 3,
       selectedInvoiceTitle: params.selectedInvoiceTitle || 4,
       // companyName: params.companyName || '',
       // regCode: params.regCode || '',
+
       // 纳税人识别号  开普票并要打印出来识别号时， 需传入该字段
-      invoiceContent: params.invoiceContent || 1,
+      invoiceContent: params.invoiceContent || 100,
       paymentType: params.paymentType || 5,
       isUseBalance: params.isUseBalance || 0,
       submitState: params.submitState || 1,
       doOrderPriceMode: params.doOrderPriceMode || 0,
-      // orderPriceSnap: params.orderPriceSnap || '',
+      orderPriceSnap: params.orderPriceSnap || [],
       reservingDate: params.reservingDate || -1,
-      installDate: params.installDate || -1,
-      needInstall: !!params.needInstall,
-      promiseDate: params.promiseDate || '2019-03-06',
-      promiseTimeRange: params.promiseTimeRange || '9:00-15:00 ',
       promiseTimeRangeCode: params.promiseTimeRangeCode || 0,
-      reservedDateStr: params.reservedDateStr || '2019-03-06',
-      reservedTimeRange: params.reservedTimeRange || '9:00-15:00',
-      poNo: params.poNo || '10',
-      customerName: params.customerName || '元'
+      // reservedDateStr: params.reservedDateStr || '2019-03-06',
+      // reservedTimeRange: params.reservedTimeRange || '9:00-15:00',
+      // poNo: params.poNo || '10',
+      // customerName: params.customerName || '元'
     }
-
-    console.log("orderParams: ", JSON.stringify(orderParams))
-    
+    /**
+     * &sku=[{"skuId":4545192,"num":1,"bNeedGift":true,"bNeedAnnex ":true,"yanbao":[]}]
+     * &doOrderPriceMode=1&orderPriceSnap=[{"skuId":4545192,"price":47.98}]
+     * &province=19&city=1601&county=3633&town=0&address=详细地址
+     * &name=收货人姓名&phone=18900000000
+     * &mobile=18900001111&email=xxxxxx&zip=100000&invoiceType=3&invoiceState=4
+     * &companyName=测试有限公司北京分公司&regCode=91110105678793913T
+     * &invoiceContent=100&selectedInvoiceTitle=5&invoiceProvice=12&invoiceCity=933
+     * &invoiceCounty=934&invoiceAddress=&invoiceName=&invoicePhone=05278828515&paymentType=5&isUseBalance=0&submitState=0
+     * &reservingDate=-1&installDate=0&needInstall=false&promiseDate=&promiseTimeRange=&promiseTimeRangeCode=0&remark=测试下单后，即可取消
+     */
     data = await jdUtils.submitOrder(orderParams)
     dataObj = JSON.parse(data)
 
