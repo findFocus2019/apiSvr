@@ -663,9 +663,9 @@ class MallController extends Controller {
         // 支付处理过的退款总和
         let paymentRefund =  payment.refund || {}
         this.logger.info(ctx.uuid, 'orderAfterDeal()', 'paymentRefund', paymentRefund)
-        let paymentAmount = (payment.amount * 100 - (paymentRefund.amount || 0) * 100) /100
-        let paymentBalance = (payment.balance * 100 - (paymentRefund.balance || 0) * 100) /100
-        let paymentEcard = (payment.ecard * 100 - (paymentRefund.ecard || 0) * 100) / 100
+        let paymentAmount = parseFloat(payment.amount - (paymentRefund.amount || 0)).toFixed(2) 
+        let paymentBalance = parseFloat(payment.balance  - (paymentRefund.balance || 0)).toFixed(2)
+        let paymentEcard = parseFloat(payment.ecard  - (paymentRefund.ecard || 0)).toFixed(2)
 
         let total = orderAfter.total
         let score = orderAfter.score
@@ -673,33 +673,38 @@ class MallController extends Controller {
         refund.score = score
         if(total > paymentAmount){
           refund.amount = paymentAmount
-          paymentRefund.amount = ((paymentRefund.amount || 0) * 100 + paymentAmount * 100) /100
-          total = (total * 100 - paymentAmount * 100) / 100
+          paymentRefund.amount = (paymentRefund.amount || 0) + paymentAmount
+          total = total  - paymentAmount 
         }else {
           refund.amount = total
-          paymentRefund.amount = ((paymentRefund.amount || 0) * 100 + total * 100)/ 100
+          paymentRefund.amount = (paymentRefund.amount || 0) + total 
           total = 0
         }
 
         if(total > paymentBalance){
           refund.balance = paymentBalance
-          paymentRefund.balance = ((paymentRefund.balance || 0) * 100 + paymentBalance * 100) /100
-          total = (total * 100 - paymentBalance * 100) / 100
+          paymentRefund.balance = (paymentRefund.balance || 0) + paymentBalance 
+          total = total  - paymentBalance 
         }else {
           refund.balance = total
-          paymentRefund.balance = ((paymentRefund.balance || 0) * 100 + total * 100)/ 100
+          paymentRefund.balance = (paymentRefund.balance || 0) + total 
           total = 0
         }
 
         if(total > paymentEcard){
           refund.ecard = paymentEcard
-          paymentRefund.ecard = ((paymentRefund.ecard || 0) * 100 + paymentEcard * 100) /100
-          total = (total * 100 - paymentEcard * 100) / 100
+          paymentRefund.ecard = (paymentRefund.ecard || 0)  + paymentEcard 
+          total = total  - paymentEcard 
         }else {
           refund.ecard = total
-          paymentRefund.ecard = ((paymentRefund.ecard || 0) * 100 + total * 100)/ 100
+          paymentRefund.ecard = (paymentRefund.ecard || 0)  + total 
           total = 0
         }
+
+        total = parseFloat(total).toFixed(2)
+        paymentRefund.amount = parseFloat(paymentRefund.amount ).toFixed(2)
+        paymentRefund.balance = parseFloat(paymentRefund.balance ).toFixed(2)
+        paymentRefund.ecard = parseFloat(paymentRefund.ecard ).toFixed(2)
 
         this.logger.info(ctx.uuid, 'orderAfterDeal()', 'refund',refund)
         this.logger.info(ctx.uuid, 'orderAfterDeal()', 'paymentRefund',paymentRefund)
