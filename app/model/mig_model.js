@@ -30,9 +30,16 @@ class MigModel extends Model {
     return this.db().define('mig_user_score', migUserScore()[0], migUserScore()[1])
   }
 
-  async migAction(){
+  async migActions(){
+    let users = await this.migUserModel().findAll()
+    for (let index = 0; index < users.length; index++) {
+      const user = users[index]
+      await this.migAction(user)
+    }
+  }
+  async migAction(user){
 
-    let user = await this.migUserModel().findOne()
+    // let user = await this.migUserModel().findOne()
 
     let balance = 0
     let score = 0
