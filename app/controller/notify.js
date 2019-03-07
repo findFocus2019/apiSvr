@@ -108,15 +108,18 @@ class PaymentLogic extends CommonController {
         }
       }
 
+      // 更新用户信息
+      userInfo.balance = userInfo.balance - payment.balance
+
       let orderIds = payment.order_ids.substr(1, payment.order_ids.length - 2).split('-')
       Logger.info(ctx.uuid, 'orderPayConfirm() orderIds', orderIds)
 
       let isSetVip = 0
+      let userSetVip = 0
 
       for (let index = 0; index < orderIds.length; index++) {
-        const orderId = orderIds[index]
-        let userSetVip = 0
-
+        let orderId = orderIds[index]
+        
         let order = await orderModel.findByPk(orderId)
         if (order.status != 0) {
           throw new Error('请不要重复支付')
@@ -145,9 +148,6 @@ class PaymentLogic extends CommonController {
             throw new Error(rabateRet.message)
           }
 
-          
-          
-
         } else {
           // vip充值订单，发放代金券，更新用户vip时间
           let userVipRet = await this._userVipDeal(ctx, order, t)
@@ -156,35 +156,6 @@ class PaymentLogic extends CommonController {
           } else {
             userSetVip = 1
           }
-        }
-        
-        // 更新用户信息
-        userInfo.balance = userInfo.balance - payment.balance
-        userInfo.score = userInfo.score - payment.score
-
-        // vip信息
-        if (userSetVip == 1 || isSetVip == 1) {
-          userInfo.vip = 1
-          let now = parseInt(Date.now() / 1000)
-          if (!userInfo.startline) {
-            userInfo.startline = now
-          }
-          if(userInfo.deadline){
-            userInfo.deadline = this.utils.date_utils.monthPlus(userInfo.deadline, 1)
-       
-          }else {
-            userInfo.deadline = this.utils.date_utils.monthPlus(parseInt(Date.now() / 1000), 1)
-       
-          }
-        }
-        let userInfoRet = await userInfo.save({
-          transaction: t
-        })
-        Logger.info(ctx.uuid, 'orderPayConfirm() userInfoRet', userInfoRet)
-        if (!userInfoRet) {
-          throw new Error('更新用户信息失败')
-        }else {
-          isSetVip = 0
         }
 
         order.payment = {
@@ -204,16 +175,6 @@ class PaymentLogic extends CommonController {
           throw new Error('订单支付信息更新失败')
         }
 
-        payment.status = 1
-        payment.notify_info = ctx.notify_info
-        let paymentRet = await payment.save({
-          transaction: t
-        })
-        Logger.info(ctx.uuid, 'orderPayConfirm() paymentRet', paymentRet)
-        if (!paymentRet) {
-          throw new Error('支付信息更新失败')
-        }
-
         // 更新商品sales
         let goodsUpdateRet = await this._paymentGoodsUpdate(ctx, order , t)
         if(goodsUpdateRet.code !== 0){
@@ -221,11 +182,46 @@ class PaymentLogic extends CommonController {
         }
       }
 
+      payment.status = 1
+      payment.notify_info = ctx.notify_info
+      let paymentRet = await payment.save({
+        transaction: t
+      })
+      Logger.info(ctx.uuid, 'orderPayConfirm() paymentRet', paymentRet)
+      if (!paymentRet) {
+        throw new Error('支付信息更新失败')
+      }
+
+      // vip信息
+      if (userSetVip == 1 || isSetVip == 1) {
+        userInfo.vip = 1
+        let now = parseInt(Date.now() / 1000)
+        if (!userInfo.startline) {
+          userInfo.startline = now
+        }
+        if(userInfo.deadline){
+          userInfo.deadline = this.utils.date_utils.monthPlus(userInfo.deadline, 1)
+     
+        }else {
+          userInfo.deadline = this.utils.date_utils.monthPlus(parseInt(Date.now() / 1000), 1)
+     
+        }
+      }
+      let userInfoRet = await userInfo.save({
+        transaction: t
+      })
+      Logger.info(ctx.uuid, 'orderPayConfirm() userInfoRet', userInfoRet)
+      if (!userInfoRet) {
+        throw new Error('更新用户信息失败')
+      }else {
+        isSetVip = 0
+      }
+
       // 记录交易信息type 3:商品购买
       let transactionData = {
         balance: payment.balance,
         amount: payment.amount,
-        score: payment.score * 1000,
+        score: payment.score * this.config.scoreExchangeNum,
         status: 1,
         method: payMethod
       }

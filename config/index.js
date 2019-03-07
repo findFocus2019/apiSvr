@@ -104,6 +104,8 @@ module.exports = {
   // 默认邀请人id
   defaultInivteUserId: 1,
 
+  scoreExchangeNum: 6000,
+
   getui:{
     host: 'https://api.getui.com/apiex.htm',
     appId:'j3F91JomB6AbpkCuDefJAA',
