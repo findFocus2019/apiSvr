@@ -2,7 +2,7 @@ const alipay = require('./alipay')
 
 module.exports = {
   DEBUG: true,
-  version: '0.9.4',
+  version: '2.0.0',
   apkUrl: 'http://img-juren.oss-cn-shenzhen.aliyuncs.com/app/android_debug.apk',
   domain: 'https://api.faxianjiaodian.com',
 
@@ -16,6 +16,15 @@ module.exports = {
     password: 'Lc19890512',
     maxLimit: 1000,
   },
+
+  // db: {
+  //   host: 'rm-wz9d95e80363zmcjjdo.mysql.rds.aliyuncs.com',
+  //   port: 3306,
+  //   dbname: 'find_focus_2019',
+  //   username: 'find_focus_2019',
+  //   password: 'find_focus_2019',
+  //   maxLimit: 1000,
+  // },
 
   tasks: {
     REGISTER: 'register', // 用户注册
@@ -103,6 +112,8 @@ module.exports = {
 
   // 默认邀请人id
   defaultInivteUserId: 1,
+
+  scoreExchangeNum: 6000,
 
   getui:{
     host: 'https://api.getui.com/apiex.htm',

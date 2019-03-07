@@ -4,4 +4,4 @@ let schedule = Schedule.getSchedule()
 
 schedule.fetchNews()
 
-// schedule.rabateDealDay()
+schedule.rabateDealDay()

@@ -79,6 +79,11 @@ class AlbumController extends Controller {
     let albumModel = new this.models.album_model
 
     let data = ctx.body
+    if(!data.type) {
+      data.type = 'banner'
+    }
+    data.status = data.status ? 1:0
+
     let notice
     if (data.id) {
       notice = await albumModel.model().findByPk(data.id)

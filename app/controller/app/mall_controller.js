@@ -346,7 +346,7 @@ class MallController extends CommonController {
 
         // 更新用户积分
         if (useScore) {
-          userInfo.score = userInfo.score - scoreCost * 1000
+          userInfo.score = userInfo.score - scoreCost * this.config.scoreExchangeNum
           let scoreSaveRet = await userInfo.save({
             transaction: t
           })
@@ -745,7 +745,7 @@ class MallController extends CommonController {
         let score = isVip ? order.score_vip : order.score
         this.logger.info(ctx.uuid, 'orderPayPre totalFee', totalFee)
         total += scoreUse ? totalFee : totalFee + score
-        scoreNum += scoreUse ? score * 1000 : 0
+        scoreNum += scoreUse ? score * this.config.scoreExchangeNum : 0
       }
 
       total = parseFloat(total)
@@ -763,15 +763,10 @@ class MallController extends CommonController {
           // 用余额补
           if (payMethod == 'ecard') {
             throw new Error('请选择代金券补齐方式')
-          }
-
-          if (payMethod == 'balance') {
-            balance = total * 100 - userEcard.amount
-            if (balance > userBalance) {
-              throw new Error('账户余额不足')
-            }
           } else if (payMethod == 'wxpay' || payMethod == 'alipay') {
-            amount = total * 100 - userEcard.amount
+            amount = total - userEcard.amount
+          } else {
+            throw new Error('支付方式选择有误(payType:1)')
           }
 
           ecard = userEcard.amount
@@ -780,9 +775,19 @@ class MallController extends CommonController {
         }
       } else if (payType == 2) {
         // 余额支付
-        balance = total
-        if (balance > userBalance) {
-          throw new Error('账户余额不足')
+        if (total > userBalance) {
+          // throw new Error('账户余额不足')
+          if (payMethod == 'balance') {
+            throw new Error('请选择代金券补齐方式')
+          } else if (payMethod == 'wxpay' || payMethod == 'alipay') {
+            amount = total - userBalance
+          } else {
+            throw new Error('支付方式选择有误(payType:2)')
+          }
+
+          balance = userBalance
+        }else {
+          balance = total
         }
       } else if (payType == 3) {
         amount = total
@@ -796,8 +801,8 @@ class MallController extends CommonController {
         // amount = 0.01
         let paymentData = {
           out_trade_no: paymentUuid,
-          amount: DEBUG ? 0.01 : amount,
-          // amount: amount,
+          // amount: DEBUG ? 0.01 : amount,
+          amount: amount,
           body: '发现焦点-商品支付',
           subject: '发现焦点-订单支付'
         }
@@ -923,12 +928,6 @@ class MallController extends CommonController {
         payment.status = 1
       }
 
-
-
-      // if (payment.balance) {
-
-      // }
-
       if (payment.ecard) {
         let ecardId = payment.ecard_id
         let userEcard = await userModel.ecardModel().findByPk(ecardId)
@@ -940,19 +939,20 @@ class MallController extends CommonController {
         })
         this.logger.info(ctx.uuid, 'orderPayConfirm() userEcardRet', userEcardRet)
         if (!userEcardRet) {
-          throw new Error('更新用户e卡失败')
+          throw new Error('更新用户代金券信息失败')
         }
       }
 
       let orderIds = payment.order_ids.substr(1, payment.order_ids.length - 2).split('-')
       this.logger.info(ctx.uuid, 'orderPayConfirm() orderIds', orderIds)
 
-
+      // 更新用户信息
+      userInfo.balance = userInfo.balance - payment.balance
+      let userSetVip = 0
 
       for (let index = 0; index < orderIds.length; index++) {
         const orderId = orderIds[index]
-        let userSetVip = 0
-
+        
         let order = await orderModel.findByPk(orderId)
         if (order.status != 0) {
           throw new Error('请不要重复支付')
@@ -975,28 +975,7 @@ class MallController extends CommonController {
           } else {
             userSetVip = 1
           }
-        }
-
-        // 更新用户信息
-        userInfo.balance = userInfo.balance - payment.balance
-        // userInfo.score = userInfo.score - payment.score
-
-        // vip信息
-        if (userSetVip == 1) {
-          userInfo.vip = 1
-          let now = parseInt(Date.now() / 1000)
-          if (!userInfo.startline) {
-            userInfo.startline = now
-          }
-          userInfo.deadline = this.utils.date_utils.monthPlus(parseInt(Date.now() / 1000), 1)
-        }
-        let userInfoRet = await userInfo.save({
-          transaction: t
-        })
-        this.logger.info(ctx.uuid, 'orderPayConfirm() userInfoRet', userInfoRet)
-        if (!userInfoRet) {
-          throw new Error('更新用户信息失败')
-        }
+        }  
 
         order.payment = {
           type: payType,
@@ -1030,12 +1009,28 @@ class MallController extends CommonController {
         }
       }
 
+      // vip信息
+      if (userSetVip == 1) {
+        userInfo.vip = 1
+        let now = parseInt(Date.now() / 1000)
+        if (!userInfo.startline) {
+          userInfo.startline = now
+        }
+        userInfo.deadline = this.utils.date_utils.monthPlus(parseInt(Date.now() / 1000), 1)
+      }
+      let userInfoRet = await userInfo.save({
+        transaction: t
+      })
+      this.logger.info(ctx.uuid, 'orderPayConfirm() userInfoRet', userInfoRet)
+      if (!userInfoRet) {
+        throw new Error('更新用户信息失败')
+      }
 
       // 记录交易信息type 3:商品购买
       let transactionData = {
         balance: payment.balance,
         amount: payment.amount,
-        score: payment.score * 1000,
+        score: payment.score * this.config.scoreExchangeNum,
         status: 1,
         method: payMethod
       }
@@ -1181,7 +1176,7 @@ class MallController extends CommonController {
       if (order.score_use) {
         let scoreCost = order.vip ? order.score_vip : order.score
         let userInfo = await userModel.getInfoByUserId(userId)
-        userInfo.score = userInfo.score + scoreCost * 1000
+        userInfo.score = userInfo.score + scoreCost * this.config.scoreExchangeNum
         let scoreSaveRet = await userInfo.save({
           transaction: t
         })
@@ -1360,7 +1355,7 @@ class MallController extends CommonController {
           let itemScore = order.vip ? item.price_score_vip : item.price_score_sell
           this.logger.info(ctx.uuid, 'orderAfter()', 'itemScore', itemScore)
           // total += itemScore
-          score += itemScore * item.num * 1000
+          score += itemScore * item.num * this.config.scoreExchangeNum
         }
         items.push(item)
       }
