@@ -780,7 +780,7 @@ class MallController extends CommonController {
           if (payMethod == 'balance') {
             throw new Error('请选择代金券补齐方式')
           } else if (payMethod == 'wxpay' || payMethod == 'alipay') {
-            amount = total - balance
+            amount = total - userBalance
           } else {
             throw new Error('支付方式选择有误(payType:2)')
           }
