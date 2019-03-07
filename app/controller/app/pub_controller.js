@@ -296,6 +296,25 @@ class PubController extends Controller {
     }
     return ctx.ret
   }
+
+  /**
+   * 订单物流信息查询
+   */
+  async orderTrack(ctx) {
+    this.logger.info(ctx.uuid, 'orderTrack()', ctx.body)
+    let { jdOrderId } = ctx.body
+    let data, dataObj
+    let data = await jdUtils.orderTrack(jdOrderId)
+    dataObj = JSON.parse(data)
+    this.logger.info(ctx.uuid, 'orderTrack() dataObj', dataObj)
+    if (dataObj.success) {
+      ctx.ret.data = JSON.parse(dataObj.result)
+    } else {
+      ctx.ret.code = -1
+      ctx.ret.message = '京东订单配送信息查询失败!'
+    }
+    return ctx.ret
+  }
 }
 
 module.exports = PubController

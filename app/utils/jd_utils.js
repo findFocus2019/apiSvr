@@ -646,7 +646,9 @@ class jdUtils {
 //     invoicePhone:params.mobile || 17666136141
 //   }
   // console.log(orderParams)
-  // let demo = new jdUtils
+// let demo = new jdUtils
+  // let data = await demo.syncGoods()
+  // let data = await demo.orderTrack(89099122476)
   // let data = await demo.getAccessToken()
   // let data = await demo.submitOrder(orderParams)
   // let data = await demo.getProvince()

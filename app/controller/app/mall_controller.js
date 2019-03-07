@@ -1651,6 +1651,11 @@ class MallController extends CommonController {
    * 
    */
   static async submitOrder(params) {
+    /**
+     * {"success":true,"resultMessage":"下单成功！","resultCode":"0001","result":{"jdOrderId":89099122476,"freight":8,"orderPrice":13.30,
+     * "orderNakedPrice":11.46,"sku":[{"skuId":231406,"num":1,"category":15924,"price":13.30,"name":"蓝月亮 深层洁净洗衣液（薰衣草）1kg/瓶 （新老包装随机发货）",
+     * "tax":16,"taxPrice":1.84,"nakedPrice":11.46,"type":0,"oid":0}],"orderTaxPrice":1.84}}
+     */
     let data, dataObj
     // let orderPriceSnap= JSON.stringify([{skuId:231406,price:13.30}])
     let orderParams = {
@@ -1699,7 +1704,7 @@ class MallController extends CommonController {
 
   static async confirmOrder(jdOrderId) {
     let data = await jdUtils.confirmOrder(jdOrderId)
-    let dataObj = JSON.parse(confirm)
+    let dataObj = JSON.parse(data)
     //{"success":true,"resultMessage":"确认下单成功","resultCode":"0003","result":true}
     return dataObj
   }

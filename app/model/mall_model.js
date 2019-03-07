@@ -157,12 +157,15 @@ class MallModel extends Model {
       categoryInfo.status = goodInfo.state
       categoryInfo.title  = goodInfo.name
       categoryInfo.category = page_num
+      categoryInfo.rabate_rate = 80
+      categoryInfo.rabate_rate_vip = 80
       categoryInfo.price_score_sell = price_score_sell
       categoryInfo.price_score_vip = price_score_vip
       await categoryInfo.save()
     } else {
       await this.goodsModel().create({
         uuid: goodInfo.sku,
+        price: goodInfo.jdPrice,
         price_vip: goodInfo.price_vip,
         price_sell: goodInfo.price_sell,
         price_cost: goodInfo.price,
