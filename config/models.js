@@ -751,5 +751,45 @@ module.exports = {
         tableName: 't_token'
       }
     ]
-  }
+  },
+  migUser: () => {
+    return [{
+        ...commonFieldGet(),
+        user_id: FIELDS.bigInt(),
+        mobile: FIELDS.stringLen(16),
+        nickname: FIELDS.stringLen(64),
+        create_date: FIELDS.stringLen(64),
+        update_date: FIELDS.stringLen(64),
+        status: FIELDS.tinyInt()
+      },
+      {
+        ...commonOpts,
+        tableName: 't_mig_user'
+      }
+    ]
+  },
+  migUserBalance: () => {
+    return [{
+        ...commonFieldGet(),
+        user_id: FIELDS.bigInt(),
+        balance: FIELDS.bigInt()
+      },
+      {
+        ...commonOpts,
+        tableName: 't_mig_user_balance'
+      }
+    ]
+  },
+  migUserScore: () => {
+    return [{
+        ...commonFieldGet(),
+        user_id: FIELDS.bigInt(),
+        score: FIELDS.bigInt()
+      },
+      {
+        ...commonOpts,
+        tableName: 't_mig_user_score'
+      }
+    ]
+  },
 }
