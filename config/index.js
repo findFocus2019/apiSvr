@@ -8,12 +8,21 @@ module.exports = {
 
   port: 5001,
   signKey: '123456',
+  // db: {
+  //   host: '59939c0a9a983.gz.cdb.myqcloud.com',
+  //   port: 5579,
+  //   dbname: '2019_find_focus',
+  //   username: 'root',
+  //   password: 'Lc19890512',
+  //   maxLimit: 1000,
+  // },
+
   db: {
-    host: '59939c0a9a983.gz.cdb.myqcloud.com',
-    port: 5579,
+    host: 'rm-wz9d95e80363zmcjjdo.mysql.rds.aliyuncs.com',
+    port: 3306,
     dbname: '2019_find_focus',
-    username: 'root',
-    password: 'Lc19890512',
+    username: '2019_find_focus',
+    password: '2019_find_focus',
     maxLimit: 1000,
   },
 
