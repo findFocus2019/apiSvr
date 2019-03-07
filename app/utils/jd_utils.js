@@ -310,11 +310,10 @@ class jdUtils {
 
 
   //确认预占库存订单接口
-  async confirmOrder(jdOrderId, companyPayMoney) {
+  async confirmOrder(jdOrderId) {
     let params = {
       token: await this.getAccessToken(),
-      jdOrderId: jdOrderId,
-      companyPayMoney: companyPayMoney
+      jdOrderId: jdOrderId
     }
     let url = 'https://bizapi.jd.com/api/order/confirmOrder'
     return await this._ruquestUtil(params, url)
@@ -654,6 +653,8 @@ class jdUtils {
   // let data = await demo.getCity(19)
   // let data = await demo.getCounty(1607)
   // let data = await demo.getTown(3155)
+  // let data = await demo.confirmOrder(89099122476)
+  // let data = await demo.messageGet(14)
     // console.log(data)
 
 // })()

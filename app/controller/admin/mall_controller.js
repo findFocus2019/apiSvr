@@ -361,9 +361,9 @@ class MallController extends Controller {
           num: 1,
           skuId: item.uuid, 
           bNeedAnnex: false,
-          bNeedGift: false,
+          bNeedGift: true,
           // price: item.price_sell,
-          yanbao: [{skuId: item.uuid}]
+          // yanbao: [{skuId: item.uuid}]
         })
 
         orderPriceSnap.push({skuId: item.uuid, price: item.price_cost})
@@ -380,7 +380,7 @@ class MallController extends Controller {
         town: order.address.town,
         address: order.address.address,
         mobile: order.address.mobile,
-        email:'244847258@qq.com',//要加
+        email:'wang.wy@jurenchina.net',//要加
         // invoiceState: 1,
         invoiceContent: 100,
         paymentType: 4,
@@ -407,7 +407,7 @@ class MallController extends Controller {
 
     // 拿到京东订单后，去确认支付
     if (jdOrderId) {
-      let doPayResult = await AppMallController.doPay(jdOrderId)
+      let doPayResult = await AppMallController.confirmOrder(jdOrderId)
       if (!doPayResult.success) {
         return ctx.ret.data = {
           code: -4,
