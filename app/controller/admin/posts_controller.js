@@ -63,6 +63,7 @@ class PostsController extends Controller {
     let postsModel = new this.models.posts_model
 
     let data = ctx.body
+    data.status = data.status ? 1: 0
     let posts
     if (data.id) {
       posts = await postsModel.model().findByPk(data.id)
