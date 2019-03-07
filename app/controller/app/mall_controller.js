@@ -1699,7 +1699,7 @@ class MallController extends CommonController {
 
   static async confirmOrder(jdOrderId) {
     let data = await jdUtils.confirmOrder(jdOrderId)
-    let dataObj = JSON.parse(data)
+    let dataObj = typeof data === 'string' ? JSON.parse(data) : data
     //{"success":true,"resultMessage":"确认下单成功","resultCode":"0003","result":true}
     return dataObj
   }
