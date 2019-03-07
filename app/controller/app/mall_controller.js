@@ -784,6 +784,8 @@ class MallController extends CommonController {
           } else {
             throw new Error('支付方式选择有误(payType:2)')
           }
+
+          balance = userBalance
         }else {
           balance = total
         }
