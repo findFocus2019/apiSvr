@@ -66,6 +66,7 @@ class PostsController extends Controller {
     let posts
     if (data.id) {
       posts = await postsModel.model().findByPk(data.id)
+      this.logger.info('upate posts is null? ', posts == null)
       await posts.update(data)
     } else {
       posts = await postsModel.model().create(data)
