@@ -5,6 +5,7 @@ const CommonController = require('./../common/common_controller')
 const uuid = require('uuid/v4')
 const Utils = require('./../utils/index')
 const Logger = require('./../../lib/log')('NOTIFY')
+const Op = require('sequelize').Op
 
 class PaymentLogic extends CommonController {
 
@@ -29,7 +30,7 @@ class PaymentLogic extends CommonController {
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
     let paymentModel = mallModel.paymentModel()
-    // let orderItemsModel = mallModel.orderItemModel()
+    let orderItemsModel = mallModel.orderItemModel()
     let userModel = new this.models.user_model
 
     let t = await mallModel.getTrans()
@@ -110,7 +111,7 @@ class PaymentLogic extends CommonController {
       let orderIds = payment.order_ids.substr(1, payment.order_ids.length - 2).split('-')
       Logger.info(ctx.uuid, 'orderPayConfirm() orderIds', orderIds)
 
-      
+      let isSetVip = 0
 
       for (let index = 0; index < orderIds.length; index++) {
         const orderId = orderIds[index]
@@ -123,6 +124,19 @@ class PaymentLogic extends CommonController {
         Logger.info(ctx.uuid, 'orderPayConfirm() order', order.id)
         // let items = order.goods_items
         if (order.order_type != 0) {
+          // 第一次支付,送vip
+          let count = await orderItemsModel.count({
+            where:{
+              user_id: userId
+            }
+          })
+
+          Logger.info(ctx.uuid, 'orderPayConfirm() count',count)
+          if(count == 0){
+            isSetVip = 1
+          }
+          Logger.info(ctx.uuid, 'orderPayConfirm() isSetVip',isSetVip)
+
           // 这里不计算返利，记录返利，7天后结算 TODO
           let rabateRet = await this._creareOrderItems(ctx, order, t)
           // let rabateRet = await this._rabate(ctx, items, t)
@@ -130,6 +144,10 @@ class PaymentLogic extends CommonController {
           if (rabateRet.code != 0) {
             throw new Error(rabateRet.message)
           }
+
+          
+          
+
         } else {
           // vip充值订单，发放代金券，更新用户vip时间
           let userVipRet = await this._userVipDeal(ctx, order, t)
@@ -139,13 +157,13 @@ class PaymentLogic extends CommonController {
             userSetVip = 1
           }
         }
-
+        
         // 更新用户信息
         userInfo.balance = userInfo.balance - payment.balance
         userInfo.score = userInfo.score - payment.score
 
         // vip信息
-        if (userSetVip == 1) {
+        if (userSetVip == 1 || isSetVip == 1) {
           userInfo.vip = 1
           let now = parseInt(Date.now() / 1000)
           if (!userInfo.startline) {
@@ -165,6 +183,8 @@ class PaymentLogic extends CommonController {
         Logger.info(ctx.uuid, 'orderPayConfirm() userInfoRet', userInfoRet)
         if (!userInfoRet) {
           throw new Error('更新用户信息失败')
+        }else {
+          isSetVip = 0
         }
 
         order.payment = {

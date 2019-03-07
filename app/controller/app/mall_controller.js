@@ -1697,9 +1697,10 @@ class MallController extends CommonController {
     return dataObj
   }
 
-  async doPay(jdOrderId) {
-    let data = await jdUtils.doPay(jdOrderId)
-    let dataObj = JSON.parse(data)
+  static async confirmOrder(jdOrderId) {
+    let data = await jdUtils.confirmOrder(jdOrderId)
+    let dataObj = JSON.parse(confirm)
+    //{"success":true,"resultMessage":"确认下单成功","resultCode":"0003","result":true}
     return dataObj
   }
 }
