@@ -617,7 +617,7 @@ class jdUtils {
 }
 //
 
-(async () => {
+// (async () => {
 //   let params = {}
 //   let str = JSON.stringify([{skuId:"231406",bNeedAnnex:true,num:1,bNeedGift:true,num:1,yanbao:[]}])
 //   let orderParams = {
@@ -646,7 +646,7 @@ class jdUtils {
 //     invoicePhone:params.mobile || 17666136141
 //   }
   // console.log(orderParams)
-  let demo = new jdUtils
+  // let demo = new jdUtils
   // let data = await demo.getAccessToken()
   // let data = await demo.submitOrder(orderParams)
   // let data = await demo.getProvince()
@@ -654,10 +654,10 @@ class jdUtils {
   // let data = await demo.getCounty(1607)
   // let data = await demo.getTown(3155)
   // let data = await demo.confirmOrder(89099122476)
-  let data = await demo.messageGet(14)
-    console.log(data)
+  // let data = await demo.messageGet(14)
+    // console.log(data)
 
-})()
+// })()
 
 
 
