@@ -542,7 +542,8 @@ module.exports = {
         rabate: FIELDS.tinyInt(),
         remark: FIELDS.stringLen(255),
         finish_time: FIELDS.defaultInt(),
-        express_time: FIELDS.defaultInt()
+        express_time: FIELDS.defaultInt(),
+        jd_order_id: FIELDS.stringLen(32)
       },
       {
         ...commonOpts,
