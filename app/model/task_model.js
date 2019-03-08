@@ -113,6 +113,14 @@ class TaskModel extends Model {
       return ret
     }
 
+    let getTodayCount = await this.getTodayCount(ctx, data.user_id)
+    Log.info(ctx.uuid, 'logByName() getTodayCount', getTodayCount)
+    if(getTodayCount >= 5000){
+      ret.code = 1
+      ret.message = '超过每日收益数量限制'
+      return ret
+    }
+
     // 记录
     let extNum = data.ext_num || 0
     let score = task.score * vipNum + extNum * vipNum
@@ -230,6 +238,19 @@ class TaskModel extends Model {
     })
 
     return count
+  }
+
+  async getTodayScore(ctx , userId){
+    let logDate = dateUtils.dateFormat(null, 'YYYYMMDD')
+
+    let count = await this.logsModel().sum('score' , {
+      where: {
+        user_id: userId,
+        log_date: logDate
+      }
+    })
+
+    return count / 100
   }
 
   /**
