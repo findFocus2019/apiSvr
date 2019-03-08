@@ -17,7 +17,7 @@ class AuthController extends Controller {
   async login (ctx) {
     this.logger.info('login: ', ctx.body)
 
-    let adminModel = new this.models.admin_model().model()
+    let adminModel = (new this.models.admin_model()).model()
     let body = ctx.body
 
     let email = body.email
@@ -32,13 +32,20 @@ class AuthController extends Controller {
 
     if (admin === null) {
       this.logger.info('login: 账号密码错误' )
-      ctx.ret.data = {code: -1, msg: '账号密码错误'}
+      ctx.ret.code = 1
+      ctx.ret.message = '账号密码错误'
+      // ctx.ret.data = {code: 1, msg: '账号密码错误'}
     } else {
-      ctx.session.admin = admin
-      ctx.ret.data = {code: 0, msg: 'success', data: {}}
-      ctx.ret.session = ctx.session.admin
+      // ctx.session.AUTH = {admin:admin}
+      // ctx.ret.data = {code: 0, msg: 'success', data: {}}
+      ctx.ret.session = {
+        AUTH: {admin: admin}
+      }
 
     }
+
+    this.logger.info('login: ', ctx.ret)
+    return ctx.ret
   }
 
   /**

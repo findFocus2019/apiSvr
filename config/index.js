@@ -8,24 +8,24 @@ module.exports = {
 
   port: 5001,
   signKey: '123456',
-  // db: {
-  //   host: '59939c0a9a983.gz.cdb.myqcloud.com',
-  //   port: 5579,
-  //   dbname: '2019_find_focus',
-  //   username: 'root',
-  //   password: 'Lc19890512',
-  //   maxLimit: 1000,
-  // },
-
   db: {
-    // host: 'rm-wz9d95e80363zmcjjdo.mysql.rds.aliyuncs.com',
-    host:'rm-wz9d95e80363zmcjj.mysql.rds.aliyuncs.com',
-    port: 3306,
-    dbname: 'find_focus_2019',
-    username: 'find_focus_2019',
-    password: 'find_focus_2019',
+    host: '59939c0a9a983.gz.cdb.myqcloud.com',
+    port: 5579,
+    dbname: '2019_find_focus',
+    username: 'root',
+    password: 'Lc19890512',
     maxLimit: 1000,
   },
+
+  // db: {
+  //   // host: 'rm-wz9d95e80363zmcjjdo.mysql.rds.aliyuncs.com',
+  //   host:'rm-wz9d95e80363zmcjj.mysql.rds.aliyuncs.com',
+  //   port: 3306,
+  //   dbname: 'find_focus_2019',
+  //   username: 'find_focus_2019',
+  //   password: 'find_focus_2019',
+  //   maxLimit: 1000,
+  // },
 
   tasks: {
     REGISTER: 'register', // 用户注册
