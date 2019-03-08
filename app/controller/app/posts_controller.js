@@ -90,7 +90,7 @@ class PostsController extends Controller {
         ['create_time', 'desc'],
         ['id', 'desc']
       ],
-      attributes: this.config.postListAttributes
+      // attributes: this.config.postListAttributes
     })
 
     let whereNew = where
