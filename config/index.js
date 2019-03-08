@@ -1,6 +1,9 @@
 const alipay = require('./alipay')
+const env = process.env.NODE_ENV
+const fs = require('fs')
+const path =require('path')
 
-module.exports = {
+let config = {
   DEBUG: true,
   version: '2.0.1',
   apkUrl: 'http://img-juren.oss-cn-shenzhen.aliyuncs.com/app/android_debug.apk',
@@ -8,6 +11,7 @@ module.exports = {
 
   port: 5001,
   signKey: '123456',
+
   // db: {
   //   host: '59939c0a9a983.gz.cdb.myqcloud.com',
   //   port: 5579,
@@ -17,15 +21,7 @@ module.exports = {
   //   maxLimit: 1000,
   // },
 
-  db: {
-    // host: 'rm-wz9d95e80363zmcjjdo.mysql.rds.aliyuncs.com',
-    host:'rm-wz9d95e80363zmcjj.mysql.rds.aliyuncs.com',
-    port: 3306,
-    dbname: 'find_focus_2019',
-    username: 'find_focus_2019',
-    password: 'find_focus_2019',
-    maxLimit: 1000,
-  },
+  
 
   tasks: {
     REGISTER: 'register', // 用户注册
@@ -124,3 +120,16 @@ module.exports = {
     masterSecret:'hW3SrajAkuAhg5kGrnEfQ6'
   }
 }
+console.log()
+if(fs.existsSync(path.join(__dirname , './' + env + '.js'))){
+
+  let envConfig = require('./' + env)
+  console.log(envConfig)
+  if(envConfig){
+    config = Object.assign(config, envConfig)
+  }
+}
+
+
+
+module.exports = config

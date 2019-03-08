@@ -152,7 +152,8 @@ class TaskModel extends Model {
   async getTaskByName(ctx, name) {
     let task = await this.model().findOne({
       where: {
-        name: name
+        name: name,
+        status: 1
       }
     })
 

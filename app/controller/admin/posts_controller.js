@@ -42,6 +42,7 @@ class PostsController extends Controller {
       page: page,
       limit: limit
     }
+    this.logger.info(ctx.uuid, 'list()', 'ret', ctx.ret)
     return ctx.ret
   }
 

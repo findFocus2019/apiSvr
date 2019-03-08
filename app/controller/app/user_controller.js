@@ -755,14 +755,14 @@ class UserController extends Controller {
 
       if (continuesNum == 7) {
         // 连续7天，现金奖励
-        // let taskLogRet7 = await taskModel.logByName(ctx, this.config.tasks.DAILY_SIGN_7, taskData, t)
-        // this.logger.info(ctx.uuid, 'dailySign()', 'taskLogRet', taskLogRet)
-        // if (taskLogRet7.code != 0) {
-        //   throw new Error(taskLogRet7.message)
-        // } else {
-        //   score += taskLogRet7.data.score
-        //   balance += taskLogRet7.data.balance
-        // }
+        let taskLogRet7 = await taskModel.logByName(ctx, 'daily_sign_c7', taskData, t)
+        this.logger.info(ctx.uuid, 'dailySign()', 'taskLogRet', taskLogRet)
+        if (taskLogRet7.code != 0) {
+          throw new Error(taskLogRet7.message)
+        } else {
+          score += taskLogRet7.data.score
+          balance += taskLogRet7.data.balance
+        }
       }
 
       ctx.ret.data = {
