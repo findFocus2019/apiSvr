@@ -18,7 +18,8 @@ const updateData = {
 4.修复一些bug及优化`,
       '修复一些bug及优化'
     ],
-    url: 'https://www.pgyer.com/DFcd'
+    // url: 'https://www.pgyer.com/DFcd'
+    url: 'https://www.pgyer.com/QcuX'
   },
   andriod: {
     version: '2.0.0',
@@ -36,7 +37,8 @@ const updateData = {
 4.修复一些bug及优化`,
       '修复一些bug及优化'
     ],
-    url: 'https://www.pgyer.com/iHri'
+    // url: 'https://www.pgyer.com/iHri',
+    url: 'https://www.pgyer.com/j5Um '
   }
 }
 
