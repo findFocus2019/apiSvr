@@ -3,7 +3,7 @@
 
 const updateData = {
   ios: {
-    version: '2.0.0',
+    version: '2.0.1',
     notes: [
       `发现焦点2.0`,
       `优化调整`,
@@ -22,7 +22,7 @@ const updateData = {
     url: 'https://www.pgyer.com/QcuX'
   },
   andriod: {
-    version: '2.0.0',
+    version: '2.0.1',
     notes: [
       `发现焦点2.0`,
       `优化调整`,
