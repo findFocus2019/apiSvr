@@ -889,27 +889,20 @@ class MallController extends Controller {
     const parser = new Parser({ fields });
     let csv = parser.parse(csvList);
     let filePath = __dirname + '/../../../backup/'
-    // fs.writeFile('file.csv', csv, function(err) {
-    //   if (err) throw err;
-    //   console.log('file saved');
-    // });
-    // await util.promisify(fs.writeFile)(filePath + 'file.csv', csv)
-    // await aliOssUtils.upload(req.files[0].path)
-      // .then(uploadResult => {
-
-    //   if (uploadResult.res.status != 200) {
-    //     return res.json(ret)
-    //   }
-    //   ret.code = 0
-    //   ret.message = '上传成功'
-    //   ret.data = {
-    //     url: uploadResult.url
-    //   }
-    //   return res.json(ret)
-    // })
-    // let csv = json2csv({ data: csvList, fields: fields })
+    let fileName = ''
+    await util.promisify(fs.writeFile)(filePath + 'file.csv', csv)
+    let uploadResult = await aliOssUtils.upload(filePath+fileName)
+    if (uploadResult.status != 200) {
+      ctx.ret.code = -1
+      ctx.ret.message = "导出文件失败"
+      
+    } else {
+      // ret.code = 0
+      // ret.message = '上传成功'
+      ctx.ret.data = { url: uploadResult.url }
+    }
     
-    ctx.ret.data = JSON.stringify(csvList)
+    // ctx.ret.data = JSON.stringify(csvList)
     return ctx.ret
   }
   _getOrderStatus(status) {
