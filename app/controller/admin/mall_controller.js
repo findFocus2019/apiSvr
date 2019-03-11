@@ -1,9 +1,11 @@
 const Controller = require('./../../../lib/controller')
-const xlsx = require('node-xlsx')
 const Op = require('sequelize').Op
 const jdUtils = require('../../utils/jd_utils')
-
+const fs = require('fs')
 const AppMallController = require('../app/mall_controller')
+const { Parser } = require('json2csv')
+const util = require('util')
+const aliOssUtils = require('../../utils/ali_oss_utils')
 
 class MallController extends Controller {
 
@@ -861,7 +863,7 @@ class MallController extends Controller {
     let csvList = []
     //字段
     let fields = [
-      "商城订单号", "京东订单号", "是否使用积分", "使用的积分数量",
+      "商城订单号", "京东订单号", "使用的积分数量",
       "vip可使用的积分数量", "购买商品", "商品ID", "订单状态",
       "订单类型", "总价"
     ]
@@ -874,7 +876,6 @@ class MallController extends Controller {
       let record = {
         "商城订单号": rows[item].order_no,
         "京东订单号": rows[item].jd_order_id,
-        "是否使用积分": rows[item].score_use > 0 ? "是" : "否",
         "使用的积分数量": rows[item].score,
         "vip可使用的积分数量": rows[item].score_vip,
         "购买商品": goodNamesList.join(","),
@@ -885,7 +886,29 @@ class MallController extends Controller {
       }
       csvList.push(record)
     }
-    // let csvFile = json2csv({ data: myCars, fields: fields });
+    const parser = new Parser({ fields });
+    let csv = parser.parse(csvList);
+    let filePath = __dirname + '/../../../backup/'
+    // fs.writeFile('file.csv', csv, function(err) {
+    //   if (err) throw err;
+    //   console.log('file saved');
+    // });
+    // await util.promisify(fs.writeFile)(filePath + 'file.csv', csv)
+    // await aliOssUtils.upload(req.files[0].path)
+      // .then(uploadResult => {
+
+    //   if (uploadResult.res.status != 200) {
+    //     return res.json(ret)
+    //   }
+    //   ret.code = 0
+    //   ret.message = '上传成功'
+    //   ret.data = {
+    //     url: uploadResult.url
+    //   }
+    //   return res.json(ret)
+    // })
+    // let csv = json2csv({ data: csvList, fields: fields })
+    
     ctx.ret.data = JSON.stringify(csvList)
     return ctx.ret
   }
