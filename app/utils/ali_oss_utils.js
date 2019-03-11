@@ -40,7 +40,19 @@ class AliOssUtils {
       return false
     }
   }
-
+  
+  async uploadFile(file) {
+    try {
+      let localFilename = path.basename(file)
+      Log.info('upload file:', file)
+      let result = await this.client.put(localFilename,file);
+      Log.info('upload result:', uploadFileName)
+      return result
+    } catch (err) {
+      Log.error('upload err:', err)
+      return false
+    }
+  }
 
   async listBuckets() {
     try {

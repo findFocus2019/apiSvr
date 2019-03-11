@@ -5,6 +5,7 @@ const fs = require('fs')
 const AppMallController = require('../app/mall_controller')
 const { Parser } = require('json2csv')
 const util = require('util')
+const path = require('path')
 const aliOssUtils = require('../../utils/ali_oss_utils')
 
 class MallController extends Controller {
@@ -852,12 +853,18 @@ class MallController extends Controller {
   async orderExport(ctx) {
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
-    let { count, rows } = await orderModel.findAndCountAll({
-      where: {
-        status: {
-          [Op.gt]: -1
-        }
+    let where = {
+          status: {
+            [Op.gt]: -1
+          }}
+    if (ctx.body.startDate && ctx.body.endDate) { 
+      where.update_time = {
+        [Op.gte]: ctx.body.startDate,
+        [Op.lte]: ctx.body.endDate
       }
+    }
+    let { count, rows } = await orderModel.findAndCountAll({
+      where: where
     })
     //csv数据
     let csvList = []
@@ -886,24 +893,31 @@ class MallController extends Controller {
       }
       csvList.push(record)
     }
-    const parser = new Parser({ fields });
-    let csv = parser.parse(csvList);
-    let filePath = __dirname + '/../../../backup/'
-    let fileName = ''
-    await util.promisify(fs.writeFile)(filePath + 'file.csv', csv)
-    let uploadResult = await aliOssUtils.upload(filePath+fileName)
-    if (uploadResult.status != 200) {
+    try {
+      const parser = new Parser({ fields });
+      let csv = parser.parse(csvList);
+      let filePath = __dirname + '/../../../backup/'
+      let fileName = 'file1.csv'
+      await util.promisify(fs.writeFile)(path.join(filePath,fileName), csv)
+      let uploadResult = await aliOssUtils.uploadFile(filePath + fileName)
+      if (!uploadResult.url) {
+        ctx.ret.code = -1
+        ctx.ret.message = "导出文件失败"
+      } else {
+        ctx.ret.code = 0
+        ctx.ret.message = '上传成功'
+        ctx.ret.data = {
+          url: uploadResult.url
+        }
+      }
+      return ctx.ret
+    } catch (err) {
+      console.log(err)
       ctx.ret.code = -1
       ctx.ret.message = "导出文件失败"
-      
-    } else {
-      // ret.code = 0
-      // ret.message = '上传成功'
-      ctx.ret.data = { url: uploadResult.url }
+      return ctx.ret
     }
     
-    // ctx.ret.data = JSON.stringify(csvList)
-    return ctx.ret
   }
   _getOrderStatus(status) {
     switch (status) {
