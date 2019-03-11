@@ -1,12 +1,16 @@
-const Controller = require('./../../../lib/controller')
-const Op = require('sequelize').Op
-const jdUtils = require('../../utils/jd_utils')
 const fs = require('fs')
-const AppMallController = require('../app/mall_controller')
-const { Parser } = require('json2csv')
 const util = require('util')
 const path = require('path')
+const { Parser } = require('json2csv')
+const Op = require('sequelize').Op
+const jdUtils = require('../../utils/jd_utils')
 const aliOssUtils = require('../../utils/ali_oss_utils')
+const dateUtiles = require('../../utils/date_utils')
+const Controller = require('./../../../lib/controller')
+const AppMallController = require('../app/mall_controller')
+
+
+
 
 class MallController extends Controller {
 
@@ -851,20 +855,23 @@ class MallController extends Controller {
   }
 
   async orderExport(ctx) {
+    let dateFormat = 'YYYYMMDD'
+    let startTime = ctx.body.startDate || parseInt(Date.now()/1000)
+    let endTime = ctx.body.endDate || parseInt(Date.now()/1000)
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
-    let where = {
-          status: {
-            [Op.gt]: -1
-          }}
-    if (ctx.body.startDate && ctx.body.endDate) { 
-      where.update_time = {
-        [Op.gte]: ctx.body.startDate,
-        [Op.lte]: ctx.body.endDate
-      }
-    }
+    let startDate = dateUtiles.dateFormat(startTime, dateFormat)
+    let endDate = dateUtiles.dateFormat(endTime,dateFormat)
     let { count, rows } = await orderModel.findAndCountAll({
-      where: where
+      where: {
+        status: {
+          [Op.gt]: -1
+        },
+        update_time: {
+          [Op.gte]: startTime,
+          [Op.lte]: endTime
+        }
+      }
     })
     //csv数据
     let csvList = []
@@ -897,7 +904,7 @@ class MallController extends Controller {
       const parser = new Parser({ fields });
       let csv = parser.parse(csvList);
       let filePath = __dirname + '/../../../backup/'
-      let fileName = 'file1.csv'
+      let fileName = `${startDate}-${endDate}.csv`
       await util.promisify(fs.writeFile)(path.join(filePath,fileName), csv)
       let uploadResult = await aliOssUtils.uploadFile(filePath + fileName)
       if (!uploadResult.url) {
