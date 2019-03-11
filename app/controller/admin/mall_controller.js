@@ -106,11 +106,20 @@ class MallController extends Controller {
   async goodsInfo(ctx) {
     this.logger.info(ctx.uuid, 'goodsInfo()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
     let mallModel = new this.models.mall_model
+    let orderItemModel = mallModel.orderItemModel()
     let id = ctx.body.id
     let info = await mallModel.goodsModel().findByPk(id)
 
+    let orderItems = await orderItemModel().findAll({
+      where: {
+        order_id: id
+      }
+    })
+
+
     ctx.ret.data = {
-      info: info
+      info: info,
+      items: orderItems
     }
     this.logger.info(ctx.uuid, 'goodsInfo()', 'ret', ctx.ret)
     return ctx.ret

@@ -122,6 +122,10 @@ class Schedule extends CommonControler {
     // let data = require('./../tests/testNewsData')
     let logger = arguments[1] || this.logger
 
+    if(!data.nid){
+      return false
+    }
+
     let newsData = {}
     newsData.type = 1
     newsData.title = data.title
@@ -149,6 +153,8 @@ class Schedule extends CommonControler {
       let ret = await postsModel.create(newsData)
       logger.info('fetchNews() insert id:', ret.id)
     }
+
+    return true
 
   }
 
