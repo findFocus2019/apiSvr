@@ -1,4 +1,5 @@
 const Controller = require('./../../../lib/controller')
+const xlsx = require('node-xlsx')
 const Op = require('sequelize').Op
 const jdUtils = require('../../utils/jd_utils')
 
@@ -846,8 +847,91 @@ class MallController extends Controller {
     return ctx.ret
   }
 
-  
-
+  async orderExport(ctx) {
+    let mallModel = new this.models.mall_model
+    let orderModel = mallModel.orderModel()
+    let { count, rows } = await orderModel.findAndCountAll({
+      where: {
+        status: {
+          [Op.gt]: -1
+        }
+      }
+    })
+    //csv数据
+    let csvList = []
+    //字段
+    let fields = [
+      "商城订单号", "京东订单号", "是否使用积分", "使用的积分数量",
+      "vip可使用的积分数量", "购买商品", "商品ID", "订单状态",
+      "订单类型", "总价"
+    ]
+    for (let item in rows) {
+      let goodNamesList = [], goodIdsList=[]
+      for (let index in rows[item].goods_items) {
+        goodIdsList.push(rows[item].goods_items[index].title)
+        goodNamesList.push(rows[item].goods_items[index].id)
+      }
+      let record = {
+        "商城订单号": rows[item].order_no,
+        "京东订单号": rows[item].jd_order_id,
+        "是否使用积分": rows[item].score_use > 0 ? "是" : "否",
+        "使用的积分数量": rows[item].score,
+        "vip可使用的积分数量": rows[item].score_vip,
+        "购买商品": goodNamesList.join(","),
+        "商品ID": goodIdsList.join(","),
+        "订单状态": this._getOrderStatus(rows[item].status),
+        "订单类型": this._getOrderType(rows[item].order_type),
+        "总价": this._getOrderTotal(rows[item])
+      }
+      csvList.push(record)
+    }
+    // let csvFile = json2csv({ data: myCars, fields: fields });
+    ctx.ret.data = JSON.stringify(csvList)
+    return ctx.ret
+  }
+  _getOrderStatus(status) {
+    switch (status) {
+      case 0:
+        return '订单已拍（待支付）'
+      case 1:
+        return '支付完成'
+      case 2:
+        return '已发货'
+      case 9:
+        return '已收货'
+      default:
+        return 'Unknown'
+      }
+  }
+  _getOrderType (orderType) {
+    switch (orderType) {
+    case 1:
+      return '自营'
+    case 2:
+      return '京东'
+    default:
+      return 'Unknown'
+    }
+  }
+  _getOrderTotal(row) {
+    let returnTotal = 0
+    //会员
+    if (row.vip == 1) {
+      if (row.score_use == 1) {
+        returnTotal = row.total_vip 
+      } else {
+        returnTotal = row.total_vip + row.score_vip
+      }
+    } else{
+      //非会员
+      if (row.score_use == 1) {
+        returnTotal = row.total
+      } else {
+        returnTotal = row.total + row.score
+      }
+    }
+    return returnTotal
+  }
 }
 
 module.exports = MallController

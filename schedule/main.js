@@ -169,6 +169,96 @@ class Schedule extends CommonControler {
     logger.info('syncGoods() start')
     await jdUtils.syncGoods()
   }
+
+  //京东自动下单
+  async submitJdOrder() {
+    //TODO 下单失败判断
+    let AppMallController = require('../app/controller/app/mall_controller')
+    let jdOrderId = ''
+    let order = {}
+    if (order.order_type === 2) { // 是京东订单
+      let sku = []
+      let orderPriceSnap = []
+      
+      order.goods_items.forEach(item => {
+        sku.push({
+          num: 1,
+          skuId: item.uuid, 
+          bNeedAnnex: false,
+          bNeedGift: true,
+          // price: item.price_sell,
+          // yanbao: [{skuId: item.uuid}]
+        })
+
+        orderPriceSnap.push({skuId: item.uuid, price: item.price_cost})
+      })
+
+            
+      let submitOrderParams = {
+        thirdOrder: order.order_no,       
+        sku: JSON.stringify(sku),
+        name: order.address.name,
+        province: order.address.province,
+        city: order.address.city,
+        county: order.address.county,
+        town: order.address.town,
+        address: order.address.address,
+        mobile: order.address.mobile,
+        email:'wang.wy@jurenchina.net',//要加
+        // invoiceState: 1,
+        invoiceContent: 100,
+        paymentType: 4,
+        isUseBalance: 1,
+        submitState: 0,
+        doOrderPriceMode:  1,
+        orderPriceSnap: JSON.stringify(orderPriceSnap) ,
+        invoicePhone: order.address.mobile
+      }
+      
+      this.logger.info('submitorderparams: ', submitOrderParams)
+      let submitOrderResult = await AppMallController.submitOrder(submitOrderParams)
+      this.logger.info('submitOrderResult: ', submitOrderResult)
+      //错误情况
+      if (!submitOrderResult.success) {
+        return ctx.ret.data = {
+          code: submitOrderResult.resultCode,
+          error: submitOrderResult.resultMessage
+        }
+      }
+
+      jdOrderId = submitOrderResult.result.jdOrderId
+    }
+
+    // 拿到京东订单后，去确认支付
+    if (jdOrderId) {
+      let doPayResult = await AppMallController.confirmOrder(jdOrderId)
+      if (!doPayResult.success) {
+        return ctx.ret.data = {
+          code: -4,
+          error: '京东确认订单失败'
+        }
+      }
+    }
+
+    orderModel.update({
+        express: {company: expressCompany, express_no: expressNo}, 
+        express_time: parseInt(Date.now() / 1000),
+        status: 2,
+        jd_order_id: jdOrderId
+      }, 
+      {
+        where: {id: orderId}
+      }).then(result => {
+      this.logger.info('dispatchGoods update result: ', result)
+      ctx.ret.data = {code: 0}
+    }).catch(error => {
+      this.logger.error('dispatchGoods error: ', error)
+      ctx.ret.data = {code: -3, error: '更新失败'}
+    })
+    
+    
+    
+  }
 }
 
 function start() {
