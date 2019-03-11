@@ -1,5 +1,6 @@
 const Controller = require('./../../../lib/controller')
 const Op = require('sequelize').Op
+const jdUtils = require('../../utils/jd_utils')
 
 const AppMallController = require('../app/mall_controller')
 
@@ -106,20 +107,11 @@ class MallController extends Controller {
   async goodsInfo(ctx) {
     this.logger.info(ctx.uuid, 'goodsInfo()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
     let mallModel = new this.models.mall_model
-    let orderItemModel = mallModel.orderItemModel()
     let id = ctx.body.id
     let info = await mallModel.goodsModel().findByPk(id)
 
-    let orderItems = await orderItemModel().findAll({
-      where: {
-        order_id: id
-      }
-    })
-
-
     ctx.ret.data = {
-      info: info,
-      items: orderItems
+      info: info
     }
     this.logger.info(ctx.uuid, 'goodsInfo()', 'ret', ctx.ret)
     return ctx.ret
@@ -224,11 +216,29 @@ class MallController extends Controller {
     }
 
     let mallModel = new this.models.mall_model()
+    let orderItemsModel = mallModel.orderItemModel()
 
     let orderInfo = await mallModel.orderModel().findOne(dbOptions)
     if (orderInfo === null) { // 没有找到
       ctx.ret.data = {}
     }
+
+    let items = await orderItemsModel.findAll({
+      where: {order_id : orderId}
+    })
+
+    orderInfo.dataValues.items = items
+
+    if(orderInfo.order_type == 2){
+      let jdOrderId  = orderInfo.jd_order_id
+      let jdData = await jdUtils.orderTrack(jdOrderId)
+      let jdDataObj = JSON.parse(jdData)
+
+      orderInfo.dataValues.jdData = jdDataObj
+    }else {
+      orderInfo.dataValues.jdData = null
+    }
+
     ctx.ret.data = orderInfo
     return ctx.ret
   }
