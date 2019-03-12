@@ -16,7 +16,7 @@ class AliOssUtils {
       accessKeyId: ossConfig.accessKeyId,
       accessKeySecret: ossConfig.accessKeySecret,
       bucket: ossConfig.bucket,
-      allowedExtname: ['jpg', 'jpeg', 'gif', 'bmp']
+      allowedExtname: ['jpg', 'jpeg', 'gif', 'bmp','csv']
     }
     this.client = new OSS(this.config)
   }
@@ -36,21 +36,24 @@ class AliOssUtils {
       Log.info('upload result:', uploadFileName)
       return result
     } catch (err) {
+      console.log(err)
       Log.error('upload err:', err)
-      return false
+      return err
     }
   }
   
   async uploadFile(file) {
     try {
+      let uploadPath = '/backup/csv/'
       let localFilename = path.basename(file)
       Log.info('upload file:', file)
-      let result = await this.client.put(localFilename,file);
-      Log.info('upload result:', uploadFileName)
+      let result = await this.client.put(uploadPath+localFilename,file);
+      Log.info('upload result:', result)
       return result
     } catch (err) {
+      // console.log(err)
       Log.error('upload err:', err)
-      return false
+      return err
     }
   }
 

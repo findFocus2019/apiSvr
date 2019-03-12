@@ -856,8 +856,8 @@ class MallController extends Controller {
 
   async orderExport(ctx) {
     let dateFormat = 'YYYYMMDD'
-    let startTime = ctx.body.startDate || parseInt(Date.now()/1000)
-    let endTime = ctx.body.endDate || parseInt(Date.now()/1000)
+    let startTime = dateUtiles.getTimestamp(ctx.body.startDate) || parseInt(Date.now()/1000)
+    let endTime = dateUtiles.getTimestamp(ctx.body.endDate) || parseInt(Date.now()/1000)
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
     let startDate = dateUtiles.dateFormat(startTime, dateFormat)
@@ -901,12 +901,13 @@ class MallController extends Controller {
       csvList.push(record)
     }
     try {
-      const parser = new Parser({ fields });
-      let csv = parser.parse(csvList);
+      const parser = new Parser({ fields })
+      let csv = parser.parse(csvList)
       let filePath = __dirname + '/../../../backup/'
       let fileName = `${startDate}-${endDate}.csv`
       await util.promisify(fs.writeFile)(path.join(filePath,fileName), csv)
       let uploadResult = await aliOssUtils.uploadFile(filePath + fileName)
+      ctx.ret.uploadResult = uploadResult
       if (!uploadResult.url) {
         ctx.ret.code = -1
         ctx.ret.message = "导出文件失败"
