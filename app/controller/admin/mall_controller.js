@@ -860,7 +860,7 @@ class MallController extends Controller {
     let endTime = dateUtiles.getTimestamp(ctx.body.endDate) || 0 
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
-    let startDate = startTime > 0 ? dateUtiles.dateFormat(startTime, dateFormat) : '从前'
+    let startDate = startTime > 0 ? dateUtiles.dateFormat(startTime, dateFormat) : '开始'
     let endDate = endTime > 0 ? dateUtiles.dateFormat(endTime, dateFormat) : '至今'
     let { count, rows } = await orderModel.findAndCountAll({
       where: {
@@ -878,7 +878,7 @@ class MallController extends Controller {
     //字段
     let fields = [
       "商城订单号", "京东订单号", "使用的积分数量",
-      "vip可使用的积分数量", "购买商品", "商品ID", "订单状态",
+      "购买商品", "商品ID", "订单状态",
       "订单类型", "总价"
     ]
     for (let item in rows) {
@@ -887,11 +887,19 @@ class MallController extends Controller {
         goodIdsList.push(rows[item].goods_items[index].title)
         goodNamesList.push(rows[item].goods_items[index].id)
       }
+
+      let score = 0
+      if(!rows[item].score_use){
+        if(rows[item].vip){
+          score = rows[item].score_vip
+        }else {
+          score = rows[item].score
+        }
+      }
       let record = {
         "商城订单号": rows[item].order_no,
         "京东订单号": rows[item].jd_order_id,
-        "使用的积分数量": rows[item].score,
-        "vip可使用的积分数量": rows[item].score_vip,
+        "使用的积分数量": score,
         "购买商品": goodNamesList.join(","),
         "商品ID": goodIdsList.join(","),
         "订单状态": this._getOrderStatus(rows[item].status),
@@ -968,7 +976,7 @@ class MallController extends Controller {
         returnTotal = row.total + row.score
       }
     }
-    return returnTotal
+    return parseFloat(returnTotal).toFixed(2)
   }
 }
 
