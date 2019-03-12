@@ -265,9 +265,9 @@ class UserModel extends Model {
   async isVipByInfo(user){
     let now = parseInt(Date.now() / 1000)
     if (user && user.vip && user.startline <= now && user.deadline >= now) {
-      return true
+      return 1
     } else {
-      return false
+      return 0
     }
   }
 

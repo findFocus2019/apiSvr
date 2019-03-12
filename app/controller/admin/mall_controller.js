@@ -878,14 +878,14 @@ class MallController extends Controller {
     //字段
     let fields = [
       "商城订单号", "京东订单号", "使用的积分数量",
-      "购买商品", "商品ID", "订单状态",
-      "订单类型", "总价"
+      "商品ID", "购买商品", "订单状态",
+      "订单类型", "总价" , "收件人" , "收件人电话" , "收件人地址"
     ]
     for (let item in rows) {
       let goodNamesList = [], goodIdsList=[]
       for (let index in rows[item].goods_items) {
-        goodIdsList.push(rows[item].goods_items[index].title)
-        goodNamesList.push(rows[item].goods_items[index].id)
+        goodIdsList.push(rows[item].goods_items[index].id)
+        goodNamesList.push(rows[item].goods_items[index].title)
       }
 
       let score = 0
@@ -900,11 +900,14 @@ class MallController extends Controller {
         "商城订单号": rows[item].order_no,
         "京东订单号": rows[item].jd_order_id,
         "使用的积分数量": score,
-        "购买商品": goodNamesList.join(","),
         "商品ID": goodIdsList.join(","),
+        "购买商品": goodNamesList.join(","),
         "订单状态": this._getOrderStatus(rows[item].status),
         "订单类型": this._getOrderType(rows[item].order_type),
-        "总价": this._getOrderTotal(rows[item])
+        "总价": this._getOrderTotal(rows[item]),
+        "收件人": rows[item].address ? rows[item].address.name : '',
+        "收件人电话": rows[item].address ? rows[item].address.mobile : '',
+        "收件人地址": rows[item].address ? rows[item].address.address + rows[item].address.info : '',
       }
       csvList.push(record)
     }

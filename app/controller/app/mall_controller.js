@@ -387,7 +387,7 @@ class MallController extends CommonController {
           address: address,
           invoice: invoice,
           remark: remark,
-          vip: isVip,
+          vip: isVip ? 1 :0,
           score_use: useScore ? 1 : 0,
           express_fee: (orderType == 2) ? expressFee : 0
         }
