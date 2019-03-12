@@ -856,20 +856,20 @@ class MallController extends Controller {
 
   async orderExport(ctx) {
     let dateFormat = 'YYYYMMDD'
-    let startTime = dateUtiles.getTimestamp(ctx.body.startDate) || parseInt(Date.now()/1000)
-    let endTime = dateUtiles.getTimestamp(ctx.body.endDate) || parseInt(Date.now()/1000)
+    let startTime = dateUtiles.getTimestamp(ctx.body.startDate) || 0
+    let endTime = dateUtiles.getTimestamp(ctx.body.endDate) || 0 
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
-    let startDate = dateUtiles.dateFormat(startTime, dateFormat)
-    let endDate = dateUtiles.dateFormat(endTime,dateFormat)
+    let startDate = startTime > 0 ? dateUtiles.dateFormat(startTime, dateFormat) : '从前'
+    let endDate = endTime > 0 ? dateUtiles.dateFormat(endTime, dateFormat) : '至今'
     let { count, rows } = await orderModel.findAndCountAll({
       where: {
         status: {
           [Op.gt]: -1
         },
         update_time: {
-          [Op.gte]: startTime,
-          [Op.lte]: endTime
+          [Op.gte]: startTime > 0 ? startTime : 0,
+          [Op.lte]: endTime > 0 ? endTime : parseInt(Date.now() / 1000)
         }
       }
     })
