@@ -405,7 +405,7 @@ class MallController extends Controller {
         city: order.address.city,
         county: order.address.county,
         town: order.address.town,
-        address: order.address.address,
+        address: order.address.address + order.address.info,
         mobile: order.address.mobile,
         email:'wang.wy@jurenchina.net',//要加
         // invoiceState: 1,
