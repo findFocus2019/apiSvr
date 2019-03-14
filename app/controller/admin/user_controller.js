@@ -430,9 +430,9 @@ class UserController extends Controller {
       let alipayUtils = this.utils.alipay_utils
       let tradeNo = this.utils.uuid_utils.v4()
       let balance = -1 * transaction.balance
-      if(this.config.DEBUG){
-        balance = 0.1
-      }
+      // if(this.config.DEBUG){
+      //   balance = 0.1
+      // }
       let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, balance)
       this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
       if (aliRet.code != 0) {
