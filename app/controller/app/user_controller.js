@@ -1386,6 +1386,11 @@ class UserController extends Controller {
       }
 
       let userInfo = await userModel.getInfoByUserId(userId)
+
+      if(!userInfo || !userInfo.alipay){
+        throw new Error('请先到设置里完善支付宝信息，方可提现')
+      }
+
       if (userInfo.balance - balance < 0) {
         throw new Error('提现金额有误')
       }
