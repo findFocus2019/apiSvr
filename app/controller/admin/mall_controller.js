@@ -871,7 +871,10 @@ class MallController extends Controller {
           [Op.gte]: startTime > 0 ? startTime : 0,
           [Op.lte]: endTime > 0 ? endTime : parseInt(Date.now() / 1000)
         }
-      }
+      },
+      order:[
+        ['create_time','desc']
+      ]
     })
     //csv数据
     let csvList = []
