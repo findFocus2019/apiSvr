@@ -879,7 +879,8 @@ class MallController extends Controller {
     let fields = [
       "商城订单号", "京东订单号", "使用的积分数量",
       "商品ID", "购买商品", "订单状态",
-      "订单类型", "总价" , "收件人" , "收件人电话" , "收件人地址"
+      "订单类型", "总价" , "收件人" , "收件人电话" , "收件人地址",
+      "支付方式"
     ]
     for (let item in rows) {
       let goodNamesList = [], goodIdsList=[]
@@ -896,6 +897,29 @@ class MallController extends Controller {
           score = rows[item].score
         }
       }
+
+      let payment = ''
+      let paymentData = rows[item].payment
+      console.log(paymentData)
+      let paymentTypes = ['','代金券','账户余额','在线支付']
+      let paymentMethods = {
+        ecard: '代金券',
+        balance:'账户余额',
+        alipay:'支付宝',
+        wxpay:'微信支付'
+      }
+      if(paymentData.type){
+        
+        if(paymentData.type == 1 || paymentData.type == 2){
+          payment += paymentTypes[paymentData.type]
+          if (paymentData.method == 'alipay' || paymentData.method == 'wxpay'){
+            payment += ('+' + paymentMethods[paymentData.method])
+          }
+        } else if (paymentData.type == 3){
+          payment += paymentMethods[paymentData.method]
+        }
+      }
+      console.log('payment' , payment)
       let record = {
         "商城订单号": rows[item].order_no,
         "京东订单号": rows[item].jd_order_id,
@@ -908,6 +932,7 @@ class MallController extends Controller {
         "收件人": rows[item].address ? rows[item].address.name : '',
         "收件人电话": rows[item].address ? rows[item].address.mobile : '',
         "收件人地址": rows[item].address ? rows[item].address.address + rows[item].address.info : '',
+        "支付方式":payment
       }
       csvList.push(record)
     }
