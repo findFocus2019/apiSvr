@@ -1,6 +1,7 @@
 const Controller = require('./../../../lib/controller')
 const Op = require('sequelize').Op
-
+const jdUtils = require('../../utils/jd_utils')
+const smsUtils = require('../../utils/sms_utils')
 class ConfigController extends Controller {
 
   async list(ctx) {
@@ -56,6 +57,39 @@ class ConfigController extends Controller {
     this.logger.info(ctx.uuid, 'update()', 'ret', ctx.ret)
     return ctx.ret
 
+  }
+
+  /**
+   * jd余额
+   * @param {*} ctx 
+   */
+  async getJdBalance(ctx) {
+    this.logger.info(ctx.uuid, 'getJdBalance()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+
+    let result = await jdUtils.getBalance(4)
+    let resultObj = JSON.parse(result)
+    if (resultObj.success) {
+      ctx.ret.data = resultObj
+    } else {
+      ctx.ret.code = -1
+      ctx.ret.message = '京东接口查询错误'
+    }
+
+    this.logger.info(ctx.uuid, 'getJdBalance()', 'ret', ctx.ret)
+    return ctx.ret
+  }
+
+  /**
+   * 短信余额
+   * @param {*} ctx 
+   */
+  async getSmsBalance(ctx) {
+    this.logger.info(ctx.uuid, 'getSmsBalance()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    let result = await smsUtils.getBalance()
+    // let resultObj = JSON.parse(result)
+    ctx.ret.data = result
+    this.logger.info(ctx.uuid, 'getSmsBalance()', 'ret', ctx.ret)
+    return ctx.ret
   }
 
 }
