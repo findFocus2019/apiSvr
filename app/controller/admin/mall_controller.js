@@ -274,6 +274,7 @@ class MallController extends Controller {
  
     let mallModel = new this.models.mall_model
     let paymentModel = mallModel.paymentModel()
+    let orderModel = mallModel.orderModel()
     let userInfoModel = (new this.models.user_model).infoModel()
     paymentModel.belongsTo(userInfoModel, {
       targetKey: 'user_id',
@@ -295,6 +296,21 @@ class MallController extends Controller {
         attributes: ['id', 'nickname', 'mobile']
       }]
     })
+
+    for (let index = 0; index < queryRet.rows.length; index++) {
+      const item = queryRet.rows[index]
+      let orderIds = item.order_ids.substr(1, item.order_ids.length - 2).split('-')
+      let orders = await orderModel.findAll({
+        where:{
+          id: {
+            [Op.in]:orderIds
+          }
+        }
+      })
+
+      item.dataValues.orders = orders
+      queryRet.rows[index] = item
+    }
 
     ctx.ret.data = queryRet
     this.logger.info(ctx.uuid, 'paymentList()', 'ret', ctx.ret)
@@ -880,7 +896,8 @@ class MallController extends Controller {
     let csvList = []
     //字段
     let fields = [
-      "商城订单号", "京东订单号", "使用的积分数量",
+      "日期",
+      "订单号", "京东订单号", "使用的积分金额",
       "商品ID", "购买商品", "订单状态",
       "订单类型", "总价" , "收件人" , "收件人电话" , "收件人地址",
       "支付方式"
@@ -923,8 +940,10 @@ class MallController extends Controller {
         }
       }
       console.log('payment' , payment)
+      let dateUtils = this.utils.date_utils
       let record = {
-        "商城订单号": rows[item].order_no,
+        "日期": dateUtils.dateFormat(rows[item].create_time),
+        "订单号": rows[item].order_no,
         "京东订单号": rows[item].jd_order_id,
         "使用的积分数量": score,
         "商品ID": goodIdsList.join(","),
