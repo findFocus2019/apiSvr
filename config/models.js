@@ -339,11 +339,42 @@ module.exports = {
         email: FIELDS.stringLen(128),
         password: FIELDS.stringLen(32),
         pid: FIELDS.tinyInt(0),
-        type: FIELDS.tinyInt(0)
+        type: FIELDS.tinyInt(0),
+        group_id: FIELDS.defaultInt()
       },
       {
         ...commonOpts,
         tableName: 't_admin'
+      }
+    ]
+  },
+  adminGroup: () => {
+    return [{
+        ...commonFieldGet(),
+        status: getStatusFields(0),
+        name: FIELDS.stringLen(64),
+        admin_id: FIELDS.bigInt(),
+        rules: FIELDS.stringLen(1000)
+      },
+      {
+        ...commonOpts,
+        tableName: 't_admin_group'
+      }
+    ]
+  },
+  adminRules: () => {
+    return [{
+        ...commonFieldGet(),
+        status: getStatusFields(0),
+        name: FIELDS.stringLen(64),
+        pid: FIELDS.bigInt(),
+        router: FIELDS.stringLen(1000),
+        icon: FIELDS.stringLen(24),
+        sort: FIELDS.defaultInt()
+      },
+      {
+        ...commonOpts,
+        tableName: 't_admin_rules'
       }
     ]
   },
@@ -543,6 +574,7 @@ module.exports = {
         remark: FIELDS.stringLen(255),
         finish_time: FIELDS.defaultInt(),
         express_time: FIELDS.defaultInt(),
+        express_extend_num: FIELDS.tinyInt(),
         jd_order_id: FIELDS.stringLen(32)
       },
       {

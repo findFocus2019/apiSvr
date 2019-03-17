@@ -50,9 +50,21 @@ class Schedule extends CommonControler {
     let orders = await orderModel.findAll({
       where: {
         status:2,
-        express_time:{
-          [Op.lt]:expressTime
-        }
+        [Op.or]: [
+          {
+            express_extend_num:0,
+            express_time:{
+              [Op.lt]:expressTime
+            }
+          },
+          {
+            express_extend_num:1,
+            express_time:{
+              [Op.lt]:expressTime - 7 * 24 * 3600
+            }
+          }
+        ]
+        
       }
     })
 
@@ -182,16 +194,10 @@ class Schedule extends CommonControler {
       },
       order: [
         ['create_time', 'desc']
-      ],
-      attributes: {
-        exclude: ['update_time']
-      },
-      include: [{
-        model: userInfoModel,
-        attributes: ['id', 'nickname', 'mobile']
-      }]
+      ]
     })
     let AppMallController = require('../app/controller/app/mall_controller')
+    this.logger.info('Schedule submitJdOrder queryRet: ', queryRet.rows.length)
     //有对应订单，自助下单
     if (queryRet.rows.length > 0) {
       let orderList = queryRet.rows
@@ -222,7 +228,7 @@ class Schedule extends CommonControler {
           city: order.address.city,
           county: order.address.county,
           town: order.address.town,
-          address: order.address.address,
+          address: order.address.address + order.address.info,
           mobile: order.address.mobile,
           email:'wang.wy@jurenchina.net',//要加
           // invoiceState: 1,
@@ -272,13 +278,15 @@ class Schedule extends CommonControler {
             })
             .catch(error => {
               this.logger.error('Schedule submitJdOrder error: ', error)
-              s// ctx.ret.data = {code: -3, error: '更新失败'}
+              // ctx.ret.data = {code: -3, error: '更新失败'}
             })
           }
         }
         
       
       }
+    }else {
+      this.logger.info('Schedule submitJdOrder 无结算订单')
     }
        
     

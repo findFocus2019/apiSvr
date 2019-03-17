@@ -1204,6 +1204,44 @@ class MallController extends CommonController {
   }
 
   /**
+   * 延长订单
+   */
+  async orderCompleteExtend(ctx) {
+
+    this.logger.info(ctx.uuid, 'orderCompleteExtend()', 'body', ctx.body, 'query', ctx.query)
+
+    let userId = ctx.body.user_id
+    let orderId = ctx.body.order_id
+
+    let mallModel = new this.models.mall_model
+    let orderModel = mallModel.orderModel()
+
+    let t = await mallModel.getTrans()
+
+    try {
+      let order = await orderModel.findByPk(orderId)
+      if (order.user_id != userId && order.status != 2) {
+        throw new Error('订单数据错误')
+      }
+
+      order.express_extend_num = 1
+      let orderRet = await order.save({
+        transaction: t
+      })
+      if(!orderRet){
+        throw new Error('延长收货失败')
+      }
+
+      t.commit()
+    } catch (err) {
+      t.rollback()
+      return this._fail(ctx, err.message)
+    }
+
+    return ctx.ret
+  }
+
+  /**
    * 完成订单（确认收货)
    */
   async orderComplete(ctx) {
