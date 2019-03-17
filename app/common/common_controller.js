@@ -1,6 +1,7 @@
 const Controller = require('./../../lib/controller')
 const Log = require('./../../lib/log')
 const Op = require('sequelize').Op
+
 class CommonController extends Controller {
 
   /**
@@ -27,8 +28,10 @@ class CommonController extends Controller {
     let goods = await goodsModel.findByPk(item.id)
 
     let rateRabate = order.vip ? goods.rabate_rate_vip : goods.rabate_rate
-    let numRabate = order.vip ? (item.price_vip - item.price_cost) : (item.price_sell - item.price_cost)
-    numRabate = numRabate * rateRabate / 100
+    let profit = order.vip ? (item.price_vip - item.price_cost) : (item.price_sell - item.price_cost)
+    // let profit = numRabate
+    let numRabate = profit * rateRabate / 100
+    this.logger.info(ctx.uuid, '_creareOrderItem profit', profit)
     this.logger.info(ctx.uuid, '_creareOrderItem rateRabate', rateRabate)
     this.logger.info(ctx.uuid, '_creareOrderItem numRabate', numRabate)
 
@@ -39,17 +42,18 @@ class CommonController extends Controller {
     let numRabateShare = 0
     let numRabatePost = 0
     let numRabateInvite = 0
+    let profitOver = 0
 
     if (user.pid) {
       // 邀请人
       let inviteUser = await userModel.getInviteUser(user.pid)
       if (!inviteUser) {
-        inviteUserId = this.config.defaultInivteUserId
+        inviteUserId = 0
       } else {
         inviteUserId = user.pid
       }
     } else {
-      inviteUserId = this.config.defaultInivteUserId
+      inviteUserId = 0
     }
     this.logger.info(ctx.uuid, '_creareOrderItem inviteUserId', inviteUserId)
 
@@ -114,10 +118,14 @@ class CommonController extends Controller {
 
     }
 
+    profitOver = profit - numRabatePost - numRabateInvite - numRabateShare
+
+    profitOver = parseFloat(profitOver).toFixed(2)
     numRabatePost = parseFloat(numRabatePost).toFixed(2)
     numRabateInvite = parseFloat(numRabateInvite).toFixed(2)
     numRabateShare = parseFloat(numRabateShare).toFixed(2)
 
+    this.logger.info(ctx.uuid, '_creareOrderItem profitOver', profitOver)
     this.logger.info(ctx.uuid, '_creareOrderItem numRabatePost', numRabatePost)
     this.logger.info(ctx.uuid, '_creareOrderItem numRabateInvite', numRabateInvite)
     this.logger.info(ctx.uuid, '_creareOrderItem numRabateShare', numRabateShare)
@@ -148,7 +156,9 @@ class CommonController extends Controller {
       invite_user_id: inviteUserId,
       goods_title: item.title,
       goods_cover: item.cover,
-      goods_amount: goodsAmount
+      goods_amount: goodsAmount,
+      profit: profit,
+      profit_over: profitOver
     }
     this.logger.info(ctx.uuid, '_creareOrderItem', data)
     let orderItem = await orderItemModel.create(data, opts)
@@ -281,9 +291,13 @@ class CommonController extends Controller {
     for (let index = 0; index < items.length; index++) {
       const item = items[index]
 
+      let defaultInviteUser = this.config.defaultInivteUserId
+
       await this._rabateDealByUser(ctx, item.id, item.invite_user_id, item.num_rabate_invite, userModel, taskModel, 15, logger)
       await this._rabateDealByUser(ctx, item.id, item.share_user_id, item.num_rabate_share, userModel, taskModel, 16, logger)
       await this._rabateDealByUser(ctx, item.id, item.post_user_id, item.num_rabate_post, userModel, taskModel, 17, logger)
+
+      await this._rabateDealByUser(ctx, item.id, defaultInviteUser, item.profit_over, userModel, taskModel, 15, logger)
 
       item.status = 1
       await item.save()

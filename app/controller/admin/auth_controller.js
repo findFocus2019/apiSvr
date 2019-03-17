@@ -141,10 +141,53 @@ class AuthController extends Controller {
     let groupId = ctx.session.AUTH.admin.group_id || 0
 
     let info = await adminModel.getGroupInfo(groupId)
+    // info.dataValues.rules = info.dataValues.rules.split(',')
     ctx.ret.data = info
 
     this.logger.info(ctx.uuid, '/adminGroupInfo' , ctx.ret)
     
+    return ctx.ret
+  }
+
+  async groupInfoGet(ctx){
+    this.logger.info(ctx.uuid, '/GroupInfoGet' , ctx.body , 'session' , ctx.session)
+    let adminModel = new this.models.admin_model
+    let groupModel = adminModel.groupModel()
+    let groupId = ctx.body.id || 0
+
+    let info = await groupModel.findByPk(groupId)
+    // info.dataValues.rules = info.dataValues.rules.split(',')
+    ctx.ret.data = info
+
+    this.logger.info(ctx.uuid, '/GroupInfoGet' , ctx.ret)
+    
+    return ctx.ret
+  }
+
+  async adminGroupUpdate(ctx){
+    this.logger.info(ctx.uuid, '/adminGroupUpdate' , ctx.body )
+    let adminModel = new this.models.admin_model
+
+    let data = ctx.body
+    console.log('==========', typeof data.rules)
+    if(typeof data.rules !== 'string'){
+      data.rules = data.rules.join(',')
+    }
+    
+    if(data.id){
+      let group = await adminModel.groupModel().findByPk(data.id)
+      group.name = data.name
+      group.rules = data.rules
+      group.status = data.status
+      await group.save()
+      
+    }else {
+      await adminModel.groupModel().create({
+        name: data.name,
+        rules: data.rules
+      })
+    }
+
     return ctx.ret
   }
 
@@ -156,7 +199,9 @@ class AuthController extends Controller {
 
     let groups = await groupModel.findAll({
       where: {
-        status: 1
+        status: {
+          [Op.gte]: 0
+        }
       }
     })
 
@@ -169,7 +214,7 @@ class AuthController extends Controller {
   }
 
   async groupUpdate(ctx){
-    this.logger.info(ctx.uuid, '/groupList' , ctx.body)
+    this.logger.info(ctx.uuid, '/groupUpdate' , ctx.body)
 
     let data = ctx.body
     let adminModel = new this.models.admin_model
@@ -188,7 +233,7 @@ class AuthController extends Controller {
   }
   
   async groupDelete(ctx){
-    this.logger.info(ctx.uuid, '/groupList' , ctx.body)
+    this.logger.info(ctx.uuid, '/groupDelete' , ctx.body)
 
     let groupId = ctx.body.id 
     let adminModel = new this.models.admin_model
@@ -198,6 +243,23 @@ class AuthController extends Controller {
     await group.save()
 
     ctx.ret.data = group
+    return ctx.ret
+  }
+
+  async rulesList(ctx){
+    this.logger.info(ctx.uuid, '/rulesList' , ctx.body)
+
+    let adminModel = new this.models.admin_model
+    let rulesModel = adminModel.rulesModel()
+    let rules = await rulesModel.findAll({
+      where: {status: 1},
+      order: [
+        ['pid' , 'asc'],
+        ['sort' , 'asc'],
+      ]
+    })
+
+    ctx.ret.data = rules
     return ctx.ret
   }
 }

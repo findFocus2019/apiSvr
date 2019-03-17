@@ -646,7 +646,9 @@ module.exports = {
         rate_imgs: FIELDS.jsonArr('rate_imgs'),
         rate_time: FIELDS.defaultInt(),
         order_status: FIELDS.tinyInt(),
-        rabate_date: FIELDS.stringLen(8)
+        rabate_date: FIELDS.stringLen(8),
+        profit: FIELDS.money('profit'),
+        profit_over: FIELDS.money('profit_over'),
       },
       {
         ...commonOpts,

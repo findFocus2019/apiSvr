@@ -108,7 +108,7 @@ let config = {
   },
 
   // 默认邀请人id
-  defaultInivteUserId: 1,
+  defaultInivteUserId: 0,
 
   scoreExchangeNum: 6000,
 

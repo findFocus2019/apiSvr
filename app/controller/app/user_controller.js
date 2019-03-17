@@ -47,6 +47,7 @@ class UserController extends Controller {
 
     let userId = ctx.body.user_id
     let userModel = new this.models.user_model
+    let user = await userModel.model().findByPk(userId)
     let info = await userModel.getInfoByUserId(userId)
     // let isVip = await userModel.isVip(userId)
 
@@ -56,6 +57,7 @@ class UserController extends Controller {
       isVip = true
     }
 
+    info.dataValues.pid = user.pid || 0
     info.dataValues.deadDate = this.utils.date_utils.dateFormat(info.deadline , 'YYYY-MM-DD')
 
     let taskModel = new this.models.task_model
@@ -75,7 +77,33 @@ class UserController extends Controller {
 
     let userId = ctx.body.user_id
     let body = ctx.body
+
     let userModel = new this.models.user_model
+
+    if(body.hasOwnProperty('pid')) {
+      let pidMobile = body.pid
+      if(!pidMobile && pidMobile.length != '11'){
+        return this._fail(ctx, '请输入正确的推荐人手机')
+      }
+
+      let pUser = await userModel.model().findOne({
+        where: {
+          mobile: pidMobile
+        }
+      })
+
+      if(!pUser){
+        return this._fail(ctx, '推荐人信息错误')
+      }
+
+      // body.pid = pUser.id
+
+      let user = await userModel.model().findByPk(userId)
+      user.pid = pUser.id
+      await user.save()
+    }
+    this.logger.info(ctx.uuid, 'infoUpdate()', 'body', body)
+    
     let info = await userModel.getInfoByUserId(userId)
 
     let updateItems = ['nickname', 'sex', 'avatar', 'alipay', 'openid']
@@ -1525,6 +1553,34 @@ class UserController extends Controller {
       num: signDayNum
     }
 
+    return ctx.ret
+  }
+
+  /**
+   * 未结算收益
+   * @param {*} ctx 
+   */
+  async rabates(ctx){
+    this.logger.info(ctx.uuid, 'rabates()', 'body', ctx.body, 'query', ctx.query)
+    let userId = ctx.body.user_id
+    let mallModel = new this.models.mall_model
+    let orderItemsModel = mallModel.orderItemModel()
+
+    let list = await orderItemsModel.findAll({
+      where: {
+        status: 0,
+        [Op.or] : [
+          {share_user_id: userId},
+          {post_user_id: userId},
+          {invite_user_id: userId}
+        ]
+      }
+    })
+
+    list.forEach(item => {
+      item.dataValues.create_date = this.utils.date_utils.dateFormat(item.create_time , 'YYYY-MM-DD HH:mm')
+    })
+    ctx.ret.data = list 
     return ctx.ret
   }
 }
