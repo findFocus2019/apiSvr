@@ -1034,6 +1034,78 @@ class MallController extends Controller {
     }
 
   }
+
+  async paymentExport(ctx) {
+    let dateFormat = 'YYYYMMDD'
+    let startTime = dateUtiles.getTimestamp(ctx.body.startDate) || 0
+    let endTime = dateUtiles.getTimestamp(ctx.body.endDate) || 0
+    
+    let mallModel = new this.models.mall_model
+    let paymentModel = mallModel.paymentModel()
+    let userInfoModel = (new this.models.user_model).infoModel()
+    paymentModel.belongsTo(userInfoModel, {
+      targetKey: 'user_id',
+      foreignKey: 'user_id'
+    })
+
+    let { count, rows } = await paymentModel.findAndCountAll({
+      where: {
+        status: {
+          [Op.gt]: -1
+        },
+        update_time: {
+          [Op.gte]: startTime > 0 ? startTime : 0,
+          [Op.lte]: endTime > 0 ? endTime : parseInt(Date.now() / 1000)
+        }
+      },
+      order: [
+        ['create_time', 'desc']
+      ]
+    })
+    //csv数据
+    let csvList = []
+    //字段
+    let fields = [
+      "ID","用户信息","支付方式","退款信息"
+    ]
+    for (let item in rows) {
+      let dateUtils = this.utils.date_utils
+      let record = {
+        "ID": rows[item].id,
+        // "用户信息":rows[item].,
+        "日期": dateUtils.dateFormat(rows[item].create_time),
+        "支付方式": rows[item].payment,
+        "退款信息": rows[item].refund
+      }
+      csvList.push(record)
+    }
+    try {
+      const parser = new Parser({ fields })
+      let csv = parser.parse(csvList)
+      let filePath = __dirname + '/../../../backup/'
+      let fileName = `${startDate}-${endDate}-payment.csv`
+      await util.promisify(fs.writeFile)(path.join(filePath,fileName), csv)
+      let uploadResult = await aliOssUtils.uploadFile(filePath + fileName)
+      ctx.ret.uploadResult = uploadResult
+      if (!uploadResult.url) {
+        ctx.ret.code = -1
+        ctx.ret.message = "导出文件失败"
+      } else {
+        ctx.ret.code = 0
+        ctx.ret.message = '上传成功'
+        ctx.ret.data = {
+          url: uploadResult.url
+        }
+      }
+      return ctx.ret
+    } catch (err) {
+      console.log(err)
+      ctx.ret.code = -1
+      ctx.ret.message = "导出文件失败"
+      return ctx.ret
+    }
+  }
+
   _getOrderStatus(status) {
     switch (status) {
       case 0:

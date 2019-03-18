@@ -2,8 +2,8 @@ const request = require('./../../request')
 
 describe('test admin api', () => {
 
-  it('user orderExport', async () => {
-      let ret = await request.post('admin/mall/orderExport', {
+  it('user paymentExport', async () => {
+      let ret = await request.post('admin/mall/paymentExport', {
         body: {
           // id: 5
         }
