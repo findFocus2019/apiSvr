@@ -884,7 +884,7 @@ class MallController extends Controller {
   async orderCommentList(ctx) {
     this.logger.info('orderCommentList: ', ctx.body)
     let {
-      page = 1, limit = 10, search = ""
+      page = 1, limit = 10, search = ''
     } = ctx.body
 
     let mallModel = new this.models.mall_model()
@@ -942,11 +942,11 @@ class MallController extends Controller {
     let csvList = []
     //字段
     let fields = [
-      "日期",
-      "订单号", "京东订单号", "使用的积分金额",
-      "商品ID", "购买商品", "订单状态",
-      "订单类型", "总价", "收件人", "收件人电话", "收件人地址",
-      "支付方式"
+      '日期',
+      '订单号', '京东订单号', '使用的积分金额',
+      '商品ID', '购买商品', '订单状态',
+      '订单类型', '总价', '收件人', '收件人电话', '收件人地址',
+      '支付方式'
     ]
     for (let item in rows) {
       let goodNamesList = [],
@@ -989,19 +989,19 @@ class MallController extends Controller {
       console.log('payment', payment)
       let dateUtils = this.utils.date_utils
       let record = {
-        "日期": dateUtils.dateFormat(rows[item].create_time),
-        "订单号": rows[item].order_no,
-        "京东订单号": rows[item].jd_order_id,
-        "使用的积分数量": score,
-        "商品ID": goodIdsList.join(","),
-        "购买商品": goodNamesList.join(","),
-        "订单状态": this._getOrderStatus(rows[item].status),
-        "订单类型": this._getOrderType(rows[item].order_type),
-        "总价": this._getOrderTotal(rows[item]),
-        "收件人": rows[item].address ? rows[item].address.name : '',
-        "收件人电话": rows[item].address ? rows[item].address.mobile : '',
-        "收件人地址": rows[item].address ? rows[item].address.address + rows[item].address.info : '',
-        "支付方式": payment
+        '日期': dateUtils.dateFormat(rows[item].create_time),
+        '订单号': rows[item].order_no,
+        '京东订单号': rows[item].jd_order_id,
+        '使用的积分数量': score,
+        '商品ID': goodIdsList.join(','),
+        '购买商品': goodNamesList.join(','),
+        '订单状态': this._getOrderStatus(rows[item].status),
+        '订单类型': this._getOrderType(rows[item].order_type),
+        '总价': this._getOrderTotal(rows[item]),
+        '收件人': rows[item].address ? rows[item].address.name : '',
+        '收件人电话': rows[item].address ? rows[item].address.mobile : '',
+        '收件人地址': rows[item].address ? rows[item].address.address + rows[item].address.info : '',
+        '支付方式': payment
       }
       csvList.push(record)
     }
@@ -1017,7 +1017,7 @@ class MallController extends Controller {
       ctx.ret.uploadResult = uploadResult
       if (!uploadResult.url) {
         ctx.ret.code = -1
-        ctx.ret.message = "导出文件失败"
+        ctx.ret.message = '导出文件失败'
       } else {
         ctx.ret.code = 0
         ctx.ret.message = '上传成功'
@@ -1029,7 +1029,7 @@ class MallController extends Controller {
     } catch (err) {
       console.log(err)
       ctx.ret.code = -1
-      ctx.ret.message = "导出文件失败"
+      ctx.ret.message = '导出文件失败'
       return ctx.ret
     }
 
@@ -1039,57 +1039,99 @@ class MallController extends Controller {
     let dateFormat = 'YYYYMMDD'
     let startTime = dateUtiles.getTimestamp(ctx.body.startDate) || 0
     let endTime = dateUtiles.getTimestamp(ctx.body.endDate) || 0
-    
+    let startDate = startTime > 0 ? dateUtiles.dateFormat(startTime, dateFormat) : '开始'
+    let endDate = endTime > 0 ? dateUtiles.dateFormat(endTime, dateFormat) : '至今'
+
     let mallModel = new this.models.mall_model
     let paymentModel = mallModel.paymentModel()
+    let orderModel = mallModel.orderModel()
     let userInfoModel = (new this.models.user_model).infoModel()
     paymentModel.belongsTo(userInfoModel, {
       targetKey: 'user_id',
       foreignKey: 'user_id'
     })
 
-    let { count, rows } = await paymentModel.findAndCountAll({
+    let {
+      count,
+      rows
+    } = await paymentModel.findAndCountAll({
       where: {
-        status: {
-          [Op.gt]: -1
-        },
-        update_time: {
+        status: 1,
+        create_time: {
           [Op.gte]: startTime > 0 ? startTime : 0,
           [Op.lte]: endTime > 0 ? endTime : parseInt(Date.now() / 1000)
         }
       },
       order: [
         ['create_time', 'desc']
-      ]
+      ],
+      include: [{
+        model: userInfoModel,
+        attributes: ['id', 'nickname', 'mobile']
+      }]
     })
     //csv数据
     let csvList = []
     //字段
     let fields = [
-      "ID","用户信息","支付方式","退款信息"
+      'ID', '用户信息', '手机号码', '支付方式', '账单总金额', '在线支付金额', '代金券使用', '余额使用', '积分使用', '支付时间', '订单号'
     ]
-    for (let item in rows) {
+    let payTypes = ['代金券', '账户余额', '在线支付']
+    let payMethods = {
+      ecard: '代金券',
+      balance: '账户余额',
+      wxpay: '微信支付',
+      alipay: '支付宝'
+    }
+    for (let i in rows) {
       let dateUtils = this.utils.date_utils
-      let record = {
-        "ID": rows[item].id,
-        // "用户信息":rows[item].,
-        "日期": dateUtils.dateFormat(rows[item].create_time),
-        "支付方式": rows[item].payment,
-        "退款信息": rows[item].refund
+      let item = rows[i]
+      let payment = ''
+      payment += payTypes[item.pay_type]
+      if (item.pay_method == 'alipay' || item.pay_method == 'wxpay') {
+        payment += (',' + payMethods[item.pay_method])
       }
+      let record = {
+        'ID': item.id,
+        '用户信息': item.user_info.nickname,
+        '手机号码': item.user_info.mobile,
+        '支付方式': payment,
+        '账单总金额': parseFloat(item.amount + item.balance + item.ecard).toFixed(2),
+        '在线支付金额': parseFloat(item.amount).toFixed(2),
+        '代金券使用': parseFloat(item.ecard).toFixed(2),
+        '余额使用': parseFloat(item.balance).toFixed(2),
+        '积分使用': item.score,
+        '支付时间': dateUtils.dateFormat(item.create_time)
+      }
+
+      let orderIds = item.order_ids.substr(1, item.order_ids.length - 2).split('-')
+      let orders = await orderModel.findAll({
+        where: {
+          id: {
+            [Op.in]: orderIds
+          }
+        }
+      })
+      let orderNos = []
+      orders.forEach(order => {
+        orderNos.push(order.order_no)
+      })
+      record['订单号'] = orderNos.join(',')
       csvList.push(record)
     }
     try {
-      const parser = new Parser({ fields })
+      const parser = new Parser({
+        fields
+      })
       let csv = parser.parse(csvList)
       let filePath = __dirname + '/../../../backup/'
       let fileName = `${startDate}-${endDate}-payment.csv`
-      await util.promisify(fs.writeFile)(path.join(filePath,fileName), csv)
+      await util.promisify(fs.writeFile)(path.join(filePath, fileName), csv)
       let uploadResult = await aliOssUtils.uploadFile(filePath + fileName)
       ctx.ret.uploadResult = uploadResult
       if (!uploadResult.url) {
         ctx.ret.code = -1
-        ctx.ret.message = "导出文件失败"
+        ctx.ret.message = '导出文件失败'
       } else {
         ctx.ret.code = 0
         ctx.ret.message = '上传成功'
@@ -1101,7 +1143,7 @@ class MallController extends Controller {
     } catch (err) {
       console.log(err)
       ctx.ret.code = -1
-      ctx.ret.message = "导出文件失败"
+      ctx.ret.message = '导出文件失败'
       return ctx.ret
     }
   }
