@@ -1,7 +1,9 @@
 const fs = require('fs')
 const util = require('util')
 const path = require('path')
-const { Parser } = require('json2csv')
+const {
+  Parser
+} = require('json2csv')
 const Op = require('sequelize').Op
 const jdUtils = require('../../utils/jd_utils')
 const aliOssUtils = require('../../utils/ali_oss_utils')
@@ -170,11 +172,11 @@ class MallController extends Controller {
     if (status !== '') {
       where.status = status
     }
-    if(type !== ''){
+    if (type !== '') {
       where.order_type = type
     }
-    
-    if(orderIds){
+
+    if (orderIds) {
       where.id = {
         [Op.in]: orderIds.substr(1, orderIds.length - 2).split('-')
       }
@@ -232,18 +234,20 @@ class MallController extends Controller {
     }
 
     let items = await orderItemsModel.findAll({
-      where: {order_id : orderId}
+      where: {
+        order_id: orderId
+      }
     })
 
     orderInfo.dataValues.items = items
 
-    if(orderInfo.order_type == 2){
-      let jdOrderId  = orderInfo.jd_order_id
+    if (orderInfo.order_type == 2) {
+      let jdOrderId = orderInfo.jd_order_id
       let jdData = await jdUtils.orderTrack(jdOrderId)
       let jdDataObj = JSON.parse(jdData)
 
       orderInfo.dataValues.jdData = jdDataObj
-    }else {
+    } else {
       orderInfo.dataValues.jdData = null
     }
 
@@ -271,7 +275,7 @@ class MallController extends Controller {
     if (userId) {
       where.user_id = userId
     }
- 
+
     let mallModel = new this.models.mall_model
     let paymentModel = mallModel.paymentModel()
     let orderModel = mallModel.orderModel()
@@ -301,9 +305,9 @@ class MallController extends Controller {
       const item = queryRet.rows[index]
       let orderIds = item.order_ids.substr(1, item.order_ids.length - 2).split('-')
       let orders = await orderModel.findAll({
-        where:{
+        where: {
           id: {
-            [Op.in]:orderIds
+            [Op.in]: orderIds
           }
         }
       })
@@ -372,7 +376,7 @@ class MallController extends Controller {
    * 发货
    * @param {Object} ctx 
    */
-  async dispatchGoods (ctx) {
+  async dispatchGoods(ctx) {
     this.logger.info('dispatchGoods: ', ctx.body)
 
     let orderId = ctx.body.orderId
@@ -384,11 +388,17 @@ class MallController extends Controller {
 
     let order = await orderModel.findByPk(orderId)
     if (order === null) { // 没有找到订单
-      ctx.ret.data = {code: -1, error: '没有找到此订单'}
+      ctx.ret.data = {
+        code: -1,
+        error: '没有找到此订单'
+      }
       return
     }
     if (order.status !== 1) { // 不是支付完成的状态
-      ctx.ret.data = {code: -2, error: '订单不是“支付完成”状态'}
+      ctx.ret.data = {
+        code: -2,
+        error: '订单不是“支付完成”状态'
+      }
       return
     }
     this.logger.info('dispatchGoods order: ', order)
@@ -398,23 +408,26 @@ class MallController extends Controller {
     if (order.order_type === 2) { // 是京东订单
       let sku = []
       let orderPriceSnap = []
-      
+
       order.goods_items.forEach(item => {
         sku.push({
           num: 1,
-          skuId: item.uuid, 
+          skuId: item.uuid,
           bNeedAnnex: false,
           bNeedGift: true,
           // price: item.price_sell,
           // yanbao: [{skuId: item.uuid}]
         })
 
-        orderPriceSnap.push({skuId: item.uuid, price: item.price_cost})
+        orderPriceSnap.push({
+          skuId: item.uuid,
+          price: item.price_cost
+        })
       })
 
-            
+
       let submitOrderParams = {
-        thirdOrder: order.order_no,       
+        thirdOrder: order.order_no,
         sku: JSON.stringify(sku),
         name: order.address.name,
         province: order.address.province,
@@ -423,17 +436,17 @@ class MallController extends Controller {
         town: order.address.town,
         address: order.address.address + order.address.info,
         mobile: order.address.mobile,
-        email:'wang.wy@jurenchina.net',//要加
+        email: 'wang.wy@jurenchina.net', //要加
         // invoiceState: 1,
         invoiceContent: 100,
         paymentType: 4,
         isUseBalance: 1,
         submitState: 0,
-        doOrderPriceMode:  1,
-        orderPriceSnap: JSON.stringify(orderPriceSnap) ,
+        doOrderPriceMode: 1,
+        orderPriceSnap: JSON.stringify(orderPriceSnap),
         invoicePhone: order.address.mobile
       }
-      
+
       this.logger.info('submitorderparams: ', submitOrderParams)
       let submitOrderResult = await AppMallController.submitOrder(submitOrderParams)
       this.logger.info('submitOrderResult: ', submitOrderResult)
@@ -460,23 +473,32 @@ class MallController extends Controller {
     }
 
     orderModel.update({
-        express: {company: expressCompany, express_no: expressNo}, 
-        express_time: parseInt(Date.now() / 1000),
-        status: 2,
-        jd_order_id: jdOrderId
-      }, 
-      {
-        where: {id: orderId}
-      }).then(result => {
+      express: {
+        company: expressCompany,
+        express_no: expressNo
+      },
+      express_time: parseInt(Date.now() / 1000),
+      status: 2,
+      jd_order_id: jdOrderId
+    }, {
+      where: {
+        id: orderId
+      }
+    }).then(result => {
       this.logger.info('dispatchGoods update result: ', result)
-      ctx.ret.data = {code: 0}
+      ctx.ret.data = {
+        code: 0
+      }
     }).catch(error => {
       this.logger.error('dispatchGoods error: ', error)
-      ctx.ret.data = {code: -3, error: '更新失败'}
+      ctx.ret.data = {
+        code: -3,
+        error: '更新失败'
+      }
     })
   }
 
-  async orderAfters(ctx){
+  async orderAfters(ctx) {
     this.logger.info(ctx.uuid, 'orderAfters()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
 
     let page = ctx.body.page || 1
@@ -488,7 +510,7 @@ class MallController extends Controller {
     // let status = ctx.body.status || ''
 
     let where = {}
-    if(status !== ''){
+    if (status !== '') {
       where.status = status
     }
     if (search) {
@@ -499,7 +521,7 @@ class MallController extends Controller {
     if (userId) {
       where.user_id = userId
     }
- 
+
     let mallModel = new this.models.mall_model
     let orderAfterModel = mallModel.orderAfterModel()
     let orderModel = mallModel.orderModel()
@@ -526,15 +548,17 @@ class MallController extends Controller {
       }]
     })
 
-    
+
     for (let index = 0; index < queryRet.rows.length; index++) {
       let row = queryRet.rows[index]
       let order = await orderModel.findByPk(row.order_id)
       this.logger.info(ctx.uuid, 'orderAfters()', 'order', order)
       let payment = await paymentModel.findOne({
         where: {
-          order_ids: {[Op.like]:'%-' + order.id + '-%'},
-          status:1
+          order_ids: {
+            [Op.like]: '%-' + order.id + '-%'
+          },
+          status: 1
         }
       })
       this.logger.info(ctx.uuid, 'orderAfters()', 'payment', payment)
@@ -568,7 +592,7 @@ class MallController extends Controller {
       row.dataValues.order = order
       row.dataValues.payment = payment
       // row.dataValues.items = items
-      
+
     }
 
     ctx.ret.data = queryRet
@@ -576,7 +600,7 @@ class MallController extends Controller {
     return ctx.ret
   }
 
-  async orderAftetDetail(ctx){
+  async orderAftetDetail(ctx) {
     this.logger.info(ctx.uuid, 'orderAftetDetail()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
     let id = ctx.body.id
 
@@ -596,8 +620,10 @@ class MallController extends Controller {
     this.logger.info(ctx.uuid, 'orderAftetDetail()', 'order', order)
     let payment = await paymentModel.findOne({
       where: {
-        order_ids: {[Op.like]:'%-' + order.id + '-%'},
-        status:1
+        order_ids: {
+          [Op.like]: '%-' + order.id + '-%'
+        },
+        status: 1
       }
     })
     this.logger.info(ctx.uuid, 'orderAftetDetail()', 'payment', payment)
@@ -612,7 +638,7 @@ class MallController extends Controller {
 
     // goodsItems.forEach(item => {
     //   if(afterGoodsIds.indexOf(item.id.toString()) > -1){
-        
+
     //     let itemTotal = order.vip ? (item.price_vip) : item.price_sell
     //     this.logger.info(ctx.uuid, 'orderAftetDetail()', 'itemTotal', itemTotal)
     //     total += itemTotal
@@ -686,98 +712,104 @@ class MallController extends Controller {
             transaction: t
           })
 
-          if(!orderItemRet){
+          if (!orderItemRet) {
             throw new Error('更新订单商品条目信息失败')
           }
         }
 
         let order = await orderModel.findByPk(orderId)
         this.logger.info(ctx.uuid, 'orderAfterDeal()', 'order', order)
-        if(order.goods_ids == orderAfter.goods_ids){
+        if (order.goods_ids == orderAfter.goods_ids) {
           order.status = -1
-          let orderUpdateRet = await order.save({transaction: t})
-          if(!orderUpdateRet){
+          let orderUpdateRet = await order.save({
+            transaction: t
+          })
+          if (!orderUpdateRet) {
             throw new Error('更新订单信息失败')
           }
         }
 
         let payment = await paymentModel.findOne({
           where: {
-            order_ids: {[Op.like]:'%-' + order.id + '-%'},
-            status:1
+            order_ids: {
+              [Op.like]: '%-' + order.id + '-%'
+            },
+            status: 1
           }
         })
         this.logger.info(ctx.uuid, 'orderAfterDeal()', 'payment', payment)
-        if(!payment){
+        if (!payment) {
           throw new Error('未查找到付款信息')
         }
 
         // 需要处理的refund
         let refund = {
-          amount:0,
-          balance:0,
-          ecard:0,
-          score:0
+          amount: 0,
+          balance: 0,
+          ecard: 0,
+          score: 0
         }
         // 支付处理过的退款总和
-        let paymentRefund =  payment.refund || {}
+        let paymentRefund = payment.refund || {}
         this.logger.info(ctx.uuid, 'orderAfterDeal()', 'paymentRefund', paymentRefund)
-        let paymentAmount = parseFloat(payment.amount - (paymentRefund.amount || 0)).toFixed(2) 
-        let paymentBalance = parseFloat(payment.balance  - (paymentRefund.balance || 0)).toFixed(2)
-        let paymentEcard = parseFloat(payment.ecard  - (paymentRefund.ecard || 0)).toFixed(2)
+        let paymentAmount = parseFloat(payment.amount - (paymentRefund.amount || 0)).toFixed(2)
+        let paymentBalance = parseFloat(payment.balance - (paymentRefund.balance || 0)).toFixed(2)
+        let paymentEcard = parseFloat(payment.ecard - (paymentRefund.ecard || 0)).toFixed(2)
 
         let total = orderAfter.total
         let score = orderAfter.score
-        
+
         refund.score = score
-        if(total > paymentAmount){
+        if (total > paymentAmount) {
           refund.amount = paymentAmount
           paymentRefund.amount = (paymentRefund.amount || 0) + paymentAmount
-          total = total  - paymentAmount 
-        }else {
+          total = total - paymentAmount
+        } else {
           refund.amount = total
-          paymentRefund.amount = (paymentRefund.amount || 0) + total 
+          paymentRefund.amount = (paymentRefund.amount || 0) + total
           total = 0
         }
 
-        if(total > paymentBalance){
+        if (total > paymentBalance) {
           refund.balance = paymentBalance
-          paymentRefund.balance = (paymentRefund.balance || 0) + paymentBalance 
-          total = total  - paymentBalance 
-        }else {
+          paymentRefund.balance = (paymentRefund.balance || 0) + paymentBalance
+          total = total - paymentBalance
+        } else {
           refund.balance = total
-          paymentRefund.balance = (paymentRefund.balance || 0) + total 
+          paymentRefund.balance = (paymentRefund.balance || 0) + total
           total = 0
         }
 
-        if(total > paymentEcard){
+        if (total > paymentEcard) {
           refund.ecard = paymentEcard
-          paymentRefund.ecard = (paymentRefund.ecard || 0)  + paymentEcard 
-          total = total  - paymentEcard 
-        }else {
+          paymentRefund.ecard = (paymentRefund.ecard || 0) + paymentEcard
+          total = total - paymentEcard
+        } else {
           refund.ecard = total
-          paymentRefund.ecard = (paymentRefund.ecard || 0)  + total 
+          paymentRefund.ecard = (paymentRefund.ecard || 0) + total
           total = 0
         }
 
         total = parseFloat(total).toFixed(2)
-        paymentRefund.amount = parseFloat(paymentRefund.amount ).toFixed(2)
-        paymentRefund.balance = parseFloat(paymentRefund.balance ).toFixed(2)
-        paymentRefund.ecard = parseFloat(paymentRefund.ecard ).toFixed(2)
+        paymentRefund.amount = parseFloat(paymentRefund.amount).toFixed(2)
+        paymentRefund.balance = parseFloat(paymentRefund.balance).toFixed(2)
+        paymentRefund.ecard = parseFloat(paymentRefund.ecard).toFixed(2)
 
-        this.logger.info(ctx.uuid, 'orderAfterDeal()', 'refund',refund)
-        this.logger.info(ctx.uuid, 'orderAfterDeal()', 'paymentRefund',paymentRefund)
+        this.logger.info(ctx.uuid, 'orderAfterDeal()', 'refund', refund)
+        this.logger.info(ctx.uuid, 'orderAfterDeal()', 'paymentRefund', paymentRefund)
 
         payment.refund = paymentRefund
-        let paymentRet = payment.save({transaction: t})
-        if(!paymentRet){
+        let paymentRet = payment.save({
+          transaction: t
+        })
+        if (!paymentRet) {
           throw new Error('更新账单支付信息失败')
         }
-        
+
         // 处理退款
         let userInfo = await userModel.getInfoByUserId(userId)
-        if(refund.amount){
-          if(!userInfo.alipay){
+        if (refund.amount) {
+          if (!userInfo.alipay) {
             throw new Error('用户未设置支付宝，请提醒用户设置')
           }
 
@@ -787,7 +819,7 @@ class MallController extends Controller {
           let alipayUtils = this.utils.alipay_utils
           let tradeNo = this.utils.uuid_utils.v4()
           let amount = 1 * refund.amount
-          if(this.config.DEBUG){
+          if (this.config.DEBUG) {
             amount = 0.1
           }
           let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
@@ -800,27 +832,31 @@ class MallController extends Controller {
         userInfo.balance = userInfo.balance + refund.balance
         userInfo.score = userInfo.score + refund.score
 
-        let userInfoRet = await userInfo.save({transaction: t})
-        if(!userInfoRet){
+        let userInfoRet = await userInfo.save({
+          transaction: t
+        })
+        if (!userInfoRet) {
           throw new Error('更新用户信息失败')
         }
 
-        if(refund.ecard){
+        if (refund.ecard) {
           let ecardId = payment.ecard_id
           let userEcardModel = userModel.ecardModel()
           let ecard = await userEcardModel.findByPk(ecardId)
-          if(!ecard){
+          if (!ecard) {
             throw new Error('未找到对应退款代金券')
           }
 
           ecard.amount = ecard.amount + refund.ecard
           ecard.status = 1
-          let ecardRet = await ecard.save({transaction: t})
-          if(!ecardRet){
+          let ecardRet = await ecard.save({
+            transaction: t
+          })
+          if (!ecardRet) {
             throw new Error('代金券信息更新失败')
           }
         }
-        
+
       }
 
       orderAfter.status = 1
@@ -828,7 +864,7 @@ class MallController extends Controller {
       let orderAfterRet = await orderAfter.save({
         transaction: t
       })
-      if(!orderAfterRet){
+      if (!orderAfterRet) {
         throw new Error('更新售后信息失败')
       }
       t.commit()
@@ -845,15 +881,19 @@ class MallController extends Controller {
    * 交易后的商品评价列表
    * @param {Object} ctx 
    */
-  async orderCommentList (ctx) {
+  async orderCommentList(ctx) {
     this.logger.info('orderCommentList: ', ctx.body)
-    let {page = 1, limit = 10, search = ""} = ctx.body
+    let {
+      page = 1, limit = 10, search = ""
+    } = ctx.body
 
     let mallModel = new this.models.mall_model()
     let commentModel = mallModel.orderItemModel()
 
     let ret = await commentModel.findAndCountAll({
-      where: {order_status: 9},
+      where: {
+        order_status: 9
+      },
       offset: (page - 1) * limit,
       limit: limit,
       order: [
@@ -862,7 +902,10 @@ class MallController extends Controller {
     })
 
     if (ret === null) { // 没找到
-      return ctx.ret.data = {rows: [], count: 0}
+      return ctx.ret.data = {
+        rows: [],
+        count: 0
+      }
     }
 
     ctx.ret.data = ret
@@ -873,23 +916,26 @@ class MallController extends Controller {
   async orderExport(ctx) {
     let dateFormat = 'YYYYMMDD'
     let startTime = dateUtiles.getTimestamp(ctx.body.startDate) || 0
-    let endTime = dateUtiles.getTimestamp(ctx.body.endDate) || 0 
+    let endTime = dateUtiles.getTimestamp(ctx.body.endDate) || 0
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
     let startDate = startTime > 0 ? dateUtiles.dateFormat(startTime, dateFormat) : '开始'
     let endDate = endTime > 0 ? dateUtiles.dateFormat(endTime, dateFormat) : '至今'
-    let { count, rows } = await orderModel.findAndCountAll({
+    let {
+      count,
+      rows
+    } = await orderModel.findAndCountAll({
       where: {
         status: {
           [Op.gt]: -1
         },
-        update_time: {
+        create_time: {
           [Op.gte]: startTime > 0 ? startTime : 0,
           [Op.lte]: endTime > 0 ? endTime : parseInt(Date.now() / 1000)
         }
       },
-      order:[
-        ['create_time','desc']
+      order: [
+        ['create_time', 'desc']
       ]
     })
     //csv数据
@@ -899,21 +945,22 @@ class MallController extends Controller {
       "日期",
       "订单号", "京东订单号", "使用的积分金额",
       "商品ID", "购买商品", "订单状态",
-      "订单类型", "总价" , "收件人" , "收件人电话" , "收件人地址",
+      "订单类型", "总价", "收件人", "收件人电话", "收件人地址",
       "支付方式"
     ]
     for (let item in rows) {
-      let goodNamesList = [], goodIdsList=[]
+      let goodNamesList = [],
+        goodIdsList = []
       for (let index in rows[item].goods_items) {
         goodIdsList.push(rows[item].goods_items[index].id)
         goodNamesList.push(rows[item].goods_items[index].title)
       }
 
       let score = 0
-      if(!rows[item].score_use){
-        if(rows[item].vip){
+      if (!rows[item].score_use) {
+        if (rows[item].vip) {
           score = rows[item].score_vip
-        }else {
+        } else {
           score = rows[item].score
         }
       }
@@ -921,25 +968,25 @@ class MallController extends Controller {
       let payment = ''
       let paymentData = rows[item].payment
       console.log(paymentData)
-      let paymentTypes = ['','代金券','账户余额','在线支付']
+      let paymentTypes = ['', '代金券', '账户余额', '在线支付']
       let paymentMethods = {
         ecard: '代金券',
-        balance:'账户余额',
-        alipay:'支付宝',
-        wxpay:'微信支付'
+        balance: '账户余额',
+        alipay: '支付宝',
+        wxpay: '微信支付'
       }
-      if(paymentData.type){
-        
-        if(paymentData.type == 1 || paymentData.type == 2){
+      if (paymentData.type) {
+
+        if (paymentData.type == 1 || paymentData.type == 2) {
           payment += paymentTypes[paymentData.type]
-          if (paymentData.method == 'alipay' || paymentData.method == 'wxpay'){
+          if (paymentData.method == 'alipay' || paymentData.method == 'wxpay') {
             payment += ('+' + paymentMethods[paymentData.method])
           }
-        } else if (paymentData.type == 3){
+        } else if (paymentData.type == 3) {
           payment += paymentMethods[paymentData.method]
         }
       }
-      console.log('payment' , payment)
+      console.log('payment', payment)
       let dateUtils = this.utils.date_utils
       let record = {
         "日期": dateUtils.dateFormat(rows[item].create_time),
@@ -954,16 +1001,18 @@ class MallController extends Controller {
         "收件人": rows[item].address ? rows[item].address.name : '',
         "收件人电话": rows[item].address ? rows[item].address.mobile : '',
         "收件人地址": rows[item].address ? rows[item].address.address + rows[item].address.info : '',
-        "支付方式":payment
+        "支付方式": payment
       }
       csvList.push(record)
     }
     try {
-      const parser = new Parser({ fields })
+      const parser = new Parser({
+        fields
+      })
       let csv = parser.parse(csvList)
       let filePath = __dirname + '/../../../backup/'
       let fileName = `${startDate}-${endDate}.csv`
-      await util.promisify(fs.writeFile)(path.join(filePath,fileName), csv)
+      await util.promisify(fs.writeFile)(path.join(filePath, fileName), csv)
       let uploadResult = await aliOssUtils.uploadFile(filePath + fileName)
       ctx.ret.uploadResult = uploadResult
       if (!uploadResult.url) {
@@ -983,7 +1032,7 @@ class MallController extends Controller {
       ctx.ret.message = "导出文件失败"
       return ctx.ret
     }
-    
+
   }
   _getOrderStatus(status) {
     switch (status) {
@@ -997,16 +1046,16 @@ class MallController extends Controller {
         return '已收货'
       default:
         return 'Unknown'
-      }
+    }
   }
-  _getOrderType (orderType) {
+  _getOrderType(orderType) {
     switch (orderType) {
-    case 1:
-      return '自营'
-    case 2:
-      return '京东'
-    default:
-      return 'Unknown'
+      case 1:
+        return '自营'
+      case 2:
+        return '京东'
+      default:
+        return 'Unknown'
     }
   }
   _getOrderTotal(row) {
@@ -1014,11 +1063,11 @@ class MallController extends Controller {
     //会员
     if (row.vip == 1) {
       if (row.score_use == 1) {
-        returnTotal = row.total_vip 
+        returnTotal = row.total_vip
       } else {
         returnTotal = row.total_vip + row.score_vip
       }
-    } else{
+    } else {
       //非会员
       if (row.score_use == 1) {
         returnTotal = row.total
@@ -1028,6 +1077,8 @@ class MallController extends Controller {
     }
     return parseFloat(returnTotal).toFixed(2)
   }
+
+
 }
 
 module.exports = MallController
