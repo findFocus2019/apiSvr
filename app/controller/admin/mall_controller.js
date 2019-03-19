@@ -1076,7 +1076,7 @@ class MallController extends Controller {
     let fields = [
       'ID', '用户信息', '手机号码', '支付方式', '账单总金额', '在线支付金额', '代金券使用', '余额使用', '积分使用', '支付时间', '订单号'
     ]
-    let payTypes = ['代金券', '账户余额', '在线支付']
+    let payTypes = ['','代金券', '账户余额', '在线支付']
     let payMethods = {
       ecard: '代金券',
       balance: '账户余额',
