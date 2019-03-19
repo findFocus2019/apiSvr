@@ -21,7 +21,7 @@ class SmsUtils {
     let post_data = {
       'apikey': apikey
     }
-    let url = ' https://sms.yunpian.com/v2/user/get.json'
+    let url = 'https://sms.yunpian.com/v2/user/get.json'
     return await this._post(url, post_data);
   }
 
@@ -30,8 +30,8 @@ class SmsUtils {
       .set('Accept', 'application/json;charset=utf-8;')
       .set('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8;')
       .send(content)
-    console.log(result.response)
-    return result.response
+    console.log('sms _post', result.body)
+    return result.response || result.body
   }
 }
 // (async () => {
@@ -42,6 +42,6 @@ class SmsUtils {
 //   } catch (err) {
 //     console.log(err)
 //   }
-  
+
 // })()
 module.exports = new SmsUtils()
