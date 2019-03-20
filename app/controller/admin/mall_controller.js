@@ -412,6 +412,7 @@ class MallController extends Controller {
 
       order.goods_items.forEach(async (item) => {
         let goods = await goodsModel.findByPk(item.id)
+        this.logger.info('dispatchGoods goods: ', goods)
         item.uuid = goods.uuid
         sku.push({
           num: 1,
