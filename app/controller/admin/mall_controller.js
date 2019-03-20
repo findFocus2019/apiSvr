@@ -385,6 +385,7 @@ class MallController extends Controller {
 
     let mallModel = new this.models.mall_model()
     let orderModel = mallModel.orderModel()
+    let goodsModel = mallModel.goodsModel()
 
     let order = await orderModel.findByPk(orderId)
     if (order === null) { // 没有找到订单
@@ -409,7 +410,9 @@ class MallController extends Controller {
       let sku = []
       let orderPriceSnap = []
 
-      order.goods_items.forEach(item => {
+      order.goods_items.forEach(async (item) => {
+        let goods = await goodsModel.findByPk(item.id)
+        item.uuid = goods.uuid
         sku.push({
           num: 1,
           skuId: item.uuid,
