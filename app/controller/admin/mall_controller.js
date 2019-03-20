@@ -842,10 +842,10 @@ class MallController extends Controller {
           this.logger.info(ctx.uuid, 'orderAfterDeal()', 'alipayAccount', alipayAccount)
           let alipayUtils = this.utils.alipay_utils
           let tradeNo = this.utils.uuid_utils.v4()
-          let amount = 1 * refund.amount
-          if (this.config.DEBUG) {
-            amount = 0.1
-          }
+          let amount = parseFloat(1 * refund.amount).toFixed(2)
+          // if (this.config.DEBUG) {
+          //   amount = 0.1
+          // }
           let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
           this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
           if (aliRet.code != 0) {
