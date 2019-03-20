@@ -410,9 +410,28 @@ class MallController extends Controller {
       let sku = []
       let orderPriceSnap = []
 
-      order.goods_items.forEach(async (item) => {
+      // order.goods_items.forEach(async (item) => {
+      //   let goods = await goodsModel.findByPk(item.id)
+      //   // this.logger.info('dispatchGoods goods: ', goods)
+      //   item.uuid = goods.uuid
+      //   sku.push({
+      //     num: 1,
+      //     skuId: item.uuid,
+      //     bNeedAnnex: false,
+      //     bNeedGift: true,
+      //     // price: item.price_sell,
+      //     // yanbao: [{skuId: item.uuid}]
+      //   })
+
+      //   orderPriceSnap.push({
+      //     skuId: item.uuid,
+      //     price: item.price_cost
+      //   })
+      // })
+
+      for (let item of order.goods_items) {
         let goods = await goodsModel.findByPk(item.id)
-        this.logger.info('dispatchGoods goods: ', goods)
+        // this.logger.info('dispatchGoods goods: ', goods)
         item.uuid = goods.uuid
         sku.push({
           num: 1,
@@ -427,8 +446,9 @@ class MallController extends Controller {
           skuId: item.uuid,
           price: item.price_cost
         })
-      })
+      }
 
+      this.logger.info('submitorderparams: orderPriceSnap', orderPriceSnap)
 
       let submitOrderParams = {
         thirdOrder: order.order_no,
