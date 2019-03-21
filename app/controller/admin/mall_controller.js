@@ -977,7 +977,7 @@ class MallController extends Controller {
         goodIdsList = []
       for (let index in rows[item].goods_items) {
         goodIdsList.push(rows[item].goods_items[index].id)
-        goodNamesList.push(rows[item].goods_items[index].title)
+        goodNamesList.push(rows[item].goods_items[index].title + ' x ' + rows[item].goods_items[index].num)
       }
 
       let score = 0
