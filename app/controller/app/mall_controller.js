@@ -50,6 +50,10 @@ class MallController extends CommonController {
       ctx.ret.data = categorys
     } else {
       let categorys = await mallModel.getGoodsCategoryJd()
+      categorys = [{
+        id: 'all',
+        name: '全部'
+      }]
       ctx.ret.data = categorys
     }
 
@@ -72,6 +76,19 @@ class MallController extends CommonController {
     let type = ctx.body.type || 1 // 分类
     let category = ctx.body.category || ''
     let order = ctx.body.order || null
+
+    // 激动隐藏
+    if (type == 2){
+      ctx.ret.data = {
+        rows: [],
+        count: 0,
+        page: page,
+        limit: limit,
+        newCount: 0,
+        timestamp: timestamp
+      }
+      return ctx.ret
+    }
 
     if (category === 'all') {
       category = ''
