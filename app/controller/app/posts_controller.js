@@ -74,6 +74,10 @@ class PostsController extends Controller {
     }
     if (channel) {
       where.channel = channel
+    }else {
+      where.channel = {
+        [Op.in]: this.config.postChannels
+      }
     }
 
     if (category) {
