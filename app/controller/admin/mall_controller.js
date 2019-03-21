@@ -955,7 +955,7 @@ class MallController extends Controller {
         },
         create_time: {
           [Op.gte]: startTime > 0 ? startTime : 0,
-          [Op.lte]: endTime > 0 ? endTime : parseInt(Date.now() / 1000)
+          [Op.lte]: endTime > 0 ? endTime + 24 * 3600 - 1 : parseInt(Date.now() / 1000)
         }
       },
       order: [
@@ -968,16 +968,18 @@ class MallController extends Controller {
     let fields = [
       '日期',
       '订单号', '京东订单号', '使用的积分金额',
-      '商品ID', '购买商品', '订单状态',
+      '商品ID', '购买商品', '数量', '订单状态',
       '订单类型', '总价', '收件人', '收件人电话', '收件人地址',
       '支付方式'
     ]
     for (let item in rows) {
       let goodNamesList = [],
-        goodIdsList = []
+        goodIdsList = [],
+        goodNums = []
       for (let index in rows[item].goods_items) {
         goodIdsList.push(rows[item].goods_items[index].id)
-        goodNamesList.push(rows[item].goods_items[index].title + ' x ' + rows[item].goods_items[index].num)
+        goodNamesList.push(rows[item].goods_items[index].title)
+        goodNums.push(rows[item].goods_items[index].num)
       }
 
       let score = 0
@@ -1019,6 +1021,7 @@ class MallController extends Controller {
         '使用的积分数量': score,
         '商品ID': goodIdsList.join(','),
         '购买商品': goodNamesList.join(','),
+        '数量': goodNums.join(','),
         '订单状态': this._getOrderStatus(rows[item].status),
         '订单类型': this._getOrderType(rows[item].order_type),
         '总价': this._getOrderTotal(rows[item]),
