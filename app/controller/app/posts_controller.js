@@ -94,7 +94,7 @@ class PostsController extends Controller {
         ['create_time', 'desc'],
         ['id', 'desc']
       ],
-      // attributes: this.config.postListAttributes
+      attributes: this.config.postListAttributes
     })
 
     let whereNew = where
@@ -105,6 +105,27 @@ class PostsController extends Controller {
     let newCount = await postsModel.model().count({
       where: where
     })
+
+    let listAd = []
+    if (type == 1){
+      let whereAd = {
+        status: 1
+      }
+      whereAd.type = 4
+      console.log('whereAd ========' , whereAd)
+      listAd = await postsModel.model().findAll({
+        where: whereAd,
+        offset: (page - 1) * 2,
+        limit: 2,
+        order: [
+          ['create_time', 'desc'],
+          ['id', 'desc']
+        ],
+        attributes: this.config.postListAttributes
+      }) 
+
+      console.log('listAd ========' , listAd)
+    }
 
     let rows = []
     let userModel = new this.models.user_model
@@ -123,6 +144,22 @@ class PostsController extends Controller {
       }
 
       rows.push(row)
+
+      if(index == 4){
+        if(listAd[0]){
+          let rowAd = listAd[0]
+          rowAd.dataValues.publish_time = this.utils.date_utils.dateFormat(rowAd.pub_date, 'YYYY-MM-DD HH:mm')
+          rows.push(rowAd)
+        }
+      }
+
+      if(index == 9){
+        if(listAd[1]){
+          let rowAd = listAd[1]
+          rowAd.dataValues.publish_time = this.utils.date_utils.dateFormat(rowAd.pub_date, 'YYYY-MM-DD HH:mm')
+          rows.push(rowAd)
+        }
+      }
     }
 
     ctx.ret.data = {

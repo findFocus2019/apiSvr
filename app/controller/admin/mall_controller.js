@@ -632,11 +632,12 @@ class MallController extends Controller {
     let orderAfterModel = mallModel.orderAfterModel()
     let orderModel = mallModel.orderModel()
     let paymentModel = mallModel.paymentModel()
-    let userInfoModel = (new this.models.user_model).infoModel()
+    let userModel = (new this.models.user_model)
+    // let userInfoModel = (new this.models.user_model).infoModel()
 
     let row = await orderAfterModel.findByPk(id)
 
-    let userInfo = await userInfoModel.findByPk(row.user_id)
+    let userInfo = await userModel.getInfoByUserId(row.user_id)
 
     row.dataValues.user = userInfo
 

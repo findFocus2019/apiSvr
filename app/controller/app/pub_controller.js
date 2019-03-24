@@ -90,7 +90,7 @@ class PubController extends Controller {
     let rows = await postsModel.model().findAll({
       where: where,
       offset: 0,
-      limit: 1,
+      limit: 10,
       order: [
         ['create_time', 'desc']
       ],

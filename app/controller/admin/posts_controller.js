@@ -314,6 +314,21 @@ class PostsController extends Controller {
 
     return ctx.ret
   }
+
+  async channels(ctx){
+
+    
+    let channels = []
+    this.config.postChannels.forEach(channel => {
+      channels.push({
+        text: channel,
+        val: channel
+      })
+    })
+    this.logger.info(ctx.uuid, 'channels()', 'channels', channels)
+    ctx.ret.data = channels
+    return ctx.ret
+  }
 }
 
 module.exports = PostsController
