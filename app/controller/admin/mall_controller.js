@@ -696,6 +696,200 @@ class MallController extends Controller {
     ctx.ret.data = row
     return ctx.ret
   }
+
+  // 删除订单，退款
+  async orderCancelDeal(ctx) {
+    this.logger.info(ctx.uuid, 'orderCancelDeal()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+
+    let orderId = ctx.body.id
+
+    let mallModel = new this.models.mall_model
+    let userModel = new this.models.user_model
+    let orderModel = mallModel.orderModel()
+    let paymentModel = mallModel.paymentModel()
+    let orderItemModel = mallModel.orderItemModel()
+
+    let t = await mallModel.getTrans()
+
+    try {
+      let order = await orderModel.findByPk(orderId)
+      if (!order || order.status != 2) {
+        throw new Error('订单错误')
+      }
+
+      let userId = order.user_id
+
+      order.status = -1
+      let orderUpdateRet = await order.save({
+        transaction: t
+      })
+      if (!orderUpdateRet) {
+        throw new Error('更新订单信息失败')
+      }
+
+      let goodsIds = order.goods_ids
+      let goodsIdsArr = goodsIds.substr(1, goodsIds.length - 2).split('-')
+      this.logger.info(ctx.uuid, 'orderCancelDeal()', 'goodsIdsArr', goodsIdsArr)
+
+      for (let index = 0; index < goodsIdsArr.length; index++) {
+        let goodsId = goodsIdsArr[index]
+        let orderItem = await orderItemModel.findOne({
+          where: {
+            order_id: orderId,
+            goods_id: goodsId
+          }
+        })
+        this.logger.info(ctx.uuid, 'orderCancelDeal()', 'orderItem', orderItem)
+        orderItem.status = -1
+        let orderItemRet = await orderItem.save({
+          transaction: t
+        })
+
+        if (!orderItemRet) {
+          throw new Error('更新订单商品条目信息失败')
+        }
+      }
+
+      let payment = await paymentModel.findOne({
+        where: {
+          order_ids: {
+            [Op.like]: '%-' + order.id + '-%'
+          },
+          status: 1
+        }
+      })
+      this.logger.info(ctx.uuid, 'orderCancelDeal()', 'payment', payment)
+      if (!payment) {
+        throw new Error('未查找到付款信息')
+      }
+
+      // 需要处理的refund
+      let refund = {
+        amount: 0,
+        balance: 0,
+        ecard: 0,
+        score: 0
+      }
+      // 支付处理过的退款总和
+      let paymentRefund = payment.refund || {}
+      this.logger.info(ctx.uuid, 'orderCancelDeal()', 'paymentRefund', paymentRefund)
+      let paymentAmount = parseFloat(payment.amount - (paymentRefund.amount || 0)).toFixed(2)
+      let paymentBalance = parseFloat(payment.balance - (paymentRefund.balance || 0)).toFixed(2)
+      let paymentEcard = parseFloat(payment.ecard - (paymentRefund.ecard || 0)).toFixed(2)
+
+
+      let total = order.vip ? order.total_vip : order.total
+      let score = order.score_use ? 0 : (order.vip ? order.score_vip : order.score)
+      total = total + score
+      let scoreNum = score * this.config.scoreExchangeNum
+
+      refund.score = scoreNum
+      if (total > paymentAmount) {
+        refund.amount = paymentAmount
+        paymentRefund.amount = (paymentRefund.amount || 0) + paymentAmount
+        total = total - paymentAmount
+      } else {
+        refund.amount = total
+        paymentRefund.amount = (paymentRefund.amount || 0) + total
+        total = 0
+      }
+
+      if (total > paymentBalance) {
+        refund.balance = paymentBalance
+        paymentRefund.balance = (paymentRefund.balance || 0) + paymentBalance
+        total = total - paymentBalance
+      } else {
+        refund.balance = total
+        paymentRefund.balance = (paymentRefund.balance || 0) + total
+        total = 0
+      }
+
+      if (total > paymentEcard) {
+        refund.ecard = paymentEcard
+        paymentRefund.ecard = (paymentRefund.ecard || 0) + paymentEcard
+        total = total - paymentEcard
+      } else {
+        refund.ecard = total
+        paymentRefund.ecard = (paymentRefund.ecard || 0) + total
+        total = 0
+      }
+
+      total = parseFloat(total).toFixed(2)
+      paymentRefund.amount = parseFloat(paymentRefund.amount).toFixed(2)
+      paymentRefund.balance = parseFloat(paymentRefund.balance).toFixed(2)
+      paymentRefund.ecard = parseFloat(paymentRefund.ecard).toFixed(2)
+
+      this.logger.info(ctx.uuid, 'orderCancelDeal()', 'refund', refund)
+      this.logger.info(ctx.uuid, 'orderCancelDeal()', 'paymentRefund', paymentRefund)
+
+      payment.refund = paymentRefund
+      let paymentRet = payment.save({
+        transaction: t
+      })
+      if (!paymentRet) {
+        throw new Error('更新账单支付信息失败')
+      }
+
+      // 处理退款
+      let userInfo = await userModel.getInfoByUserId(userId)
+      if (refund.amount) {
+        if (!userInfo.alipay) {
+          throw new Error('用户未设置支付宝，请提醒用户设置')
+        }
+
+        // 支付宝退款
+        let alipayAccount = userInfo.alipay
+        this.logger.info(ctx.uuid, 'orderCancelDeal()', 'alipayAccount', alipayAccount)
+        let alipayUtils = this.utils.alipay_utils
+        let tradeNo = this.utils.uuid_utils.v4()
+        let amount = parseFloat(1 * refund.amount).toFixed(2)
+        // if (this.config.DEBUG) {
+        //   amount = 0.1
+        // }
+        alipayAccount = ''
+        let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
+        this.logger.info(ctx.uuid, 'orderCancelDeal()', 'aliRet', aliRet)
+        if (aliRet.code != 0) {
+          return this._fail(ctx, aliRet.message)
+        }
+      }
+
+      userInfo.balance = userInfo.balance + refund.balance
+      userInfo.score = userInfo.score + refund.score
+
+      let userInfoRet = await userInfo.save({
+        transaction: t
+      })
+      if (!userInfoRet) {
+        throw new Error('更新用户信息失败')
+      }
+
+      if (refund.ecard) {
+        let ecardId = payment.ecard_id
+        let userEcardModel = userModel.ecardModel()
+        let ecard = await userEcardModel.findByPk(ecardId)
+        if (!ecard) {
+          throw new Error('未找到对应退款代金券')
+        }
+
+        ecard.amount = ecard.amount + refund.ecard
+        ecard.status = 1
+        let ecardRet = await ecard.save({
+          transaction: t
+        })
+        if (!ecardRet) {
+          throw new Error('代金券信息更新失败')
+        }
+      }
+      t.commit()
+    } catch (err) {
+      ctx.ret.code = 1
+      ctx.ret.message = err.message
+      t.rollback()
+    }
+
+    return ctx.ret
+  }
   /* 
    * type : 1:退货 2:换货
    */
@@ -715,6 +909,7 @@ class MallController extends Controller {
     let t = await mallModel.getTrans()
 
     try {
+
       let orderAfter = await orderAfterModel.findByPk(orderAfterId)
       this.logger.info(ctx.uuid, 'orderAfterDeal()', 'orderAfter', orderAfter)
 
@@ -1108,7 +1303,7 @@ class MallController extends Controller {
     let fields = [
       'ID', '用户信息', '手机号码', '支付方式', '账单总金额', '在线支付金额', '代金券使用', '余额使用', '积分使用', '支付时间', '订单号'
     ]
-    let payTypes = ['','代金券', '账户余额', '在线支付']
+    let payTypes = ['', '代金券', '账户余额', '在线支付']
     let payMethods = {
       ecard: '代金券',
       balance: '账户余额',
