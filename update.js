@@ -3,11 +3,10 @@
 
 const updateData = {
   ios: {
-    version: '2.0.1',
+    version: '2.0.2',
     notes: [
       `发现焦点2.0.2
-1.一些优化调整
-2.添加延长收货时间
+(务必删除原APP后重新下载安装)
 `,
       `发现焦点2.0`,
       `优化调整`,
@@ -26,11 +25,10 @@ const updateData = {
     url: 'https://www.pgyer.com/QcuX'
   },
   android: {
-    version: '2.0.1',
+    version: '2.0.2',
     notes: [
       `发现焦点2.0.2
-1.一些优化调整
-2.添加延长收货时间
+(务必删除原APP后重新下载安装)
 `,
       `发现焦点2.0`,
       `优化调整`,
