@@ -444,7 +444,7 @@ class MallController extends Controller {
 
         orderPriceSnap.push({
           skuId: item.uuid,
-          price: item.price_cost
+          price: item.price_market
         })
       }
 
