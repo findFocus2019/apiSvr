@@ -46,7 +46,7 @@ const updateData = {
       '修复一些bug及优化'
     ],
     // url: 'https://www.pgyer.com/iHri',
-    url: 'https://www.pgyer.com/j5Um '
+    url: 'https://www.pgyer.com/j5Um'
   }
 }
 
