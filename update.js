@@ -25,7 +25,7 @@ const updateData = {
     // url: 'https://www.pgyer.com/DFcd'
     url: 'https://www.pgyer.com/QcuX'
   },
-  andriod: {
+  android: {
     version: '2.0.2',
     notes: [
       `发现焦点2.0.2
