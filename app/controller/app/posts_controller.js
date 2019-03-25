@@ -827,6 +827,26 @@ class PostsController extends Controller {
     let score = 0
     let balance = 0
 
+    // 记录收益
+    let taskModel = new this.models.task_model
+    let t = await taskModel.getTrans()
+    let taskData = {
+      user_id: userId,
+      model_id: post.id,
+      ip: ctx.ip
+    }
+    let taskRet = await taskModel.logByName(ctx, 'user_post', taskData, t)
+    this.logger.info(ctx.uuid, 'postAction() taskRet', taskRet)
+    // let score = 0
+    // let balance = 0
+    if (taskRet.code != 0) {
+      t.rollback()
+    } else {
+      score = taskRet.data.score || 0
+      balance = taskRet.data.balance || 0
+      t.commit()
+    }
+
     ctx.ret.data = {
       id: post.id,
       uuid: post.uuid,
