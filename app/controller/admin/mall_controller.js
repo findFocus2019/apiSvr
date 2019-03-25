@@ -476,9 +476,9 @@ class MallController extends Controller {
       this.logger.info('submitOrderResult: ', submitOrderResult)
       //错误情况
       if (!submitOrderResult.success) {
-        return ctx.ret.data = {
+        return ctx.ret = {
           code: submitOrderResult.resultCode,
-          error: submitOrderResult.resultMessage
+          message: submitOrderResult.resultMessage
         }
       }
 
@@ -489,9 +489,9 @@ class MallController extends Controller {
     if (jdOrderId) {
       let doPayResult = await AppMallController.confirmOrder(jdOrderId)
       if (!doPayResult.success) {
-        return ctx.ret.data = {
+        return ctx.ret = {
           code: -4,
-          error: '京东确认订单失败'
+          message: '京东确认订单失败'
         }
       }
     }
@@ -510,15 +510,19 @@ class MallController extends Controller {
       }
     }).then(result => {
       this.logger.info('dispatchGoods update result: ', result)
-      ctx.ret.data = {
+      ctx.ret = {
         code: 0
       }
+
+      return ctx.ret
     }).catch(error => {
       this.logger.error('dispatchGoods error: ', error)
-      ctx.ret.data = {
+      ctx.ret = {
         code: -3,
         error: '更新失败'
       }
+
+      return ctx.ret
     })
   }
 
