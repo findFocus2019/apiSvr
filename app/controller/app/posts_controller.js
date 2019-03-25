@@ -107,25 +107,25 @@ class PostsController extends Controller {
     })
 
     let listAd = []
-    // if (type == 1){
-    //   let whereAd = {
-    //     status: 1
-    //   }
-    //   whereAd.type = 4
-    //   console.log('whereAd ========' , whereAd)
-    //   listAd = await postsModel.model().findAll({
-    //     where: whereAd,
-    //     offset: (page - 1) * 2,
-    //     limit: 2,
-    //     order: [
-    //       ['create_time', 'desc'],
-    //       ['id', 'desc']
-    //     ],
-    //     attributes: this.config.postListAttributes
-    //   }) 
+    if (type == 1){
+      let whereAd = {
+        status: 1
+      }
+      whereAd.type = 4
+      console.log('whereAd ========' , whereAd)
+      listAd = await postsModel.model().findAll({
+        where: whereAd,
+        offset: (page - 1) * 2,
+        limit: 2,
+        order: [
+          ['create_time', 'desc'],
+          ['id', 'desc']
+        ],
+        attributes: this.config.postListAttributes
+      }) 
 
-    //   console.log('listAd ========' , listAd)
-    // }
+      console.log('listAd ========' , listAd)
+    }
 
     let rows = []
     let userModel = new this.models.user_model
