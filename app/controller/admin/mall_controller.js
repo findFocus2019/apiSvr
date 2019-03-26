@@ -1057,11 +1057,14 @@ class MallController extends Controller {
           // if (this.config.DEBUG) {
           //   amount = 0.1
           // }
-          let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
-          this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
-          if (aliRet.code != 0) {
-            return this._fail(ctx, aliRet.message)
+          if(parseFloat(amount) > 0){
+            let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
+            this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
+            if (aliRet.code != 0) {
+              return this._fail(ctx, aliRet.message)
+            }
           }
+          
         }
 
         userInfo.balance = userInfo.balance + refund.balance
