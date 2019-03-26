@@ -42,7 +42,7 @@ class Schedule extends CommonControler {
   async orderConfirm(){
     let logger = arguments[0] || this.logger
     let ctx = {
-      uuid: this.utils.uuid_utils.v4()
+      uuid: this.utils.uuid_utils.v4(),
     }
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
@@ -74,6 +74,10 @@ class Schedule extends CommonControler {
     for (let index = 0; index < orders.length; index++) {
       let order = orders[index]
       let t = await mallModel.getTrans()
+      ctx.ret = {
+        code:0,
+        message: ''
+      }
       let completeRet = await this._orderComplete(ctx, order , t)
       if(completeRet.code == 0){
         logger.info(`orderConfirm() success: ${order.id}`)
