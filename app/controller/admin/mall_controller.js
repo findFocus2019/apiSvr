@@ -293,7 +293,7 @@ class MallController extends Controller {
         ['create_time', 'desc']
       ],
       attributes: {
-        exclude: ['update_time', 'info']
+        exclude: ['update_time']
       },
       include: [{
         model: userInfoModel,
@@ -313,6 +313,17 @@ class MallController extends Controller {
       })
 
       item.dataValues.orders = orders
+      if(item.pay_method == 'wxpay'){
+        console.log(item.dataValues)
+        let wxpayInfo = JSON.parse(item.info)
+        if(wxpayInfo.partnerid == this.config.miniApp.mch_id){
+          item.dataValues.wxpay_type = 2
+        }else if (wxpayInfo.partnerid == this.config.wxpay.mch_id){
+          item.dataValues.wxpay_type = 1
+        }
+      }else {
+        item.dataValues.wxpay_type = 0
+      }
       queryRet.rows[index] = item
     }
 
@@ -1301,7 +1312,7 @@ class MallController extends Controller {
     let csvList = []
     //字段
     let fields = [
-      'ID', '用户信息', '手机号码', '支付方式', '账单总金额', '在线支付金额', '代金券使用', '余额使用', '积分使用', '支付时间', '订单号'
+      'ID', '用户信息', '手机号码', '支付方式', '账单总金额', '在线支付金额', '代金券使用', '余额使用', '积分使用', '支付时间', '订单号','微信支付商户号'
     ]
     let payTypes = ['', '代金券', '账户余额', '在线支付']
     let payMethods = {
@@ -1344,6 +1355,16 @@ class MallController extends Controller {
         orderNos.push(order.order_no)
       })
       record['订单号'] = orderNos.join(',')
+
+      if(item.pay_method == 'wxpay'){
+        // console.log(item.dataValues)
+        let wxpayInfo = JSON.parse(item.info) || {}
+        record['微信支付商户号'] = wxpayInfo.partnerid || ''
+        
+      }else {
+        record['微信支付商户号'] = ''
+      }
+
       csvList.push(record)
     }
     try {
