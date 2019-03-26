@@ -1092,7 +1092,7 @@ class MallController extends Controller {
             throw new Error('未找到对应退款代金券')
           }
 
-          ecard.amount = ecard.amount + refund.ecard
+          ecard.amount = parseFloat(ecard.amount + parseFloat(refund.ecard)).toFixed(2)
           ecard.status = 1
           let ecardRet = await ecard.save({
             transaction: t
