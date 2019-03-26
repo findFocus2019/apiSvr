@@ -47,6 +47,7 @@ class Schedule extends CommonControler {
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
     let expressTime = parseInt(Date.now()/ 1000) - 7 * 24 * 3600
+    logger.info('orderConfirm()', expressTime)
     let orders = await orderModel.findAll({
       where: {
         status:2,
@@ -67,6 +68,8 @@ class Schedule extends CommonControler {
         
       }
     })
+
+    logger.info('orderConfirm() orders', orders.length)
 
     for (let index = 0; index < orders.length; index++) {
       let order = orders[index]
