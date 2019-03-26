@@ -1070,7 +1070,7 @@ class MallController extends Controller {
           
         }
 
-        userInfo.balance = userInfo.balance + refund.balance
+        userInfo.balance = parseFloat(userInfo.balance + parseFloat(refund.balance)).toFixed(2)
         userInfo.score = userInfo.score + refund.score
         this.logger.info(ctx.uuid, 'orderAfterDeal()', 'userInfo.balance', userInfo.balance)
         this.logger.info(ctx.uuid, 'orderAfterDeal()', 'userInfo.score', userInfo.score)
