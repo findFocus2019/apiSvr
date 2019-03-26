@@ -1,5 +1,7 @@
-const Schedule = require('../schedule/main')
 process.env.NODE_ENV = 'production'
+
+const Schedule = require('../schedule/main')
+
 let schedule = Schedule.getSchedule()
 
 // schedule.fetchNews()
