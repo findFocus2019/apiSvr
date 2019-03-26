@@ -1079,8 +1079,10 @@ class MallController extends Controller {
 
         if (refund.ecard) {
           let ecardId = payment.ecard_id
+          this.logger.info(ctx.uuid, 'transactionUpdate()', 'ecardId', ecardId)
           let userEcardModel = userModel.ecardModel()
           let ecard = await userEcardModel.findByPk(ecardId)
+          this.logger.info(ctx.uuid, 'transactionUpdate()', 'ecard', ecard)
           if (!ecard) {
             throw new Error('未找到对应退款代金券')
           }
@@ -1090,6 +1092,7 @@ class MallController extends Controller {
           let ecardRet = await ecard.save({
             transaction: t
           })
+          this.logger.info(ctx.uuid, 'transactionUpdate()', 'ecardRet', ecardRet)
           if (!ecardRet) {
             throw new Error('代金券信息更新失败')
           }
