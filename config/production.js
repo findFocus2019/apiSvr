@@ -6,6 +6,6 @@ module.exports = {
     dbname: 'find_focus_2019',
     username: 'find_focus_2019',
     password: 'find_focus_2019',
-    maxLimit: 3000,
+    maxLimit: 1200,
   },
 }
