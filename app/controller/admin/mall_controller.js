@@ -713,13 +713,13 @@ class MallController extends Controller {
 
     try {
       let order = await orderModel.findByPk(orderId)
-      if (!order || order.status != 2) {
+      if (!order || order.status != 1) {
         throw new Error('订单错误')
       }
 
       let userId = order.user_id
 
-      order.status = -1
+      order.status = -2
       let orderUpdateRet = await order.save({
         transaction: t
       })
