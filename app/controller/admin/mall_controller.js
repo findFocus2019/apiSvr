@@ -1082,8 +1082,9 @@ class MallController extends Controller {
           throw new Error('更新用户信息失败')
         }
 
-        if (refund.ecard) {
+        if (refund.ecard && payment.ecard_id) {
           let ecardId = payment.ecard_id
+
           this.logger.info(ctx.uuid, 'transactionUpdate()', 'ecardId', ecardId)
           let userEcardModel = userModel.ecardModel()
           let ecard = await userEcardModel.findByPk(ecardId)
