@@ -70,7 +70,7 @@ class Schedule extends CommonControler {
 
     for (let index = 0; index < orders.length; index++) {
       let order = orders[index]
-      let t = await mallModel.getTrans(t)
+      let t = await mallModel.getTrans()
       let completeRet = await this._orderComplete(ctx, order , t)
       if(completeRet.code == 0){
         logger.info(`orderConfirm() success: ${order.id}`)
