@@ -77,8 +77,10 @@ class Schedule extends CommonControler {
       let completeRet = await this._orderComplete(ctx, order , t)
       if(completeRet.code == 0){
         logger.info(`orderConfirm() success: ${order.id}`)
+        t.commit()
       }else {
         logger.info(`orderConfirm() fail: ${order.id}`)
+        t.rollback()
       }
       
     }
