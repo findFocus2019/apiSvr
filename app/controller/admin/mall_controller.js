@@ -1043,6 +1043,7 @@ class MallController extends Controller {
 
         // 处理退款
         let userInfo = await userModel.getInfoByUserId(userId)
+        this.logger.info(ctx.uuid, 'orderAfterDeal()', 'userInfo', userInfo)
         if (refund.amount) {
           if (!userInfo.alipay) {
             throw new Error('用户未设置支付宝，请提醒用户设置')
@@ -1063,12 +1064,16 @@ class MallController extends Controller {
             if (aliRet.code != 0) {
               return this._fail(ctx, aliRet.message)
             }
+          }else {
+            this.logger.info(ctx.uuid, 'transactionUpdate()', '无需退在线支付')
           }
           
         }
 
         userInfo.balance = userInfo.balance + refund.balance
         userInfo.score = userInfo.score + refund.score
+        this.logger.info(ctx.uuid, 'orderAfterDeal()', 'userInfo.balance', userInfo.balance)
+        this.logger.info(ctx.uuid, 'orderAfterDeal()', 'userInfo.score', userInfo.score)
 
         let userInfoRet = await userInfo.save({
           transaction: t
