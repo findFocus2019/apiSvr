@@ -6,4 +6,6 @@ let schedule = Schedule.getSchedule()
 
 // schedule.rabateDealDay()
 
-schedule.submitJdOrder()
+// schedule.submitJdOrder()
+
+schedule.orderConfirm()
