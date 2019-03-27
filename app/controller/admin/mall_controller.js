@@ -348,7 +348,7 @@ class MallController extends Controller {
       orders.forEach(order => {
         let goodsItems = order.goods_items
         goodsItems.forEach(goods=> {
-          priceCost += goods.price_cost
+          priceCost += (goods.price_cost * goods.num)
         })
       })
       
@@ -1400,7 +1400,7 @@ class MallController extends Controller {
         orderNos.push(order.order_no)
         let goodsItems = order.goods_items
         goodsItems.forEach(goods=> {
-          priceCost += goods.price_cost
+          priceCost += (goods.price_cost * goods.num)
         })
       })
 
