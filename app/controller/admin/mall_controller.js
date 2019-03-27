@@ -261,9 +261,14 @@ class MallController extends Controller {
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
     let offset = (page - 1) * limit
-    let search = ctx.body.search
+    let search = ctx.body.search || ''
     let userId = ctx.body.user_id || 0
     // let status = ctx.body.status || ''
+
+    let mallModel = new this.models.mall_model
+    let paymentModel = mallModel.paymentModel()
+    let orderModel = mallModel.orderModel()
+    let userInfoModel = (new this.models.user_model).infoModel()
 
     let where = {}
     where.status = 1
@@ -271,15 +276,28 @@ class MallController extends Controller {
       // where.title = {
       //   [Op.like]: '%' + search + '%'
       // }
+      let order = await orderModel.findOne({
+        where: {
+          order_no: search
+        }
+      })
+      this.logger.info(ctx.uuid, 'paymentList()', 'order', order)
+      if(!order){
+        ctx.ret.data = {
+          rows: [],
+          count:0
+        }
+        return ctx.ret
+      }
+      let orderId = order.id
+      where.order_ids = {
+        [Op.like]:'%-' + orderId + '-%'
+      }
     }
     if (userId) {
       where.user_id = userId
     }
-
-    let mallModel = new this.models.mall_model
-    let paymentModel = mallModel.paymentModel()
-    let orderModel = mallModel.orderModel()
-    let userInfoModel = (new this.models.user_model).infoModel()
+ 
     paymentModel.belongsTo(userInfoModel, {
       targetKey: 'user_id',
       foreignKey: 'user_id'
@@ -301,6 +319,7 @@ class MallController extends Controller {
       }]
     })
 
+    
     for (let index = 0; index < queryRet.rows.length; index++) {
       const item = queryRet.rows[index]
       let orderIds = item.order_ids.substr(1, item.order_ids.length - 2).split('-')
@@ -324,6 +343,17 @@ class MallController extends Controller {
       }else {
         item.dataValues.wxpay_type = 0
       }
+
+      let priceCost = 0
+      orders.forEach(order => {
+        let goodsItems = order.goods_items
+        goodsItems.forEach(goods=> {
+          priceCost += goods.price_cost
+        })
+      })
+      
+      item.dataValues.price_cost = parseFloat(priceCost).toFixed(2)
+      // 计算成本
       queryRet.rows[index] = item
     }
 
@@ -1326,7 +1356,7 @@ class MallController extends Controller {
     let csvList = []
     //字段
     let fields = [
-      'ID', '用户信息', '手机号码', '支付方式', '账单总金额', '在线支付金额', '代金券使用', '余额使用', '积分使用', '支付时间', '订单号','微信支付商户号'
+      'ID', '用户信息', '手机号码', '支付方式', '账单总金额', '在线支付金额', '代金券使用', '余额使用', '积分使用', '支付时间', '总成本', '订单号','微信支付商户号'
     ]
     let payTypes = ['', '代金券', '账户余额', '在线支付']
     let payMethods = {
@@ -1365,9 +1395,16 @@ class MallController extends Controller {
         }
       })
       let orderNos = []
+      let priceCost = 0
       orders.forEach(order => {
         orderNos.push(order.order_no)
+        let goodsItems = order.goods_items
+        goodsItems.forEach(goods=> {
+          priceCost += goods.price_cost
+        })
       })
+
+      record['总成本'] = parseFloat(priceCost).toFixed(2)
       record['订单号'] = orderNos.join(',')
 
       if(item.pay_method == 'wxpay'){
