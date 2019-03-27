@@ -854,18 +854,20 @@ class MallController extends Controller {
         let alipayUtils = this.utils.alipay_utils
         let tradeNo = this.utils.uuid_utils.v4()
         let amount = parseFloat(1 * refund.amount).toFixed(2)
-        // if (this.config.DEBUG) {
-        //   amount = 0.1
-        // }
-        alipayAccount = ''
-        let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
-        this.logger.info(ctx.uuid, 'orderCancelDeal()', 'aliRet', aliRet)
-        if (aliRet.code != 0) {
-          return this._fail(ctx, aliRet.message)
+
+        if(parseFloat(amount) > 0){
+          let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
+          this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
+          if (aliRet.code != 0) {
+            return this._fail(ctx, aliRet.message)
+          }
+        }else {
+          this.logger.info(ctx.uuid, 'transactionUpdate()', '无需退在线支付')
         }
+
       }
 
-      userInfo.balance = userInfo.balance + refund.balance
+      userInfo.balance = parseFloat(userInfo.balance + parseFloat(refund.balance)).toFixed(2)
       userInfo.score = userInfo.score + refund.score
 
       let userInfoRet = await userInfo.save({
@@ -875,7 +877,7 @@ class MallController extends Controller {
         throw new Error('更新用户信息失败')
       }
 
-      if (refund.ecard) {
+      if (refund.ecard && payment.ecard_id) {
         let ecardId = payment.ecard_id
         let userEcardModel = userModel.ecardModel()
         let ecard = await userEcardModel.findByPk(ecardId)
@@ -883,7 +885,7 @@ class MallController extends Controller {
           throw new Error('未找到对应退款代金券')
         }
 
-        ecard.amount = ecard.amount + refund.ecard
+        ecard.amount = parseFloat(ecard.amount + parseFloat(refund.ecard)).toFixed(2)
         ecard.status = 1
         let ecardRet = await ecard.save({
           transaction: t
