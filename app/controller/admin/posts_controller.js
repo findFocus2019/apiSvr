@@ -29,6 +29,7 @@ class PostsController extends Controller {
       offset: (page - 1) * limit,
       limit: limit,
       order: [
+        ['recommend', 'desc'],
         ['create_time', 'desc']
       ],
       attributes: {
