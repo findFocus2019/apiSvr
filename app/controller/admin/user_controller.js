@@ -39,8 +39,10 @@ class UserController extends Controller {
     })
 
     for (let index = 0; index < queryRet.rows.length; index++) {
-      let item = queryRet.rows[index];
-      item.dataValues.isVip = await userModel.isVipByInfo(item)
+      let item = queryRet.rows[index]
+      let isVip = await userModel.isVipByInfo(item)
+      // this.logger.info(ctx.uuid, 'list()', 'isVip', isVip)
+      item.dataValues.isVip = isVip
       queryRet.rows[index] = item
     }
 
