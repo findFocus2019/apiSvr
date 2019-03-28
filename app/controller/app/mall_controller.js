@@ -1415,11 +1415,14 @@ class MallController extends CommonController {
         let itemTotal = order.vip ? (item.price_vip) : item.price_sell
         this.logger.info(ctx.uuid, 'orderAfter()', 'itemTotal', itemTotal)
         total += itemTotal * item.num
+
+        let itemScore = order.vip ? item.price_score_vip : item.price_score_sell
+        this.logger.info(ctx.uuid, 'orderAfter()', 'itemScore', itemScore)
         if (order.score_use) {
-          let itemScore = order.vip ? item.price_score_vip : item.price_score_sell
-          this.logger.info(ctx.uuid, 'orderAfter()', 'itemScore', itemScore)
           // total += itemScore
           score += itemScore * item.num * this.config.scoreExchangeNum
+        }else {
+          total += itemScore * item.num
         }
         items.push(item)
       }
