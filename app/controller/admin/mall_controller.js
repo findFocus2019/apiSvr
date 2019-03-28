@@ -873,29 +873,7 @@ class MallController extends Controller {
 
       // 处理退款
       let userInfo = await userModel.getInfoByUserId(userId)
-      if (refund.amount) {
-        if (!userInfo.alipay) {
-          throw new Error('用户未设置支付宝，请提醒用户设置')
-        }
-
-        // 支付宝退款
-        let alipayAccount = userInfo.alipay
-        this.logger.info(ctx.uuid, 'orderCancelDeal()', 'alipayAccount', alipayAccount)
-        let alipayUtils = this.utils.alipay_utils
-        let tradeNo = this.utils.uuid_utils.v4()
-        let amount = parseFloat(1 * refund.amount).toFixed(2)
-
-        if(parseFloat(amount) > 0){
-          let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
-          this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
-          if (aliRet.code != 0) {
-            return this._fail(ctx, aliRet.message)
-          }
-        }else {
-          this.logger.info(ctx.uuid, 'transactionUpdate()', '无需退在线支付')
-        }
-
-      }
+      
 
       userInfo.balance = parseFloat(userInfo.balance + parseFloat(refund.balance)).toFixed(2)
       userInfo.score = userInfo.score + refund.score
@@ -924,6 +902,31 @@ class MallController extends Controller {
           throw new Error('代金券信息更新失败')
         }
       }
+
+      if (refund.amount) {
+        if (!userInfo.alipay) {
+          throw new Error('用户未设置支付宝，请提醒用户设置')
+        }
+
+        // 支付宝退款
+        let alipayAccount = userInfo.alipay
+        this.logger.info(ctx.uuid, 'orderCancelDeal()', 'alipayAccount', alipayAccount)
+        let alipayUtils = this.utils.alipay_utils
+        let tradeNo = this.utils.uuid_utils.v4()
+        let amount = parseFloat(1 * refund.amount).toFixed(2)
+
+        if(parseFloat(amount) > 0){
+          let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
+          this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
+          if (aliRet.code != 0) {
+            return this._fail(ctx, aliRet.message)
+          }
+        }else {
+          this.logger.info(ctx.uuid, 'transactionUpdate()', '无需退在线支付')
+        }
+
+      }
+      
       t.commit()
     } catch (err) {
       ctx.ret.code = 1
@@ -954,16 +957,26 @@ class MallController extends Controller {
     try {
 
       let orderAfter = await orderAfterModel.findByPk(orderAfterId)
-      let orderAfterType = orderAfter.category
       this.logger.info(ctx.uuid, 'orderAfterDeal()', 'orderAfter', orderAfter)
 
       let userId = orderAfter.user_id
 
       let orderId = orderAfter.order_id
       let goodsIds = orderAfter.goods_ids
+      let amount = 0
+
+      orderAfter.status = 1
+      orderAfter.category = (type == 1) ? '退款' : '退货';
+      orderAfter.remark = ctx.body.remark
+      let orderAfterRet = await orderAfter.save({
+        transaction: t
+      })
+      if (!orderAfterRet) {
+        throw new Error('更新售后信息失败')
+      }
 
       if (type == 1) {
-        orderAfterType = '退款'
+     
         // 退款
         let goodsIdsArr = goodsIds.substr(1, goodsIds.length - 2).split('-')
 
@@ -1078,31 +1091,7 @@ class MallController extends Controller {
         // 处理退款
         let userInfo = await userModel.getInfoByUserId(userId)
         this.logger.info(ctx.uuid, 'orderAfterDeal()', 'userInfo', userInfo)
-        if (refund.amount) {
-          if (!userInfo.alipay) {
-            throw new Error('用户未设置支付宝，请提醒用户设置')
-          }
-
-          // 支付宝退款
-          let alipayAccount = userInfo.alipay
-          this.logger.info(ctx.uuid, 'orderAfterDeal()', 'alipayAccount', alipayAccount)
-          let alipayUtils = this.utils.alipay_utils
-          let tradeNo = this.utils.uuid_utils.v4()
-          let amount = parseFloat(1 * refund.amount).toFixed(2)
-          // if (this.config.DEBUG) {
-          //   amount = 0.1
-          // }
-          if(parseFloat(amount) > 0){
-            let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
-            this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
-            if (aliRet.code != 0) {
-              return this._fail(ctx, aliRet.message)
-            }
-          }else {
-            this.logger.info(ctx.uuid, 'transactionUpdate()', '无需退在线支付')
-          }
-          
-        }
+        
 
         userInfo.balance = parseFloat(userInfo.balance + parseFloat(refund.balance)).toFixed(2)
         userInfo.score = userInfo.score + refund.score
@@ -1138,19 +1127,34 @@ class MallController extends Controller {
           }
         }
 
-      }else {
-        orderAfterType = '退货'
+        if (refund.amount) {
+          if (!userInfo.alipay) {
+            throw new Error('用户未设置支付宝，请提醒用户设置')
+          }
+
+          // 支付宝退款
+          let alipayAccount = userInfo.alipay
+          this.logger.info(ctx.uuid, 'orderAfterDeal()', 'alipayAccount', alipayAccount)
+          let alipayUtils = this.utils.alipay_utils
+          let tradeNo = this.utils.uuid_utils.v4()
+          amount = parseFloat(1 * refund.amount).toFixed(2)
+          // if (this.config.DEBUG) {
+          //   amount = 0.1
+          // }
+          if(parseFloat(amount) > 0){
+            let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
+            this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
+            if (aliRet.code != 0) {
+              return this._fail(ctx, aliRet.message)
+            }
+          }else {
+            this.logger.info(ctx.uuid, 'transactionUpdate()', '无需退在线支付')
+          }
+          
+        }
+
       }
 
-      orderAfter.status = 1
-      orderAfter.category = orderAfterType
-      orderAfter.remark = ctx.body.remark
-      let orderAfterRet = await orderAfter.save({
-        transaction: t
-      })
-      if (!orderAfterRet) {
-        throw new Error('更新售后信息失败')
-      }
       t.commit()
     } catch (err) {
       ctx.ret.code = 1
