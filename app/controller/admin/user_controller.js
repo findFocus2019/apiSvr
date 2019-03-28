@@ -38,6 +38,10 @@ class UserController extends Controller {
       ]
     })
 
+    queryRet.rows.forEach(async(item) => {
+      item.dataValues.isVip = await userModel.isVipByInfo(item)
+    })
+
     this.logger.info(ctx.uuid, 'list()', 'queryRet', queryRet)
     ctx.ret.data = queryRet
     return ctx.ret
