@@ -954,6 +954,7 @@ class MallController extends Controller {
     try {
 
       let orderAfter = await orderAfterModel.findByPk(orderAfterId)
+      let orderAfterType = orderAfter.category
       this.logger.info(ctx.uuid, 'orderAfterDeal()', 'orderAfter', orderAfter)
 
       let userId = orderAfter.user_id
@@ -962,6 +963,7 @@ class MallController extends Controller {
       let goodsIds = orderAfter.goods_ids
 
       if (type == 1) {
+        orderAfterType = '退款'
         // 退款
         let goodsIdsArr = goodsIds.substr(1, goodsIds.length - 2).split('-')
 
@@ -1136,9 +1138,12 @@ class MallController extends Controller {
           }
         }
 
+      }else {
+        orderAfterType = '退货'
       }
 
       orderAfter.status = 1
+      orderAfter.category = orderAfterType
       orderAfter.remark = ctx.body.remark
       let orderAfterRet = await orderAfter.save({
         transaction: t
