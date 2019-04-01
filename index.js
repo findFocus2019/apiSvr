@@ -33,6 +33,7 @@ app.all('*', (req, res, next) => {
 
 app.use('/update' , require('./update'))
 app.use('/upload', require('./lib/upload'))
+
 // 路由
 app.use(require('./app/controller'))
 
