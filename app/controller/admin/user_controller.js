@@ -1,4 +1,11 @@
 const Controller = require('./../../../lib/controller')
+const {
+  Parser
+} = require('json2csv')
+const aliOssUtils = require('../../utils/ali_oss_utils')
+const fs = require('fs')
+const util = require('util')
+const path = require('path')
 const Op = require('sequelize').Op
 class UserController extends Controller {
 
@@ -453,6 +460,74 @@ class UserController extends Controller {
 
     return ctx.ret
     
+  }
+
+  async dataExport(ctx){
+
+    //csv数据
+    let csvList = []
+    //字段
+    let fields = [
+      '用户ID', '昵称', '手机号码', '注册时间', '账单余额', '积分', 'vip', 'vip到期时间', '支付宝'
+    ]
+
+    let UserModel = new this.models.user_model
+    let userInfoModel = UserModel.infoModel()
+
+    let users = await userInfoModel.findAll({
+      where: {
+        id: {
+          [Op.ne]:1
+        }
+      }
+    })
+
+    for (let index = 0; index < users.length; index++) {
+      const user = users[index]
+
+      let data = {}
+      data['用户ID'] = user.user_id
+      data['昵称'] = user.nickname
+      data['手机号码'] = user.mobile
+      data['注册时间'] = this.utils.date_utils.dateFormat(user.create_time)
+      data['账单余额'] = parseFloat(user.balance).toFixed(2)
+      data['积分'] = user.score
+
+      let vip = await UserModel.isVipByInfo(user)
+      data['vip'] = vip ? '是' : '否'
+      data['vip到期时间'] = vip ? this.utils.date_utils.dateFormat(user.deadline) : ''
+      data['支付宝'] = user.alipay
+      
+      csvList.push(data)
+    }
+
+    try {
+      const parser = new Parser({
+        fields
+      })
+      let csv = parser.parse(csvList)
+      let filePath = __dirname + '/../../../backup/'
+      let fileName = 'users.csv'
+      await util.promisify(fs.writeFile)(path.join(filePath, fileName), csv)
+      let uploadResult = await aliOssUtils.uploadFile(filePath + fileName)
+      ctx.ret.uploadResult = uploadResult
+      if (!uploadResult.url) {
+        ctx.ret.code = -1
+        ctx.ret.message = '导出文件失败'
+      } else {
+        ctx.ret.code = 0
+        ctx.ret.message = '上传成功'
+        ctx.ret.data = {
+          url: uploadResult.url
+        }
+      }
+      return ctx.ret
+    } catch (err) {
+      console.log(err)
+      ctx.ret.code = -1
+      ctx.ret.message = '导出文件失败'
+      return ctx.ret
+    }
   }
 }
 
