@@ -368,7 +368,7 @@ class AuthController extends Controller {
     let verifyRet = await verifyCodeModel.verify(mobile, verify_code)
     this.logger.info(ctx.uuid, 'sign()', 'verifyRet', verifyRet)
     if (verifyRet.code != 0) {
-      return this._fail(ctx, '短信验证失败，' + verifyRet.message)
+      return this._fail(ctx, verifyRet.message)
     }
 
     let userModel = new this.models.user_model()

@@ -50,19 +50,27 @@ class VerifyCodeModel extends Model {
           ['id', 'DESC']
         ]
       })
-      console.log('verify =================', rows.status)
+
+      if(!rows){
+        ret.code = 1
+        ret.message = '验证码已失效'
+        return ret
+      }
+      console.log('verify =================', rows)
       //TODO 时间过期
       if (rows.status != 1) {
-        ret.code = 403
+        ret.code = 1
         ret.message = '验证码已失效'
       } else {
-        rows.status = 1
+        rows.status = 0
         await rows.save()
         ret.code = 0
         ret.message = '验证成功'
       }
+
       return ret
     } catch (err) {
+      console.log(err)
       ret.code = 500
       ret.message = '服务器错误'
       // ret.data = err
