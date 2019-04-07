@@ -314,6 +314,25 @@ class PubController extends Controller {
     }
     return ctx.ret
   }
+
+  /**
+   * 获取用户手机号
+   * @param {*} ctx 
+   */
+  async getInviteUser(ctx){
+    this.logger.info(ctx.uuid, 'getInviteUser()', ctx.body)
+
+    let pid = ctx.body.pid
+    let userModel = new this.models.user_model
+    let userInfo = await userModel.getInfoByUserId(pid)
+
+    let mobile = userInfo.mobile
+    mobile = mobile.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+    ctx.ret.data = {
+      id: userInfo.user_id,
+      mobile: mobile
+    }
+  }
 }
 
 module.exports = PubController

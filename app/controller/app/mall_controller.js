@@ -24,7 +24,7 @@ class MallController extends CommonController {
     // }
 
     let needCheckToken = true
-    let unLimitRoutes = ['goodsList', 'goodsInfo', 'categorys']
+    let unLimitRoutes = ['goodsList', 'goodsInfo', 'categorys', 'goodsRateList']
     if (unLimitRoutes.indexOf(ctx.route.action) > -1) {
       needCheckToken = false
     }
@@ -169,37 +169,56 @@ class MallController extends CommonController {
    * @param {*} ctx 
    */
   async goodsRateList(ctx) {
-    // this.logger.info(ctx.uuid, 'goodsRateList()', 'body', ctx.body, 'query', ctx.query)
+    this.logger.info(ctx.uuid, 'goodsRateList()', 'body', ctx.body, 'query', ctx.query)
 
-    // let page = ctx.body.page || 1
-    // let limit = ctx.body.limit || 10
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
 
-    // let goodsId = ctx.body.goods_id
+    let goodsId = ctx.body.goods_id
 
-    // let where = {}
-    // where.goods_id = goodsId
-    // this.logger.info(ctx.uuid, 'goodsRateList()', 'where', where)
+    let where = {}
+    where.goods_id = goodsId
+    where.status = 9
+    where.rate_level = {
+      [Op.gt]:0
+    }
+    this.logger.info(ctx.uuid, 'goodsRateList()', 'where', where)
 
-    // let mallModel = new this.models.mall_model
-    // let orderRateModel = mallModel.orderRateModel()
-    // let queryRet = await orderRateModel.findAndCountAll({
-    //   where: where,
-    //   offset: (page - 1) * limit,
-    //   limit: limit,
-    //   order: [
-    //     ['update_time', 'desc']
-    //   ]
-    // })
+    let userModel = new this.models.user_model
+    let mallModel = new this.models.mall_model
+    let orderItemModel = mallModel.orderItemModel()
+    let queryRet = await orderItemModel.findAndCountAll({
+      where: where,
+      offset: (page - 1) * limit,
+      limit: limit,
+      order: [
+        ['update_time', 'desc']
+      ]
+    })
 
-    // ctx.ret.data = {
-    //   rows: queryRet.rows || [],
-    //   count: queryRet.count || 0,
-    //   page: page,
-    //   limit: limit
-    // }
-    // this.logger.info(ctx.uuid, 'goodsRateList()', 'ret', ctx.ret)
+    let rows = []
+    for (let index = 0; index < queryRet.rows.length; index++) {
+      let item = queryRet.rows[index]
+      let user = await userModel.getInfoByUserId(item.user_id)
 
-    // return ctx.ret
+      item.dataValues.user_info = {
+        nickname : user.nickname || user.mobile,
+        avatar: user.avatar || ''
+      }
+      item.dataValues.rate_date = this.utils.date_utils.dateFormat(item.rate_time)
+      
+      rows.push(item)
+    }
+
+    ctx.ret.data = {
+      rows: rows || [],
+      count: queryRet.count || 0,
+      page: page,
+      limit: limit
+    }
+    this.logger.info(ctx.uuid, 'goodsRateList()', 'ret', ctx.ret)
+
+    return ctx.ret
   }
 
   /**
@@ -1092,6 +1111,11 @@ class MallController extends CommonController {
     let where = {}
     where.user_id = userId
     where.status = status
+    if(status == -1){
+      where.status = {
+        [Op.in]: [-1,-2]
+      }
+    }
     where.order_type = {
       [Op.gt]: 0
     }
