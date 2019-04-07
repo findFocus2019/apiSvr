@@ -63,7 +63,7 @@ app.use(errorHandler)
 
 let port = config.port || process.env.PORT || 5001
 if (process.env.NODE_ENV == 'production'){
-  port = '80'
+  port = '8080'
 }
 app.listen(port, () => {
   console.log(`apiSvr listening on port ${port}`)
