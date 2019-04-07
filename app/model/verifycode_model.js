@@ -53,7 +53,7 @@ class VerifyCodeModel extends Model {
 
       if(!rows){
         ret.code = 1
-        ret.message = '验证码已失效'
+        ret.message = '验证码错误'
         return ret
       }
       console.log('verify =================', rows)
