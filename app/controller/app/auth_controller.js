@@ -364,12 +364,12 @@ class AuthController extends Controller {
 
     this.logger.info(ctx.uuid, 'sign()', 'pid', pid)
     // 短信验证
-    // let verifyCodeModel = new this.models.verifycode_model
-    // let verifyRet = await verifyCodeModel.verify(mobile, verify_code)
-    // this.logger.info(ctx.uuid, 'sign()', 'verifyRet', verifyRet)
-    // if (verifyRet.code != 0) {
-    //   return this._fail(ctx, '短信验证失败，' + verifyRet.message)
-    // }
+    let verifyCodeModel = new this.models.verifycode_model
+    let verifyRet = await verifyCodeModel.verify(mobile, verify_code)
+    this.logger.info(ctx.uuid, 'sign()', 'verifyRet', verifyRet)
+    if (verifyRet.code != 0) {
+      return this._fail(ctx, '短信验证失败，' + verifyRet.message)
+    }
 
     let userModel = new this.models.user_model()
     let user = await userModel.model().findOne({
