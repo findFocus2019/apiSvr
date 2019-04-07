@@ -120,7 +120,7 @@ let config = {
     masterSecret:'hW3SrajAkuAhg5kGrnEfQ6'
   }
 }
-console.log()
+// console.log()
 if(fs.existsSync(path.join(__dirname , './' + env + '.js'))){
 
   let envConfig = require('./' + env)
