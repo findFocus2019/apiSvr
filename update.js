@@ -25,7 +25,7 @@ const updateData = {
     url: 'https://www.pgyer.com/QcuX'
   },
   android: {
-    version: '2.0.3',
+    version: '2.0.2',
     notes: [
       `修改前期已知Bug，优化用户注册流程
 (温馨提示:务必删除原APP后重新下载安装)
