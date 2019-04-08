@@ -27,8 +27,7 @@ const updateData = {
   android: {
     version: '2.0.3',
     notes: [
-      `1.修复若干bug
-2.注册登录使用验证码
+      `修改前期已知Bug，优化用户注册流程
 (温馨提示:务必删除原APP后重新下载安装)
 `,
       `发现焦点2.0.2
