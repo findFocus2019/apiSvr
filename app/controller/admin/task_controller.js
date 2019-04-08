@@ -4,7 +4,7 @@ const Op = require('sequelize').Op
 class TaskController extends Controller {
 
   async list(ctx) {
-    this.logger.info(ctx.uuid, 'list()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'list()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
 
     let taskModel = new this.models.task_model
     let rows = await taskModel.model().findAll({
@@ -25,7 +25,7 @@ class TaskController extends Controller {
   }
 
   async info(ctx) {
-    this.logger.info(ctx.uuid, 'info()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'info()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let taskModel = new this.models.task_model
     let id = ctx.body.id
     let info = await taskModel.model().findByPk(id)
@@ -38,7 +38,7 @@ class TaskController extends Controller {
   }
 
   async update(ctx) {
-    this.logger.info(ctx.uuid, 'update()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'update()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let taskModel = new this.models.task_model
 
     let data = ctx.body
@@ -60,7 +60,7 @@ class TaskController extends Controller {
 
   async logs(ctx) {
 
-    this.logger.info(ctx.uuid, 'logs()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'logs()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
 

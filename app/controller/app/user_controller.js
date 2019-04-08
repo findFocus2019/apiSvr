@@ -1300,7 +1300,7 @@ class UserController extends Controller {
    * @param {*} ctx 
    */
   async taskLogs(ctx) {
-    this.logger.info(ctx.uuid, 'trades()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'trades()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let userId = ctx.body.user_id
     let type = ctx.body.type || 1
     let page = ctx.body.page || 1

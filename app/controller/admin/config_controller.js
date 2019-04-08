@@ -5,7 +5,7 @@ const smsUtils = require('../../utils/sms_utils')
 class ConfigController extends Controller {
 
   async list(ctx) {
-    this.logger.info(ctx.uuid, 'list()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'list()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
 
     let configModel = new this.models.config_model
     let rows = await configModel.model().findAll({
@@ -26,7 +26,7 @@ class ConfigController extends Controller {
   }
 
   async info(ctx) {
-    this.logger.info(ctx.uuid, 'info()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'info()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let configModel = new this.models.config_model
     let id = ctx.body.id
     let info = await configModel.model().findByPk(id)
@@ -39,7 +39,7 @@ class ConfigController extends Controller {
   }
 
   async update(ctx) {
-    this.logger.info(ctx.uuid, 'update()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'update()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let configModel = new this.models.config_model
 
     let data = ctx.body
@@ -64,7 +64,7 @@ class ConfigController extends Controller {
    * @param {*} ctx 
    */
   async getJdBalance(ctx) {
-    this.logger.info(ctx.uuid, 'getJdBalance()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'getJdBalance()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
 
     let result = await jdUtils.getBalance(4)
     let resultObj = JSON.parse(result)
@@ -84,7 +84,7 @@ class ConfigController extends Controller {
    * @param {*} ctx 
    */
   async getSmsBalance(ctx) {
-    this.logger.info(ctx.uuid, 'getSmsBalance()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'getSmsBalance()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let result = await smsUtils.getBalance()
     // let resultObj = JSON.parse(result)
     ctx.ret.data = result

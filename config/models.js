@@ -332,6 +332,22 @@ module.exports = {
       }
     ]
   },
+  mch: () => {
+    return [{
+        ...commonFieldGet(),
+        status: getStatusFields(0),
+        username: FIELDS.stringLen(64),
+        email: FIELDS.stringLen(128),
+        mobile: FIELDS.stringLen(16),
+        password: FIELDS.stringLen(32),
+        info: FIELDS.jsonObj('info')
+      },
+      {
+        ...commonOpts,
+        tableName: 't_mch'
+      }
+    ]
+  },
   admin: () => {
     return [{
         ...commonFieldGet(),

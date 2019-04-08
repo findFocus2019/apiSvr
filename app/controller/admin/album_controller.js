@@ -62,7 +62,7 @@ class AlbumController extends Controller {
   }
 
   async info(ctx) {
-    this.logger.info(ctx.uuid, 'info()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'info()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let albumModel = new this.models.album_model
     let id = ctx.body.id
     let info = await albumModel.model().findByPk(id)
@@ -75,7 +75,7 @@ class AlbumController extends Controller {
   }
 
   async update(ctx) {
-    this.logger.info(ctx.uuid, 'update()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'update()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let albumModel = new this.models.album_model
 
     let data = ctx.body

@@ -17,7 +17,7 @@ const AppMallController = require('../app/mall_controller')
 class MallController extends Controller {
 
   async categoryList(ctx) {
-    this.logger.info(ctx.uuid, 'categoryList()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'categoryList()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
 
     let where = {}
     where.type = this.config.categoryType.GOODS
@@ -45,7 +45,7 @@ class MallController extends Controller {
   }
 
   async categoryInfo(ctx) {
-    this.logger.info(ctx.uuid, 'info()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'info()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let mallModel = new this.models.mall_model
     let id = ctx.body.id
     let info = await mallModel.categoryModel().findByPk(id)
@@ -58,7 +58,7 @@ class MallController extends Controller {
   }
 
   async categoryUpdate(ctx) {
-    this.logger.info(ctx.uuid, 'categoryUpdate()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'categoryUpdate()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let mallModel = new this.models.mall_model
 
     let data = ctx.body
@@ -80,13 +80,15 @@ class MallController extends Controller {
   }
 
   async goodsList(ctx) {
-    this.logger.info(ctx.uuid, 'goodsList()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'goodsList()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
 
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
     let offset = (page - 1) * limit
     let search = ctx.body.search
     let type = ctx.body.type || ''
+
+
 
     let where = {}
     if (search) {
@@ -97,6 +99,13 @@ class MallController extends Controller {
     if (type) {
       where.type = type
     }
+
+    // 添加商户
+    let mchId = ctx.session.mch_id || 0
+    if (mchId) {
+      where.mch_id = mchId
+    }
+
     let mallModel = new this.models.mall_model
     let queryRet = await mallModel.goodsModel().findAndCountAll({
       where: where,
@@ -115,7 +124,7 @@ class MallController extends Controller {
   }
 
   async goodsInfo(ctx) {
-    this.logger.info(ctx.uuid, 'goodsInfo()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'goodsInfo()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let mallModel = new this.models.mall_model
     let id = ctx.body.id
     let info = await mallModel.goodsModel().findByPk(id)
@@ -128,11 +137,21 @@ class MallController extends Controller {
   }
 
   async goodsUpdate(ctx) {
-    this.logger.info(ctx.uuid, 'goodsUpdate()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'goodsUpdate()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     delete ctx.body.update_time
     let mallModel = new this.models.mall_model
 
     let data = ctx.body
+
+    // 添加商户
+    let mchId = ctx.session.mch_id || 0
+    if (mchId) {
+      data.mch_id = mchId
+      if (!data.id) {
+        data.status = 0
+      }
+    }
+
     let goods
     if (data.id) {
       goods = await mallModel.goodsModel().findByPk(data.id)
@@ -149,7 +168,7 @@ class MallController extends Controller {
   }
 
   async orderList(ctx) {
-    this.logger.info(ctx.uuid, 'orderList()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'orderList()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
 
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
@@ -256,7 +275,7 @@ class MallController extends Controller {
   }
 
   async paymentList(ctx) {
-    this.logger.info(ctx.uuid, 'paymentList()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'paymentList()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
 
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
@@ -282,22 +301,22 @@ class MallController extends Controller {
         }
       })
       this.logger.info(ctx.uuid, 'paymentList()', 'order', order)
-      if(!order){
+      if (!order) {
         ctx.ret.data = {
           rows: [],
-          count:0
+          count: 0
         }
         return ctx.ret
       }
       let orderId = order.id
       where.order_ids = {
-        [Op.like]:'%-' + orderId + '-%'
+        [Op.like]: '%-' + orderId + '-%'
       }
     }
     if (userId) {
       where.user_id = userId
     }
- 
+
     paymentModel.belongsTo(userInfoModel, {
       targetKey: 'user_id',
       foreignKey: 'user_id'
@@ -319,7 +338,7 @@ class MallController extends Controller {
       }]
     })
 
-    
+
     for (let index = 0; index < queryRet.rows.length; index++) {
       const item = queryRet.rows[index]
       let orderIds = item.order_ids.substr(1, item.order_ids.length - 2).split('-')
@@ -332,26 +351,26 @@ class MallController extends Controller {
       })
 
       item.dataValues.orders = orders
-      if(item.pay_method == 'wxpay'){
+      if (item.pay_method == 'wxpay') {
         console.log(item.dataValues)
         let wxpayInfo = JSON.parse(item.info)
-        if(wxpayInfo.partnerid == this.config.miniApp.mch_id){
+        if (wxpayInfo.partnerid == this.config.miniApp.mch_id) {
           item.dataValues.wxpay_type = 2
-        }else if (wxpayInfo.partnerid == this.config.wxpay.mch_id){
+        } else if (wxpayInfo.partnerid == this.config.wxpay.mch_id) {
           item.dataValues.wxpay_type = 1
         }
-      }else {
+      } else {
         item.dataValues.wxpay_type = 0
       }
 
       let priceCost = 0
       orders.forEach(order => {
         let goodsItems = order.goods_items
-        goodsItems.forEach(goods=> {
+        goodsItems.forEach(goods => {
           priceCost += (goods.price_cost * goods.num)
         })
       })
-      
+
       item.dataValues.price_cost = parseFloat(priceCost).toFixed(2)
       // 计算成本
       queryRet.rows[index] = item
@@ -363,7 +382,7 @@ class MallController extends Controller {
   }
 
   async transOutDeal(ctx) {
-    this.logger.info(ctx.uuid, 'transOutDeal()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'transOutDeal()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let transactionId = ctx.body.id
 
     let userModel = new this.models.user_model
@@ -568,7 +587,7 @@ class MallController extends Controller {
   }
 
   async orderAfters(ctx) {
-    this.logger.info(ctx.uuid, 'orderAfters()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'orderAfters()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
 
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
@@ -670,7 +689,7 @@ class MallController extends Controller {
   }
 
   async orderAftetDetail(ctx) {
-    this.logger.info(ctx.uuid, 'orderAftetDetail()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'orderAftetDetail()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let id = ctx.body.id
 
     let mallModel = new this.models.mall_model
@@ -740,7 +759,7 @@ class MallController extends Controller {
 
   // 删除订单，退款
   async orderCancelDeal(ctx) {
-    this.logger.info(ctx.uuid, 'orderCancelDeal()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'orderCancelDeal()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
 
     let orderId = ctx.body.id
 
@@ -873,7 +892,7 @@ class MallController extends Controller {
 
       // 处理退款
       let userInfo = await userModel.getInfoByUserId(userId)
-      
+
 
       userInfo.balance = parseFloat(userInfo.balance + parseFloat(refund.balance)).toFixed(2)
       userInfo.score = userInfo.score + refund.score
@@ -915,18 +934,18 @@ class MallController extends Controller {
         let tradeNo = this.utils.uuid_utils.v4()
         let amount = parseFloat(1 * refund.amount).toFixed(2)
 
-        if(parseFloat(amount) > 0){
+        if (parseFloat(amount) > 0) {
           let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
           this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
           if (aliRet.code != 0) {
             return this._fail(ctx, aliRet.message)
           }
-        }else {
+        } else {
           this.logger.info(ctx.uuid, 'transactionUpdate()', '无需退在线支付')
         }
 
       }
-      
+
       t.commit()
     } catch (err) {
       ctx.ret.code = 1
@@ -940,7 +959,7 @@ class MallController extends Controller {
    * type : 1:退货 2:换货
    */
   async orderAfterDeal(ctx) {
-    this.logger.info(ctx.uuid, 'orderAfterDeal()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'orderAfterDeal()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
 
     let orderAfterId = ctx.body.id
     let type = ctx.body.type || 0
@@ -976,7 +995,7 @@ class MallController extends Controller {
       }
 
       if (type == 1) {
-     
+
         // 退款
         let goodsIdsArr = goodsIds.substr(1, goodsIds.length - 2).split('-')
 
@@ -1091,7 +1110,7 @@ class MallController extends Controller {
         // 处理退款
         let userInfo = await userModel.getInfoByUserId(userId)
         this.logger.info(ctx.uuid, 'orderAfterDeal()', 'userInfo', userInfo)
-        
+
 
         userInfo.balance = parseFloat(userInfo.balance + parseFloat(refund.balance)).toFixed(2)
         userInfo.score = userInfo.score + refund.score
@@ -1141,16 +1160,16 @@ class MallController extends Controller {
           // if (this.config.DEBUG) {
           //   amount = 0.1
           // }
-          if(parseFloat(amount) > 0){
+          if (parseFloat(amount) > 0) {
             let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
             this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
             if (aliRet.code != 0) {
               return this._fail(ctx, aliRet.message)
             }
-          }else {
+          } else {
             this.logger.info(ctx.uuid, 'transactionUpdate()', '无需退在线支付')
           }
-          
+
         }
 
       }
@@ -1365,7 +1384,7 @@ class MallController extends Controller {
     let csvList = []
     //字段
     let fields = [
-      'ID', '用户信息', '手机号码', '支付方式', '账单总金额', '在线支付金额', '代金券使用', '余额使用', '积分使用', '支付时间', '总成本', '订单号','微信支付商户号'
+      'ID', '用户信息', '手机号码', '支付方式', '账单总金额', '在线支付金额', '代金券使用', '余额使用', '积分使用', '支付时间', '总成本', '订单号', '微信支付商户号'
     ]
     let payTypes = ['', '代金券', '账户余额', '在线支付']
     let payMethods = {
@@ -1408,7 +1427,7 @@ class MallController extends Controller {
       orders.forEach(order => {
         orderNos.push(order.order_no)
         let goodsItems = order.goods_items
-        goodsItems.forEach(goods=> {
+        goodsItems.forEach(goods => {
           priceCost += (goods.price_cost * goods.num)
         })
       })
@@ -1416,12 +1435,12 @@ class MallController extends Controller {
       record['总成本'] = parseFloat(priceCost).toFixed(2)
       record['订单号'] = orderNos.join(',')
 
-      if(item.pay_method == 'wxpay'){
+      if (item.pay_method == 'wxpay') {
         // console.log(item.dataValues)
         let wxpayInfo = JSON.parse(item.info) || {}
         record['微信支付商户号'] = wxpayInfo.partnerid || ''
-        
-      }else {
+
+      } else {
         record['微信支付商户号'] = ''
       }
 

@@ -11,5 +11,6 @@ module.exports = {
   push_model: require('./../model/push_model'),
   verifycode_model: require('./verifycode_model'),
   admin_model: require('./admin_model'),
-  token_model: require('./token_model')
+  token_model: require('./token_model'),
+  mch_model: require('./mch_model')
 }

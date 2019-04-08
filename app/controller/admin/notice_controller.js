@@ -4,7 +4,7 @@ const Op = require('sequelize').Op
 class NoticeController extends Controller {
 
   async list(ctx) {
-    this.logger.info(ctx.uuid, 'list()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'list()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
 
     let page = ctx.body.page || 1
     let limit = ctx.body.limit || 10
@@ -44,7 +44,7 @@ class NoticeController extends Controller {
   }
 
   async info(ctx) {
-    this.logger.info(ctx.uuid, 'info()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'info()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let noticeModel = new this.models.notice_model
     let id = ctx.body.id
     let info = await noticeModel.model().findByPk(id)
@@ -57,7 +57,7 @@ class NoticeController extends Controller {
   }
 
   async update(ctx) {
-    this.logger.info(ctx.uuid, 'update()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'update()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
     let noticeModel = new this.models.notice_model
 
     let data = ctx.body
@@ -79,7 +79,7 @@ class NoticeController extends Controller {
 
   async send(ctx) {
 
-    this.logger.info(ctx.uuid, 'send()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.sesssion)
+    this.logger.info(ctx.uuid, 'send()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
 
     return ctx.ret
   }
