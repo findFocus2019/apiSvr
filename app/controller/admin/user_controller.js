@@ -48,7 +48,17 @@ class UserController extends Controller {
     for (let index = 0; index < queryRet.rows.length; index++) {
       let item = queryRet.rows[index]
       let isVip = await userModel.isVipByInfo(item)
-      // this.logger.info(ctx.uuid, 'list()', 'isVip', isVip)
+      this.logger.info(ctx.uuid, 'list()', 'user', item)
+      let userData = await userModel.model().findByPk(item.user_id)
+      if(userData){
+        // this.logger.info(ctx.uuid, 'list()', 'userData', userData)
+        item.dataValues.last_signin_time = userData.last_signin_time
+        item.dataValues.last_signin_ip = userData.last_signin_ip
+      }else {
+        item.dataValues.last_signin_time = 0
+        item.dataValues.last_signin_ip = ''
+      }
+      
       item.dataValues.isVip = isVip
       queryRet.rows[index] = item
     }

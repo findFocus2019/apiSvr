@@ -25,8 +25,12 @@ const updateData = {
     url: 'https://www.pgyer.com/QcuX'
   },
   android: {
-    version: '2.0.2',
+    version: '2.0.3',
     notes: [
+      `1.修复若干bug
+2.注册登录使用验证码
+(温馨提示:务必删除原APP后重新下载安装)
+`,
       `发现焦点2.0.2
 (务必删除原APP后重新下载安装)
 `,
