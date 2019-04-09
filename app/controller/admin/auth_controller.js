@@ -156,6 +156,15 @@ class AuthController extends Controller {
       await mch.save()
 
     } else {
+      let findByEmailRet = await mchModel.model().findOne({
+        where: {
+          email: data.email
+        }
+      })
+      if (findByEmailRet) {
+        ctx.ret.code = 1
+        ctx.ret.message = '存在相同邮箱账号'
+      }
       await mchModel.model().create({
         email: data.email,
         mobile: data.mobile,
