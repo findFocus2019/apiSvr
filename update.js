@@ -48,7 +48,8 @@ const updateData = {
     ],
     // url: 'https://www.pgyer.com/iHri',
     // url: 'https://www.pgyer.com/j5Um',
-    url:'http://img-juren.oss-cn-shenzhen.aliyuncs.com/app/2.0.3_prod.apk'
+    // url:'http://img-juren.oss-cn-shenzhen.aliyuncs.com/app/2.0.3_prod.apk',
+    url: 'https://a.app.qq.com/o/simple.jsp?pkgname=com.dfn.newdiscoverfocusnews&channel=0002160650432d595942&fromcase=60001'
   }
 }
 
