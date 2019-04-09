@@ -843,4 +843,21 @@ module.exports = {
       }
     ]
   },
+  statistics: () => {
+    return [{
+        ...commonFieldGet(),
+        registration_amount: FIELDS.defaultInt(),
+        active_user: FIELDS.defaultInt(),
+        active_user_composition: FIELDS.defaultInt(),
+        order_quantity: FIELDS.defaultInt(),
+        new_vip_user: FIELDS.defaultInt(),
+        vip_user_amount: FIELDS.defaultInt(),
+        user_amount: FIELDS.defaultInt(),
+      },
+      {
+        ...commonOpts,
+        tableName: 't_daily_statistics'
+      }
+    ]
+  },
 }
