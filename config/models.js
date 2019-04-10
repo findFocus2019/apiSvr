@@ -557,7 +557,8 @@ module.exports = {
           img_2: FIELDS.stringLen(255),
           is_share: FIELDS.tinyInt(),
           price: FIELDS.money('price'),
-          rabate_score: FIELDS.defaultInt()
+          rabate_score: FIELDS.defaultInt(),
+          mch_id: FIELDS.bigInt()
         },
         {
           ...commonOpts,
