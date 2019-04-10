@@ -521,9 +521,7 @@ class UserController extends Controller {
 
       // let authType = await UserModel.getUserAuthDataById(user.user_id)
       let userAuth = userAuthData['user_' + user.user_id] || {}
-      if(user.user_id == 120){
-        console.log('userAuth' , userAuth)
-      }
+ 
       data['H5登录'] = userAuth.h5 ? '是' :'否'
       data['小程序登录'] = userAuth.mpwx ? '是' :'否'
       data['APP登录'] = userAuth.app ? '是' :'否'
