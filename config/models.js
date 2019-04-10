@@ -849,7 +849,7 @@ module.exports = {
         ...commonFieldGet(),
         registration_amount: FIELDS.defaultInt(),
         active_user: FIELDS.defaultInt(),
-        active_user_composition: FIELDS.defaultInt(),
+        active_user_composition: FIELDS.stringLen(50),
         order_quantity: FIELDS.defaultInt(),
         new_vip_user: FIELDS.defaultInt(),
         vip_user_amount: FIELDS.defaultInt(),
