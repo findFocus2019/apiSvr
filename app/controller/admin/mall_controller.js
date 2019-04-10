@@ -1299,7 +1299,7 @@ class MallController extends Controller {
       let dateUtils = this.utils.date_utils
       let record = {
         '日期': dateUtils.dateFormat(rows[item].create_time),
-        '订单号': rows[item].order_no.toString(),
+        '订单号': rows[item].order_no + ' ',
         '京东订单号': rows[item].jd_order_id,
         '使用的积分数量': score,
         '商品ID': goodIdsList.join(','),
