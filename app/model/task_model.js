@@ -115,7 +115,7 @@ class TaskModel extends Model {
 
     let getTodayScore = await this.getTodayScore(ctx, data.user_id)
     Log.info(ctx.uuid, 'logByName() getTodayScore', getTodayScore)
-    if(getTodayScore >= 50000){
+    if(getTodayScore >= 5000000){
       ret.code = 1
       ret.message = '超过每日收益数量限制'
       return ret
