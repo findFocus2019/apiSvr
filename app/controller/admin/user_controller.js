@@ -479,7 +479,7 @@ class UserController extends Controller {
     let csvList = []
     //字段
     let fields = [
-      '用户ID', '昵称', '手机号码', '注册时间', '账单余额', '积分', 'vip', 'vip到期时间', '支付宝'
+      '用户ID', '昵称', '手机号码', '注册时间', '账单余额', '积分', 'vip', 'vip到期时间', '支付宝','H5登录','小程序登录','APP登录'
     ]
 
     let UserModel = new this.models.user_model
@@ -491,6 +491,16 @@ class UserController extends Controller {
           [Op.ne]:1
         }
       }
+    })
+
+    let userAuths = await UserModel.authModel().findAll()
+    let userAuthData = {}
+    userAuths.forEach(item => {
+      if(!userAuthData['user_' + item.user_id]){
+        userAuthData['user_' + item.user_id] = {}
+      }
+
+      userAuthData['user_' + item.user_id][item.type] = 1
     })
 
     for (let index = 0; index < users.length; index++) {
@@ -508,7 +518,15 @@ class UserController extends Controller {
       data['vip'] = vip ? '是' : '否'
       data['vip到期时间'] = vip ? this.utils.date_utils.dateFormat(user.deadline) : ''
       data['支付宝'] = user.alipay
-      
+
+      // let authType = await UserModel.getUserAuthDataById(user.user_id)
+      let userAuth = userAuthData['user_' + user.user_id] || {}
+      if(user.user_id == 120){
+        console.log('userAuth' , userAuth)
+      }
+      data['H5登录'] = userAuth.h5 ? '是' :'否'
+      data['小程序登录'] = userAuth.mpwx ? '是' :'否'
+      data['APP登录'] = userAuth.app ? '是' :'否'
       csvList.push(data)
     }
 

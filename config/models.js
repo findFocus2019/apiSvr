@@ -68,11 +68,11 @@ const FIELDS = {
       defaultValue: 0,
       get() {
         const val = this.getDataValue(filed) / 100
-        console.log('money get ============', val)
+        // console.log('money get ============', val)
         return val
       },
       set(val) {
-        console.log('money set ============', val)
+        // console.log('money set ============', val)
         this.setDataValue(filed, val * 100)
       }
     }

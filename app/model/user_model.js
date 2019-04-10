@@ -394,13 +394,14 @@ class UserModel extends Model {
       where: {user_id: userId}
     })
 
+    // console.log(JSON.stringify(list))
     list.forEach(item => {
       if(item.type == 'h5'){
         ret.h5 = 1
       }else if(item.type == 'mpwx'){
         ret.mpwx = 1
       }else if(item.type == 'app'){
-        ret.mpwx = 1
+        ret.app = 1
       }
     })
 
