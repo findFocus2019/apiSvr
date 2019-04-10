@@ -383,6 +383,31 @@ class UserModel extends Model {
     
   }
 
+  async getUserAuthDataById(userId){
+    let ret = {
+      h5:0,
+      mpwx:0,
+      app:0
+    }
+
+    let list = await this.authModel().findAll({
+      where: {user_id: userId}
+    })
+
+    list.forEach(item => {
+      if(item.type == 'h5'){
+        ret.h5 = 1
+      }else if(item.type == 'mpwx'){
+        ret.mpwx = 1
+      }else if(item.type == 'app'){
+        ret.mpwx = 1
+      }
+    })
+
+    return ret
+
+  }
+
 }
 
 module.exports = UserModel

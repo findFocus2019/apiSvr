@@ -60,6 +60,7 @@ class UserController extends Controller {
       }
       
       item.dataValues.isVip = isVip
+      item.dataValues.authType = await userModel.getUserAuthDataById(item.user_id)
       queryRet.rows[index] = item
     }
 
