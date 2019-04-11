@@ -402,9 +402,8 @@ class AuthController extends Controller {
           mobile: mobile,
           pid: pid
         })
+        isReg = 1
       }
-
-      isReg = 1
 
     }
 
@@ -468,7 +467,7 @@ class AuthController extends Controller {
       })
     }
 
-    if (pid && pid > 0) {
+    if (pid && pid > 0 && isReg) {
 
       // 邀请获取积分
       let t1 = await userModel.getTrans()
