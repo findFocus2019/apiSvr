@@ -81,6 +81,13 @@ class NoticeController extends Controller {
 
     this.logger.info(ctx.uuid, 'send()', 'body', ctx.body, 'query', ctx.query, 'session', ctx.session)
 
+    let noticeId = ctx.body.notice_id
+    let noticeModel = new this.models.notice_model
+
+    let notice = await noticeModel.model().findByPk(noticeId)
+
+    ctx.ret.data = notice
+
     return ctx.ret
   }
 }
