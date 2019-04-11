@@ -300,6 +300,60 @@ class Schedule extends CommonControler {
        
     
   }
+
+  //每日统计
+  async dailyStatistics() {
+    let logger = arguments[0] || this.logger
+    logger.info('dailyStatistics() start')
+    //当天凌晨时间
+    let today =  new Date(new Date().setHours(0, 0, 0, 0)) / 1000;
+    const statisticsModel = (new this.models.statistics_model).model()
+    const userModel = (new this.models.user_model).model()
+    const orderModel = (new this.models.mall_model).orderModel()
+    //活跃用户
+    let active_user = await userModel.count({
+      where: { 'last_signin_time': { [Op.gte]: today } }
+    })
+    //用户总量
+    let user_amount = await userModel.count()
+    //当日注册量
+    let registration_amount = await userModel.count({
+      where: { 'create_time': { [Op.gte]: today } }
+    })
+    //新增vip
+    let new_vip_user = await userModel.count({
+      where: {
+        'create_time': { [Op.gte]: today },
+        'vip': 1
+      }
+    })
+    //总vip
+    let vip_user_amount = await userModel.count({
+      where: { 'vip': 1 }
+    })
+    //活跃用户构成
+    let active_user_composition = (Math.round(active_user / user_amount * 10000) / 100.00 + "%");
+    //order_quantity 下单量
+    let order_quantity = await orderModel.count({
+      where: {
+        'update_time': { [Op.gte]: today },
+        'status': 1
+      }
+    })
+    try {
+      await statisticsModel.create({
+        active_user: active_user,
+        user_amount: user_amount,
+        registration_amount: registration_amount,
+        new_vip_user: new_vip_user,
+        vip_user_amount: vip_user_amount,
+        active_user_composition: active_user_composition,
+        order_quantity: order_quantity
+      })
+    } catch (err) {
+      logger.info('每日数据统计失败,原因：',err)
+    }
+  }
 }
 
 function start() {
