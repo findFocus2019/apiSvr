@@ -100,7 +100,7 @@ class ConfigController extends Controller {
     let limit = ctx.body.limit || 10
     let offset = (page - 1) * limit
     const statisticsModel = new this.models.statistics_model
-    let rows = await statisticsModel.model().findAll({
+    let queryRet = await statisticsModel.model().findAndCountAll({
       offset: offset,
       limit: limit,
       order: [
@@ -108,9 +108,7 @@ class ConfigController extends Controller {
       ]
     })
 
-    ctx.ret.data = {
-      rows: rows
-    }
+    ctx.ret.data = queryRet
     return ctx.ret
   }
 }
