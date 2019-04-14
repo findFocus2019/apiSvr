@@ -92,6 +92,27 @@ class ConfigController extends Controller {
     return ctx.ret
   }
 
+
+  // 每日统计
+  async dailyStatistics(ctx) {
+    this.logger.info(ctx.uuid, 'dailyStatistics()', 'body', ctx.body, 'query', ctx.query)
+    let page = ctx.body.page || 1
+    let limit = ctx.body.limit || 10
+    let offset = (page - 1) * limit
+    const statisticsModel = new this.models.statistics_model
+    let rows = await statisticsModel.model().findAll({
+      offset: offset,
+      limit: limit,
+      order: [
+        ['create_time', 'desc']
+      ]
+    })
+
+    ctx.ret.data = {
+      rows: rows
+    }
+    return ctx.ret
+  }
 }
 
 module.exports = ConfigController
