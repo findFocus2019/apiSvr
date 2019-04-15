@@ -309,6 +309,7 @@ class Schedule extends CommonControler {
     let today =  new Date(new Date().setHours(0, 0, 0, 0)) / 1000;
     const statisticsModel = (new this.models.statistics_model).model()
     const userModel = (new this.models.user_model).model()
+    const userInfoModel = (new this.models.user_model).infoModel()
     const orderModel = (new this.models.mall_model).orderModel()
     //活跃用户
     let active_user = await userModel.count({
@@ -321,18 +322,21 @@ class Schedule extends CommonControler {
       where: { 'create_time': { [Op.gte]: today } }
     })
     //新增vip
-    let new_vip_user = await userModel.count({
+    let new_vip_user = await userInfoModel.count({
       where: {
-        'create_time': { [Op.gte]: today },
+        'startline': { [Op.gte]: today },
         'vip': 1
       }
     })
     //总vip
-    let vip_user_amount = await userModel.count({
-      where: { 'vip': 1 }
+    let vip_user_amount = await userInfoModel.count({
+      where: {
+        'vip': 1,
+        'deadline': { [Op.gte]: today }
+      }
     })
     //活跃用户构成
-    let active_user_composition = (Math.round(active_user / user_amount * 10000) / 100.00 + "%");
+    let active_user_composition = (Math.round(parseFloat(active_user) / parseFloat(user_amount) * 10000) / 100.00 + "%"); 
     //order_quantity 下单量
     let order_quantity = await orderModel.count({
       where: {
