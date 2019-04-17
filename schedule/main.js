@@ -2,6 +2,7 @@ const Controller = require('./../lib/controller')
 const nodeSchedule = require('node-schedule')
 const ShowApiSdk = require('./../lib/showApi')
 const dateUtils = require('./../app/utils/date_utils')
+const uuidUtils = require('./../app/utils/uuid_utils')
 const jdUtils = require('./../app/utils/jd_utils')
 const config = require('./../config')
 const CommonControler = require('./../app/common/common_controller')
@@ -129,7 +130,7 @@ class Schedule extends CommonControler {
     for (let index = 0; index < list.length; index++) {
       const item = list[index]
       if (item.html && item.imageurls.length) {
-        logger.info('fetchNews()', item.title)
+        logger.info('fetchNews()', item.title , item.nid)
         await this._saveNewsData(item, logger)
         success++
       }
@@ -143,9 +144,9 @@ class Schedule extends CommonControler {
     // let data = require('./../tests/testNewsData')
     let logger = arguments[1] || this.logger
 
-    if(!data.nid){
-      return false
-    }
+    // if(!data.nid){
+    //   return false
+    // }
 
     let newsData = {}
     newsData.type = 1
@@ -158,12 +159,13 @@ class Schedule extends CommonControler {
     newsData.channel = data.channelName.replace('最新', '')
     newsData.source = data.source
     newsData.link = data.link
-    newsData.uuid = data.nid
+    newsData.uuid = uuidUtils.v4()
 
     let postsModel = (new this.models.posts_model).model()
     let find = await postsModel.findOne({
       where: {
-        uuid: newsData.uuid
+        // uuid: newsData.uuid
+        title: newsData.title
       }
     })
 
