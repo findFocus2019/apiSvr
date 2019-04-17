@@ -341,7 +341,9 @@ class Schedule extends CommonControler {
     let order_quantity = await orderModel.count({
       where: {
         'update_time': { [Op.gte]: today },
-        'status': 1
+        'status': {
+          [Op.gte]:0
+        }
       }
     })
     try {
