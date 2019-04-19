@@ -12,6 +12,7 @@ const {
   userCollection,
   userTransaction
 } = require('./../../config/models')
+const Op = require('sequelize').Op
 const uuid = require('uuid')
 
 class UserModel extends Model {
@@ -187,6 +188,9 @@ class UserModel extends Model {
     let where = {
       user_id : userId,
       type: 'mpwx',
+      openid: {
+        [Op.ne]:''
+      }
     }
 
     let oauth = await this.oAuthModel().findOne({
