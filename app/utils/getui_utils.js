@@ -1,6 +1,7 @@
 const config = require('./../../config').getui
 const GeTui = require('./../../vendor/getui/GT.push')
 const NotificationTemplate = require('./../../vendor/getui/getui/template/NotificationTemplate')
+const TransmissionTemplate = require('./../../vendor/getui/getui/template/TransmissionTemplate')
 const AppMessage = require('./../../vendor/getui/getui/message/AppMessage')
 const APNPayload = require('./../../vendor/getui/payload/APNPayload')
 const SimpleAlertMsg = require('./../../vendor/getui/payload/SimpleAlertMsg')
@@ -68,6 +69,41 @@ class GetuiUtils {
     })
     
   }
+
+  pushMessageToApp(content) {
+    // var taskGroupName = 'test';
+    var taskGroupName = null
+    var template = new TransmissionTemplate({
+      appId: this.appId,
+      appKey: this.appKey,
+      transmissionType: 1,
+      transmissionContent: content
+  })
+
+    //个推信息体
+    //基于应用消息体
+    var message = new AppMessage({
+        isOffline: false,
+        offlineExpireTime: 3600 * 12 * 1000,
+        data: template,
+        appIdList: [this.appId],
+        //        phoneTypeList: ['IOS'],
+        //        provinceList: ['浙江'],
+        //tagList: ['阿百川']
+        speed: 10000
+    });
+    return new Promise((r,j) => {
+      this.GT.pushMessageToApp(message, taskGroupName, function (err, res) {
+        console.log(res)
+        if(err){
+          j(err)
+        }else {
+          r(res)
+        }
+      })
+    })
+    
+}
 
   
 

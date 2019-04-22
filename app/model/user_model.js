@@ -12,6 +12,7 @@ const {
   userCollection,
   userTransaction
 } = require('./../../config/models')
+const Op = require('sequelize').Op
 const uuid = require('uuid')
 
 class UserModel extends Model {
@@ -187,6 +188,9 @@ class UserModel extends Model {
     let where = {
       user_id : userId,
       type: 'mpwx',
+      openid: {
+        [Op.ne]:''
+      }
     }
 
     let oauth = await this.oAuthModel().findOne({
@@ -381,6 +385,32 @@ class UserModel extends Model {
 
   setUserPushInfo(userId , data){
     
+  }
+
+  async getUserAuthDataById(userId){
+    let ret = {
+      h5:0,
+      mpwx:0,
+      app:0
+    }
+
+    let list = await this.authModel().findAll({
+      where: {user_id: userId}
+    })
+
+    // console.log(JSON.stringify(list))
+    list.forEach(item => {
+      if(item.type == 'h5'){
+        ret.h5 = 1
+      }else if(item.type == 'mpwx'){
+        ret.mpwx = 1
+      }else if(item.type == 'app'){
+        ret.app = 1
+      }
+    })
+
+    return ret
+
   }
 
 }

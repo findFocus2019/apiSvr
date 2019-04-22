@@ -2,6 +2,7 @@ const Controller = require('./../lib/controller')
 const nodeSchedule = require('node-schedule')
 const ShowApiSdk = require('./../lib/showApi')
 const dateUtils = require('./../app/utils/date_utils')
+const uuidUtils = require('./../app/utils/uuid_utils')
 const jdUtils = require('./../app/utils/jd_utils')
 const config = require('./../config')
 const CommonControler = require('./../app/common/common_controller')
@@ -129,7 +130,7 @@ class Schedule extends CommonControler {
     for (let index = 0; index < list.length; index++) {
       const item = list[index]
       if (item.html && item.imageurls.length) {
-        logger.info('fetchNews()', item.title)
+        logger.info('fetchNews()', item.title , item.nid)
         await this._saveNewsData(item, logger)
         success++
       }
@@ -143,9 +144,9 @@ class Schedule extends CommonControler {
     // let data = require('./../tests/testNewsData')
     let logger = arguments[1] || this.logger
 
-    if(!data.nid){
-      return false
-    }
+    // if(!data.nid){
+    //   return false
+    // }
 
     let newsData = {}
     newsData.type = 1
@@ -158,12 +159,13 @@ class Schedule extends CommonControler {
     newsData.channel = data.channelName.replace('最新', '')
     newsData.source = data.source
     newsData.link = data.link
-    newsData.uuid = data.nid
+    newsData.uuid = uuidUtils.v4()
 
     let postsModel = (new this.models.posts_model).model()
     let find = await postsModel.findOne({
       where: {
-        uuid: newsData.uuid
+        // uuid: newsData.uuid
+        title: newsData.title
       }
     })
 
@@ -299,6 +301,66 @@ class Schedule extends CommonControler {
     }
        
     
+  }
+
+  //每日统计
+  async dailyStatistics() {
+    let logger = arguments[0] || this.logger
+    logger.info('dailyStatistics() start')
+    //当天凌晨时间
+    let today =  new Date(new Date().setHours(0, 0, 0, 0)) / 1000;
+    const statisticsModel = (new this.models.statistics_model).model()
+    const userModel = (new this.models.user_model).model()
+    const userInfoModel = (new this.models.user_model).infoModel()
+    const orderModel = (new this.models.mall_model).orderModel()
+    //活跃用户
+    let active_user = await userModel.count({
+      where: { 'last_signin_time': { [Op.gte]: today } }
+    })
+    //用户总量
+    let user_amount = await userModel.count()
+    //当日注册量
+    let registration_amount = await userModel.count({
+      where: { 'create_time': { [Op.gte]: today } }
+    })
+    //新增vip
+    let new_vip_user = await userInfoModel.count({
+      where: {
+        'startline': { [Op.gte]: today },
+        'vip': 1
+      }
+    })
+    //总vip
+    let vip_user_amount = await userInfoModel.count({
+      where: {
+        'vip': 1,
+        'deadline': { [Op.gte]: today }
+      }
+    })
+    //活跃用户构成
+    let active_user_composition = (Math.round(parseFloat(active_user) / parseFloat(user_amount) * 10000) / 100.00 + "%"); 
+    //order_quantity 下单量
+    let order_quantity = await orderModel.count({
+      where: {
+        'update_time': { [Op.gte]: today },
+        'status': {
+          [Op.gte]:0
+        }
+      }
+    })
+    try {
+      await statisticsModel.create({
+        active_user: active_user,
+        user_amount: user_amount,
+        registration_amount: registration_amount,
+        new_vip_user: new_vip_user,
+        vip_user_amount: vip_user_amount,
+        active_user_composition: active_user_composition,
+        order_quantity: order_quantity
+      })
+    } catch (err) {
+      logger.info('每日数据统计失败,原因：',err)
+    }
   }
 }
 

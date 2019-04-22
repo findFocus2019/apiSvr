@@ -377,7 +377,8 @@ class AuthController extends Controller {
         mobile: mobile
       }
     })
- 
+    
+    let isReg = 0
     console.log('')
     if(pid === undefined){
       // 登录
@@ -401,6 +402,7 @@ class AuthController extends Controller {
           mobile: mobile,
           pid: pid
         })
+        isReg = 1
       }
 
     }
@@ -447,9 +449,9 @@ class AuthController extends Controller {
       }
     }
 
-    if (pid && pid > 0) {
-      // 邀请发送现金
-      let taskModel = new this.models.task_model
+    let taskModel = new this.models.task_model
+    if(isReg){
+      // 邀请发送积分
       let t = await userModel.getTrans()
       let taskData = {
         user_id: user.id,
@@ -463,6 +465,9 @@ class AuthController extends Controller {
           t.rollback()
         }
       })
+    }
+
+    if (pid && pid > 0 && isReg) {
 
       // 邀请获取积分
       let t1 = await userModel.getTrans()

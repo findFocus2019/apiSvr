@@ -145,12 +145,15 @@ class MallController extends Controller {
 
     // 添加商户
     let mchId = ctx.session.mch_id || 0
+    this.logger.info(ctx.uuid, 'goodsUpdate()', 'mchId', mchId)
     if (mchId) {
       data.mch_id = mchId
       if (!data.id) {
         data.status = 0
       }
     }
+
+    this.logger.info(ctx.uuid, 'goodsUpdate()', 'data', data)
 
     let goods
     if (data.id) {

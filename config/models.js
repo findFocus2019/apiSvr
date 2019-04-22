@@ -68,11 +68,11 @@ const FIELDS = {
       defaultValue: 0,
       get() {
         const val = this.getDataValue(filed) / 100
-        console.log('money get ============', val)
+        // console.log('money get ============', val)
         return val
       },
       set(val) {
-        console.log('money set ============', val)
+        // console.log('money set ============', val)
         this.setDataValue(filed, val * 100)
       }
     }
@@ -557,7 +557,8 @@ module.exports = {
           img_2: FIELDS.stringLen(255),
           is_share: FIELDS.tinyInt(),
           price: FIELDS.money('price'),
-          rabate_score: FIELDS.defaultInt()
+          rabate_score: FIELDS.defaultInt(),
+          mch_id: FIELDS.bigInt()
         },
         {
           ...commonOpts,
@@ -840,6 +841,23 @@ module.exports = {
       {
         ...commonOpts,
         tableName: 't_mig_user_score'
+      }
+    ]
+  },
+  statistics: () => {
+    return [{
+        ...commonFieldGet(),
+        registration_amount: FIELDS.defaultInt(),
+        active_user: FIELDS.defaultInt(),
+        active_user_composition: FIELDS.stringLen(50),
+        order_quantity: FIELDS.defaultInt(),
+        new_vip_user: FIELDS.defaultInt(),
+        vip_user_amount: FIELDS.defaultInt(),
+        user_amount: FIELDS.defaultInt(),
+      },
+      {
+        ...commonOpts,
+        tableName: 't_daily_statistics'
       }
     ]
   },

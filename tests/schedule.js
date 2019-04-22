@@ -1,4 +1,4 @@
-process.env.NODE_ENV = 'production'
+process.env.NODE_ENV = 'dev'
 
 const Schedule = require('../schedule/main')
 
@@ -11,3 +11,5 @@ schedule.fetchNews()
 // schedule.submitJdOrder()
 
 // schedule.orderConfirm()
+
+// schedule.dailyStatistics()
