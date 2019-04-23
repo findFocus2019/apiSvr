@@ -1167,7 +1167,8 @@ class MallController extends Controller {
             let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
             this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
             if (aliRet.code != 0) {
-              return this._fail(ctx, aliRet.message)
+              // return this._fail(ctx, aliRet.message)
+              throw new Error(aliRet.message)
             }
           } else {
             this.logger.info(ctx.uuid, 'transactionUpdate()', '无需退在线支付')
