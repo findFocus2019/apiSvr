@@ -479,7 +479,7 @@ class UserController extends Controller {
     let csvList = []
     //字段
     let fields = [
-      '用户ID', '昵称', '手机号码', '注册时间', '账单余额', '积分', 'vip', 'vip到期时间', '支付宝','H5登录','小程序登录','APP登录'
+      '用户ID', '昵称', '手机号码', '注册时间', '账单余额', '积分', 'vip', 'vip到期时间', '支付宝','H5登录','小程序登录','APP登录','上次使用时间','上次使用ip'
     ]
 
     let UserModel = new this.models.user_model
@@ -525,6 +525,8 @@ class UserController extends Controller {
       data['H5登录'] = userAuth.h5 ? '是' :'否'
       data['小程序登录'] = userAuth.mpwx ? '是' :'否'
       data['APP登录'] = userAuth.app ? '是' :'否'
+      data['上次使用时间'] = this.utils.date_utils.dateFormat(user.last_signin_time)
+      data['上次使用ip'] = user.last_signin_ip
       csvList.push(data)
     }
 
