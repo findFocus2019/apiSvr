@@ -541,13 +541,13 @@ class UserController extends Controller {
 
       // let userData = await UserModel.findByPk(user.user_id)
       if (user.user && user.user.last_signin_time){
-        data['上次使用时间'] = this.utils.date_utils.dateFormat(user.last_signin_time)
+        data['上次使用时间'] = this.utils.date_utils.dateFormat(user.user.last_signin_time)
       }else {
         data['上次使用时间'] = ''
       }
       
       if (user.user && user.user.last_signin_ip){
-        data['上次使用ip'] = user.last_signin_ip
+        data['上次使用ip'] = user.user.last_signin_ip
       }else {
         data['上次使用ip'] = ''
       }
