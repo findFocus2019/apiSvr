@@ -515,7 +515,10 @@ class UserController extends Controller {
 
     for (let index = 0; index < users.length; index++) {
       const user = users[index]
-
+      if(index == 0){
+        console.log(JSON.stringify(user))
+      }
+      
       let data = {}
       data['用户ID'] = user.user_id
       data['昵称'] = user.nickname
@@ -537,8 +540,18 @@ class UserController extends Controller {
       data['APP登录'] = userAuth.app ? '是' :'否'
 
       // let userData = await UserModel.findByPk(user.user_id)
-      data['上次使用时间'] = this.utils.date_utils.dateFormat(user.user.last_signin_time)
-      data['上次使用ip'] = user.user.last_signin_ip
+      if (user.user && user.user.last_signin_time){
+        data['上次使用时间'] = this.utils.date_utils.dateFormat(user.last_signin_time)
+      }else {
+        data['上次使用时间'] = ''
+      }
+      
+      if (user.user && user.user.last_signin_ip){
+        data['上次使用ip'] = user.last_signin_ip
+      }else {
+        data['上次使用ip'] = ''
+      }
+      
       csvList.push(data)
     }
 
