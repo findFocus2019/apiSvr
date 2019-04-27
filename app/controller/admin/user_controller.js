@@ -525,8 +525,10 @@ class UserController extends Controller {
       data['H5登录'] = userAuth.h5 ? '是' :'否'
       data['小程序登录'] = userAuth.mpwx ? '是' :'否'
       data['APP登录'] = userAuth.app ? '是' :'否'
-      data['上次使用时间'] = this.utils.date_utils.dateFormat(user.last_signin_time)
-      data['上次使用ip'] = user.last_signin_ip
+
+      let userData = await UserModel.findByPk(user.user_id)
+      data['上次使用时间'] = this.utils.date_utils.dateFormat(userData.last_signin_time)
+      data['上次使用ip'] = userData.last_signin_ip
       csvList.push(data)
     }
 
