@@ -484,13 +484,23 @@ class UserController extends Controller {
 
     let UserModel = new this.models.user_model
     let userInfoModel = UserModel.infoModel()
+    let userModel = UserModel.model()
+
+    userInfoModel.belongsTo(userModel, {
+      targetKey: 'id',
+      foreignKey: 'user_id'
+    })
 
     let users = await userInfoModel.findAll({
       where: {
         id: {
           [Op.ne]:1
         }
-      }
+      },
+      include: [{
+        model: userModel,
+        attributes: ['id', 'last_signin_time', 'last_signin_ip']
+      }]
     })
 
     let userAuths = await UserModel.authModel().findAll()
@@ -526,9 +536,9 @@ class UserController extends Controller {
       data['小程序登录'] = userAuth.mpwx ? '是' :'否'
       data['APP登录'] = userAuth.app ? '是' :'否'
 
-      let userData = await UserModel.findByPk(user.user_id)
-      data['上次使用时间'] = this.utils.date_utils.dateFormat(userData.last_signin_time)
-      data['上次使用ip'] = userData.last_signin_ip
+      // let userData = await UserModel.findByPk(user.user_id)
+      data['上次使用时间'] = this.utils.date_utils.dateFormat(user.user.last_signin_time)
+      data['上次使用ip'] = user.user.last_signin_ip
       csvList.push(data)
     }
 
