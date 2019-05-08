@@ -1407,6 +1407,11 @@ class MallController extends CommonController {
       return this._fail(ctx, '订单错误')
     }
 
+    if (order.finish_time && order.finish_time + 7 * 24 * 3600 < parseInt(Date.now() / 1000)){
+      // 超过时间
+      return this._fail(ctx, '超过售后服务时间')
+    }
+
     let afterNo = this._createOrderNo(ctx)
     let orderAfterModel = mallModel.orderAfterModel()
 
