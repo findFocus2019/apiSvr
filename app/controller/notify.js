@@ -126,7 +126,9 @@ class PaymentLogic extends CommonController {
         }
         Logger.info(ctx.uuid, 'orderPayConfirm() order', order.id)
         // let items = order.goods_items
-        if (order.order_type != 0) {
+
+        let orderType = order.order_type // 0：vip代金券 1,2商城 3:广告券
+        if (orderType == 1 || orderType == 2) {
           // 第一次支付,送vip
           let count = await orderItemsModel.count({
             where:{
@@ -148,13 +150,19 @@ class PaymentLogic extends CommonController {
             throw new Error(rabateRet.message)
           }
 
-        } else {
+        } else if (orderType == 0){
           // vip充值订单，发放代金券，更新用户vip时间
           let userVipRet = await this._userVipDeal(ctx, order, t)
           if (userVipRet.code != 0) {
             throw new Error(userVipRet.message)
           } else {
             userSetVip = 1
+          }
+        } else if (orderType == 3){
+          // 发放广告券
+          let dealRet = await this._orderDealType3(ctx, order, t)
+          if (dealRet.code != 0){
+            throw new Error(dealRet.message)
           }
         }
 

@@ -861,4 +861,20 @@ module.exports = {
       }
     ]
   },
+  adItem: () => {
+    return [{
+      ...commonFieldGet(),
+      user_id:FIELDS.bigInt(),
+      name: FIELDS.stringLen(255),
+      order_id: FIELDS.bigInt(),
+      goods_id: FIELDS.bigInt(),
+      token: FIELDS.stringLen(32),
+      used_time: FIELDS.defaultInt(),
+    },
+    {
+      ...commonOpts,
+      tableName: 't_ad_item'
+    }
+  ]
+  }
 }

@@ -5,6 +5,50 @@ const Op = require('sequelize').Op
 class CommonController extends Controller {
 
   /**
+   * 处理广告券
+   * @param {*} order 
+   */
+  async _orderDealType3(ctx, order, t = null) {
+    let items = order.goods_items
+    let orderId = order.id
+
+    try {
+      for (let index = 0; index < items.length; index++) {
+        let item = items[index]
+        let goodsId = item.id
+        let num = item.num
+
+        for (let index = 0; index < num; index++) {
+          // 添加 ad key
+          let token = this.utils.uuid_utils.v4()
+          let adItemData = {
+            user_id: order.user_id,
+            order_id: orderId,
+            goods_id: goodsId,
+            token: token
+          }
+
+          this.logger.info(ctx.uuid , '_orderDealType3' , 'adKeyData', adItemData )
+          let adModel = new this.models.ad_model
+          let opt = {}
+          if (t) {
+            opt.transaction = t
+          }
+          let saveRet = await adModel.itemModel().create(adItemData, opt)
+          if (!saveRet){
+            throw new Error('添加广告券购买记录失败')
+          }
+        }
+      }
+    } catch (err) {
+      ctx.ret.code = 1
+      ctx.ret.message = err.message
+    }
+
+    return ctx.ret
+
+  }
+  /**
    * 记录订单商品
    * @param {*} ctx 
    * @param {*} order 

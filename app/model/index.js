@@ -13,5 +13,6 @@ module.exports = {
   admin_model: require('./admin_model'),
   token_model: require('./token_model'),
   mch_model: require('./mch_model'),
-  statistics_model: require('./statistics_model')
+  statistics_model: require('./statistics_model'),
+  ad_model: require('./ad_model'),
 }
