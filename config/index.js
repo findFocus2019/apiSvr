@@ -21,7 +21,12 @@ let config = {
   //   maxLimit: 1000,
   // },
 
-  
+  // 广告券业务
+  vds: {
+    category:' guanggaoquan',
+    categoryTitle: '广告券',
+    type: 99999
+  },
 
   tasks: {
     REGISTER: 'register', // 用户注册

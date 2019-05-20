@@ -1583,6 +1583,108 @@ class UserController extends Controller {
     ctx.ret.data = list 
     return ctx.ret
   }
+
+  /**
+   * ecard合并
+   * @param {*} ctx 
+   */
+  async ecardCombine(ctx) {
+    this.logger.info(ctx.uuid, 'ecardCombine()', 'body', ctx.body, 'query', ctx.query)
+    let userId = ctx.body.user_id
+
+    let userModel = new this.models.user_model
+    let ecardModel = userModel.ecardModel()
+
+    let t = await userModel.getTrans()
+    try {
+      
+      let ecards = await ecardModel.findAll({
+        where: {
+          user_id: userId,
+          status:1
+        },
+        order: [
+          ['create_time' , 'desc']
+        ]
+      })
+
+      if (!ecards || ecards.length <= 1){
+        throw new Error('无可用代金券或合并数量不足')
+      }
+
+      let amount = 0
+      let price = 0
+      let exchanges = []
+      let now = parseInt(Date.now() / 1000)
+      ecards.forEach((item,index) => {
+        // 记录要改变的 amount
+        amount += item.amount
+
+        let exchange = item.exchange
+        if (index == 0){
+          exchanges[index] = exchange || []
+
+          price = item.price
+        }else {
+          price += item.amount
+
+          exchanges[index] = exchange || []
+          // 记录要加上的
+          exchanges[0].push({
+            type: 1,
+            amount: item.amount,
+            from: item.id,
+            to: 0,
+            time: now
+          })
+          // 记录要减去的数据
+          exchanges[index].push({
+            type: 2,
+            amount: item.amount,
+            from: 0,
+            to: ecards[0].id,
+            time: now
+          })
+        }
+      })
+
+      this.logger.info(ctx.uuid, 'ecardCombine()', 'amount', amount)
+      this.logger.info(ctx.uuid, 'ecardCombine()', 'price', price)
+
+      for (let index = 0; index < ecards.length; index++) {
+        let ecard = ecards[index]
+        if (index == 0){
+          ecard.amount = parseFloat(amount).toFixed(2)
+          ecard.price = parseFloat(price).toFixed(2)
+          
+        }else {
+          ecard.amount = 0
+          ecard.status = 0
+        }
+
+        ecard.exchange = exchanges[index]
+
+        let updateRet = await ecard.save({transaction: t})
+        if (!updateRet){
+          this.logger.error(ctx.uuid, 'ecardCombine()', 'err', ecard.id)
+          throw new Error('合并失败')
+        }
+        
+      }
+
+      t.commit()
+    } catch (err) {
+      this.logger.error(ctx.uuid, 'ecardCombine()', 'err', err.message)
+      ctx.ret.code = 1
+      ctx.ret.message = err.message || ''
+
+      t.rollback()
+    }
+
+    return ctx.ret
+    
+
+  }
 }
 
 module.exports = UserController

@@ -834,8 +834,9 @@ class MallController extends CommonController {
         }else {
           balance = total
         }
-      } else if (payType == 3) {
-        amount = total
+      } else {
+        // 商户的走h5支付
+        throw new Error('商户订单不支持此类支付下单')
       }
 
       amount = parseFloat(amount).toFixed(2)

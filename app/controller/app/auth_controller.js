@@ -369,12 +369,15 @@ class AuthController extends Controller {
       }
     }else {
       // 短信验证
-      let verifyCodeModel = new this.models.verifycode_model
-      let verifyRet = await verifyCodeModel.verify(mobile, verify_code)
-      this.logger.info(ctx.uuid, 'sign()', 'verifyRet', verifyRet)
-      if (verifyRet.code != 0) {
-        return this._fail(ctx, verifyRet.message)
+      if (process.env.NODE_ENV !== 'dev'){
+        let verifyCodeModel = new this.models.verifycode_model
+        let verifyRet = await verifyCodeModel.verify(mobile, verify_code)
+        this.logger.info(ctx.uuid, 'sign()', 'verifyRet', verifyRet)
+        if (verifyRet.code != 0) {
+          return this._fail(ctx, verifyRet.message)
+        }
       }
+      
     }
     
 

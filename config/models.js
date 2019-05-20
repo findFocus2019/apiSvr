@@ -275,7 +275,8 @@ module.exports = {
         user_id: FIELDS.bigInt(),
         name: FIELDS.stringLen(64),
         price: FIELDS.money('price'),
-        amount: FIELDS.money('amount')
+        amount: FIELDS.money('amount'),
+        exchange: FIELDS.jsonArr('exchange')
       },
       {
         ...commonOpts,
