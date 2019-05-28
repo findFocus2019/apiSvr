@@ -33,6 +33,6 @@ CREATE TABLE `t_daily_statistics` (
   `vip_user_amount` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '总VIP',
   `user_amount` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '总用户量',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COMMENT='日常数据统计';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='日常数据统计';
 
 SET FOREIGN_KEY_CHECKS = 1;

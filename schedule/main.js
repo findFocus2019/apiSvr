@@ -159,7 +159,6 @@ class Schedule extends CommonControler {
     newsData.channel = data.channelName.replace('最新', '')
     newsData.source = data.source
     newsData.link = data.link
-    newsData.uuid = uuidUtils.v4()
 
     let postsModel = (new this.models.posts_model).model()
     let find = await postsModel.findOne({
@@ -173,6 +172,7 @@ class Schedule extends CommonControler {
       let ret = await find.update(newsData)
       logger.info('fetchNews() update id:', ret.id)
     } else {
+      newsData.uuid = uuidUtils.v4()
       let ret = await postsModel.create(newsData)
       logger.info('fetchNews() insert id:', ret.id)
     }

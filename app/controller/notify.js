@@ -199,7 +199,8 @@ class PaymentLogic extends CommonController {
         if (!userInfo.startline) {
           userInfo.startline = now
         }
-        if(userInfo.deadline){
+        if(userInfo.deadline && userInfo.deadline > now){
+          // 还未过期
           userInfo.deadline = this.utils.date_utils.monthPlus(userInfo.deadline, 1)
      
         }else {

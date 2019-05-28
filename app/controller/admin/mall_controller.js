@@ -1159,7 +1159,9 @@ class MallController extends Controller {
           this.logger.info(ctx.uuid, 'orderAfterDeal()', 'alipayAccount', alipayAccount)
           let alipayUtils = this.utils.alipay_utils
           let tradeNo = this.utils.uuid_utils.v4()
-          amount = parseFloat(1 * refund.amount).toFixed(2)
+          // amount = parseFloat(1 * refund.amount).toFixed(2)
+          amount = refund.amount
+          this.logger.info(ctx.uuid, 'orderAfterDeal()', 'amount', amount)
           // if (this.config.DEBUG) {
           //   amount = 0.1
           // }
@@ -1167,7 +1169,8 @@ class MallController extends Controller {
             let aliRet = await alipayUtils.toAccountTransfer(tradeNo, alipayAccount, amount)
             this.logger.info(ctx.uuid, 'transactionUpdate()', 'aliRet', aliRet)
             if (aliRet.code != 0) {
-              return this._fail(ctx, aliRet.message)
+              // return this._fail(ctx, aliRet.message)
+              throw new Error(aliRet.message)
             }
           } else {
             this.logger.info(ctx.uuid, 'transactionUpdate()', '无需退在线支付')

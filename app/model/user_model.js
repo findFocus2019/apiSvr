@@ -162,7 +162,7 @@ class UserModel extends Model {
   async getInviteUser(userId) {
     let user = await this.model().findOne({
       where: {
-        pid: userId
+        id: userId
       }
     })
     return user || null
