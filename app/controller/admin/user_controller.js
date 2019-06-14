@@ -391,15 +391,14 @@ class UserController extends Controller {
 
   async transactionList(ctx) {
     this.logger.info(ctx.uuid, 'body', ctx.body, 'query', ctx.query)
-
-    let page = ctx.body.page || 1
-    let limit = ctx.body.limit || 10
+    let {page, limit, type, search} = ctx.body
+    page   = page   || 1
+    limit  = limit  || 10
+    type   = type   || 2
+    search = search || ''
     let offset = (page - 1) * limit
-    let type = ctx.body.type || 2
-    let where = {}
+    let where  = {}
     where.type = type
-
-    let search = ctx.body.search || ''
     if (search) {
       where.mobile = {
         [Op.like]: '%' + search + '%'

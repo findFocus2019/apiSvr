@@ -69,6 +69,18 @@ class TaskController extends Controller {
     let taskModel = TaskModel.model()
     let userInfoModel = (new this.models.user_model).infoModel()
 
+    let where = {}
+    let uesrId = ctx.body.user_id || 0
+    if (uesrId) {
+      where.user_id = uesrId
+    }
+    let isBalance = ctx.body.is_balance || 0
+    if (isBalance) {
+      where.balance = {
+        [Op.gt]: 0
+      }
+    }
+
     taskLogsModel.belongsTo(taskModel, {
       targetKey: 'id',
       foreignKey: 'task_id'
@@ -78,7 +90,7 @@ class TaskController extends Controller {
       foreignKey: 'user_id'
     })
     let queryRet = await taskLogsModel.findAndCountAll({
-      where: {},
+      where: where,
       offset: (page - 1) * limit,
       limit: limit,
       order: [
