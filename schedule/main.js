@@ -13,8 +13,8 @@ class Schedule extends CommonControler {
   async _init_() {
     let scheduleModel = new this.models.schedule_model
     let schedules = await scheduleModel.model().findAll({
-      where:{
-        status:1
+      where: {
+        status: 1
       }
     })
 
@@ -40,33 +40,32 @@ class Schedule extends CommonControler {
   /**
    * 发货七天未确认收货自动确认
    */
-  async orderConfirm(){
+  async orderConfirm() {
     let logger = arguments[0] || this.logger
     let ctx = {
       uuid: this.utils.uuid_utils.v4(),
     }
     let mallModel = new this.models.mall_model
     let orderModel = mallModel.orderModel()
-    let expressTime = parseInt(Date.now()/ 1000) - 7 * 24 * 3600
+    let expressTime = parseInt(Date.now() / 1000) - 7 * 24 * 3600
     logger.info('orderConfirm()', expressTime)
     let orders = await orderModel.findAll({
       where: {
-        status:2,
-        [Op.or]: [
-          {
-            express_extend_num:0,
-            express_time:{
-              [Op.lt]:expressTime
+        status: 2,
+        [Op.or]: [{
+            express_extend_num: 0,
+            express_time: {
+              [Op.lt]: expressTime
             }
           },
           {
-            express_extend_num:1,
-            express_time:{
-              [Op.lt]:expressTime - 7 * 24 * 3600
+            express_extend_num: 1,
+            express_time: {
+              [Op.lt]: expressTime - 7 * 24 * 3600
             }
           }
         ]
-        
+
       }
     })
 
@@ -76,22 +75,22 @@ class Schedule extends CommonControler {
       let order = orders[index]
       let t = await mallModel.getTrans()
       ctx.ret = {
-        code:0,
+        code: 0,
         message: ''
       }
-      let completeRet = await this._orderComplete(ctx, order , t)
-      if(completeRet.code == 0){
+      let completeRet = await this._orderComplete(ctx, order, t)
+      if (completeRet.code == 0) {
         logger.info(`orderConfirm() success: ${order.id}`)
         t.commit()
-      }else {
+      } else {
         logger.info(`orderConfirm() fail: ${order.id}`)
         t.rollback()
       }
-      
+
     }
   }
 
-  async rabateDealDay(){
+  async rabateDealDay() {
     let ctx = {
       uuid: this.utils.uuid_utils.v4()
     }
@@ -130,7 +129,7 @@ class Schedule extends CommonControler {
     for (let index = 0; index < list.length; index++) {
       const item = list[index]
       if (item.html && item.imageurls.length) {
-        logger.info('fetchNews()', item.title , item.nid)
+        logger.info('fetchNews()', item.title, item.nid)
         await this._saveNewsData(item, logger)
         success++
       }
@@ -221,18 +220,21 @@ class Schedule extends CommonControler {
         //商品准备
         order.goods_items.forEach(item => {
           sku.push({
-            num: 1,
-            skuId: item.uuid, 
+            num: item.num || 1,
+            skuId: item.uuid,
             bNeedAnnex: false,
             bNeedGift: true,
             // price: item.price_sell,
             // yanbao: [{skuId: item.uuid}]
           })
-          orderPriceSnap.push({skuId: item.uuid, price: item.price_cost})
+          orderPriceSnap.push({
+            skuId: item.uuid,
+            price: item.price_cost
+          })
         })
         //参数准备
         let submitOrderParams = {
-          thirdOrder: order.order_no,       
+          thirdOrder: order.order_no,
           sku: JSON.stringify(sku),
           name: order.address.name,
           province: order.address.province,
@@ -241,21 +243,21 @@ class Schedule extends CommonControler {
           town: order.address.town,
           address: order.address.address + order.address.info,
           mobile: order.address.mobile,
-          email:'wang.wy@jurenchina.net',//要加
+          email: 'wang.wy@jurenchina.net', //要加
           // invoiceState: 1,
           invoiceContent: 100,
           paymentType: 4,
           isUseBalance: 1,
           submitState: 0,
-          doOrderPriceMode:  1,
-          orderPriceSnap: JSON.stringify(orderPriceSnap) ,
+          doOrderPriceMode: 1,
+          orderPriceSnap: JSON.stringify(orderPriceSnap),
           invoicePhone: order.address.mobile
         }
-      
-      this.logger.info('Schedule submitJdOrder submitorderparams: ', submitOrderParams)
-      let submitOrderResult = await AppMallController.submitOrder(submitOrderParams)
-      this.logger.info('Schedule submitJdOrder submitOrderResult: ', submitOrderResult)
-      //错误情况
+
+        this.logger.info('Schedule submitJdOrder submitorderparams: ', submitOrderParams)
+        let submitOrderResult = await AppMallController.submitOrder(submitOrderParams)
+        this.logger.info('Schedule submitJdOrder submitOrderResult: ', submitOrderResult)
+        //错误情况
         if (!submitOrderResult.success) {
           this.logger.error('Schedule submitJdOrder submitOrderResult: err', {
             code: submitOrderResult.resultCode,
@@ -275,32 +277,36 @@ class Schedule extends CommonControler {
             }
           } else {
             orderModel.update({
-              express: {company: 'JD', express_no: 'JDexpressNo'}, 
-              express_time: parseInt(Date.now() / 1000),
-              status: 2,
-              jd_order_id: jdOrderId
-            }, 
-            {
-              where: {id: orderId}
-            })
-            .then(result => {
-              this.logger.info('Schedule submitJdOrder update result: ', result)
-              // ctx.ret.data = {code: 0}
-            })
-            .catch(error => {
-              this.logger.error('Schedule submitJdOrder error: ', error)
-              // ctx.ret.data = {code: -3, error: '更新失败'}
-            })
+                express: {
+                  company: 'JD',
+                  express_no: 'JDexpressNo'
+                },
+                express_time: parseInt(Date.now() / 1000),
+                status: 2,
+                jd_order_id: jdOrderId
+              }, {
+                where: {
+                  id: orderId
+                }
+              })
+              .then(result => {
+                this.logger.info('Schedule submitJdOrder update result: ', result)
+                // ctx.ret.data = {code: 0}
+              })
+              .catch(error => {
+                this.logger.error('Schedule submitJdOrder error: ', error)
+                // ctx.ret.data = {code: -3, error: '更新失败'}
+              })
           }
         }
-        
-      
+
+
       }
-    }else {
+    } else {
       this.logger.info('Schedule submitJdOrder 无结算订单')
     }
-       
-    
+
+
   }
 
   //每日统计
@@ -308,25 +314,35 @@ class Schedule extends CommonControler {
     let logger = arguments[0] || this.logger
     logger.info('dailyStatistics() start')
     //当天凌晨时间
-    let today =  new Date(new Date().setHours(0, 0, 0, 0)) / 1000;
+    let today = new Date(new Date().setHours(0, 0, 0, 0)) / 1000;
     const statisticsModel = (new this.models.statistics_model).model()
     const userModel = (new this.models.user_model).model()
     const userInfoModel = (new this.models.user_model).infoModel()
     const orderModel = (new this.models.mall_model).orderModel()
     //活跃用户
     let active_user = await userModel.count({
-      where: { 'last_signin_time': { [Op.gte]: today } }
+      where: {
+        'last_signin_time': {
+          [Op.gte]: today
+        }
+      }
     })
     //用户总量
     let user_amount = await userModel.count()
     //当日注册量
     let registration_amount = await userModel.count({
-      where: { 'create_time': { [Op.gte]: today } }
+      where: {
+        'create_time': {
+          [Op.gte]: today
+        }
+      }
     })
     //新增vip
     let new_vip_user = await userInfoModel.count({
       where: {
-        'startline': { [Op.gte]: today },
+        'startline': {
+          [Op.gte]: today
+        },
         'vip': 1
       }
     })
@@ -334,17 +350,21 @@ class Schedule extends CommonControler {
     let vip_user_amount = await userInfoModel.count({
       where: {
         'vip': 1,
-        'deadline': { [Op.gte]: today }
+        'deadline': {
+          [Op.gte]: today
+        }
       }
     })
     //活跃用户构成
-    let active_user_composition = (Math.round(parseFloat(active_user) / parseFloat(user_amount) * 10000) / 100.00 + "%"); 
+    let active_user_composition = (Math.round(parseFloat(active_user) / parseFloat(user_amount) * 10000) / 100.00 + "%");
     //order_quantity 下单量
     let order_quantity = await orderModel.count({
       where: {
-        'update_time': { [Op.gte]: today },
+        'update_time': {
+          [Op.gte]: today
+        },
         'status': {
-          [Op.gte]:0
+          [Op.gte]: 0
         }
       }
     })
@@ -359,7 +379,7 @@ class Schedule extends CommonControler {
         order_quantity: order_quantity
       })
     } catch (err) {
-      logger.info('每日数据统计失败,原因：',err)
+      logger.info('每日数据统计失败,原因：', err)
     }
   }
 }
